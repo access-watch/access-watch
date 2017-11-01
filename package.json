@@ -1,0 +1,12 @@
+{
+  "name": "access-watch",
+  "version": "0.1",
+  "description": "Open Source Web Traffic Processor",
+  "main": "index.js",
+  "license": "Apache-2.0",
+  "author": "François Hodierne <francois@access.watch>",
+  "contributors": [
+    "Benoît Fleury <benoit@access.watch>",
+    "Jean Duthon <jean@access.watch>"
+  ]
+}
