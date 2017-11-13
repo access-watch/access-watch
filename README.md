@@ -2,6 +2,23 @@
 
 Open Source Web Traffic Processor
 
+## Install
+
+Make sure you have Node.js version >= 7. We recommend using [nvm](https://github.com/creationix/nvm).
+
+```bash
+npm install
+```
+
+## Start
+
+```bash
+npm start
+```
+
+## Documentation
+
+ - [Integrate with Nginx using syslog logging](https://access.watch/documentation/nginx)
 
 ## License
 
