@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "description": "A representation of an HTTP request as seen from a web server.",
+  "type": "object",
+  "required": ["request", "response"],
+  "properties": {
+    "request": {
+      "type": "object",
+      "required": ["time", "address", "scheme", "method", "url", "headers"],
+      "properties": {
+        "time": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "captured_headers": {
+          "type": "array"
+        },
+        "headers": {
+          "type": "object"
+        }
+      }
+    },
+    "response": {
+      "type": "object",
+      "required": ["status"]
+    }
+  }
+}
