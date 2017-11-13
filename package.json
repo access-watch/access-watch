@@ -1,12 +1,49 @@
 {
   "name": "access-watch",
-  "version": "0.1",
+  "version": "0.2.0",
   "description": "Open Source Web Traffic Processor",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/access-watch/access-watch.git"
+  },
   "main": "index.js",
   "license": "Apache-2.0",
   "author": "François Hodierne <francois@access.watch>",
   "contributors": [
     "Benoît Fleury <benoit@access.watch>",
     "Jean Duthon <jean@access.watch>"
-  ]
+  ],
+  "scripts": {
+    "start": "node index.js",
+    "test": "standard && mocha --recursive"
+  },
+  "dependencies": {
+    "access-watch-sdk": "^0.1.3",
+    "ajv": "^5.3.0",
+    "axios": "^0.17.0",
+    "body-parser": "^1.18.2",
+    "date-format-lite": "^17.7.0",
+    "ejs": "^2.5.7",
+    "express": "^4.16.2",
+    "express-ws": "^3.0.0",
+    "immutable": "^4.0.0-rc.9",
+    "lru-cache": "^4.1.1",
+    "md5": "^2.2.1",
+    "micro-strptime": "^0.2.2",
+    "proxy-addr": "^2.0.2",
+    "syslogd": "^1.1.2",
+    "tail": "^1.2.3",
+    "url": "^0.11.0",
+    "uuid": "^3.1.0",
+    "ws": "^3.2.0"
+  },
+  "devDependencies": {
+    "mocha": "^4.0.1",
+    "standard": "^10.0.3"
+  },
+  "standard": {
+    "ignore": [
+      "dashboard/static/main.js"
+    ]
+  }
 }
