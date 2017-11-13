@@ -7,6 +7,7 @@ const app = require('./lib/app')
 const pipeline = require('./lib/pipeline')
 
 require('./config')
+require('./dashboard')
 
 pipeline.start()
 app.start()
