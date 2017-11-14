@@ -38,3 +38,20 @@ pipeline.registerInput(syslogInputNginxAccessWatch)
 // })
 
 // pipeline.registerInput(fileInputNginxAccessWatch)
+
+// const elasticsearchInput = input.elasticsearch.create({
+//   config: {
+//     host: '__HOST__:__PORT__'
+//   },
+//   query: {
+//     index: '__INDEX__',
+//     type: '__TYPE__',
+//     body: {
+//       size: 100,
+//       sort: [ { '@timestamp': { order: 'desc' } } ]
+//     }
+//   },
+//   parser: format.logstash.parser('HTTPD_COMBINEDLOG')
+// })
+
+// pipeline.registerInput(elasticsearchInput)
