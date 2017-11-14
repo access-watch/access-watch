@@ -23,8 +23,8 @@ pipeline.registerInput(syslogInputNginxAccessWatch)
 
 // const fileInputNginxCombined = input.file.create({
 //   path: '/var/log/nginx/access.log',
-//   parse: nginx.parser({
-//     format: nginx.formats.combined
+//   parse: format.nginx.parser({
+//     format: format.nginx.formats.combined
 //   })
 // })
 
