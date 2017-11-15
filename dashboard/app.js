@@ -153,7 +153,11 @@ function getActivity (parameters) {
 }
 
 function getCountries (parameters) {
-  let query = Map({name: 'request', by: 'country'})
+  let query = Map({
+    name: 'request',
+    by: 'country',
+    step: 3600
+  })
   query = readParameters(query, parameters)
   if (parameters.type) {
     query = query.setIn(['tags', 'type'], parameters.type)
@@ -167,7 +171,10 @@ function getCountries (parameters) {
 }
 
 function getMetrics (parameters) {
-  let query = Map({name: 'request'})
+  let query = Map({
+    name: 'request',
+    step: 3600
+  })
   query = readParameters(query, parameters)
   return Map({
     requests: countAndSpeed(db.query(query)),
