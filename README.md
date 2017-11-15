@@ -1,6 +1,10 @@
 # Access Watch
 
-Open Source Web Traffic Processor
+Access Watch is a flexible access log processor that helps operators analyze the web traffic reaching their infrastructure.
+
+Access Watch is built on a real-time stream processor handling logs from inputs of any type (CDN, Load Balancer, Reverse Proxy, Web Server, Application) using any protocol (rsyslog, Log shippers, HTTP API, HTTP polling, Websocket).
+
+Access Watch is currently in beta and is already covering multiple great use cases.
 
 ## Install
 
@@ -16,7 +20,35 @@ npm install
 npm start
 ```
 
-## Documentation
+### Configure
+
+At a minimum you will need to tell Access Watch where to find the logs and in what format they are. In order to do this, you need to edit the input configuration file at `config/input.js`.
+
+See [Input Configuration](./docs/input.md) for the list of available input types and how to configure them.
+
+### Start
+
+Ok, now go back to where Access Watch is installed and start it.
+
+```shell
+npm start
+```
+
+The Access Watch API and Interface will be served from port 3000 by default. You can change that using an environment variable.
+
+```shell
+export PORT=3000 npm start
+```
+
+**Warning**: There is no authentication mechanism in the Access Watch processor, if the server is on the public internet, you will need to setup your firewall properly to restrict access to it.
+
+### Browse the interface
+
+Now, you can point your browser on the IP/port where Access Watch is running.
+
+If you see data flowing, congrats you made it!
+
+## Tutorials
 
  - [Integrate with Nginx using syslog logging](https://access.watch/documentation/nginx)
 
