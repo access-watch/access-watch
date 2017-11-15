@@ -19,7 +19,7 @@ function create ({config, query, parser}) {
       // Done
       const done = () => {
         running = false
-        setInterval(run, 333)
+        setTimeout(run, 333)
       }
       // Poll
       const poll = () => {
