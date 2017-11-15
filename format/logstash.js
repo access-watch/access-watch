@@ -30,13 +30,11 @@ formats['HTTPD_COMBINEDLOG'] = (source) => {
   return fromJS({request, response})
 }
 
-function parser (format = 'HTTPD_COMBINEDLOG') {
-  if (!formats[format]) {
-    throw new Error(`Unknown format ${format}`)
-  }
-  return formats[format]
+function parser ({format}) {
+  return (msg) => format(msg)
 }
 
 module.exports = {
+  formats: formats,
   parser: parser
 }
