@@ -1,5 +1,6 @@
 const process = require('process')
 
+const session = require('./lib/session')
 const metrics = require('./lib/metrics')
 const db = metrics.createDatabase('traffic')
 
@@ -9,11 +10,19 @@ const pipeline = require('./lib/pipeline')
 require('./config')
 require('./dashboard')
 
-pipeline.start()
-app.start()
+function start () {
+  pipeline.start()
+  app.start()
+}
 
-process.on('SIGTERM', function () {
+function stop () {
   pipeline.close()
   app.close()
   db.close()
-})
+  session.close()
+  process.exit()
+}
+
+start()
+
+process.on('SIGINT', stop)
