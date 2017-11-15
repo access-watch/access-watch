@@ -63,7 +63,7 @@ stream
   .metrics(requestMetrics)
   .window({
     strategy: new FixedWindow(1),
-    reducer: reducers.count(),
+    reducer: reducers.count()
   })
   .store()
 
@@ -105,7 +105,7 @@ robotRequests
 robotRequests
   .window({
     strategy: new FixedWindow(60),
-    reducer: reducers.count(),
+    reducer: reducers.count()
   })
   .sessionUpdate(metric => {
     return session => {
