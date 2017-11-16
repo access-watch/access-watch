@@ -6,7 +6,7 @@
   "properties": {
     "request": {
       "type": "object",
-      "required": ["time", "address", "scheme", "method", "url", "headers"],
+      "required": ["time", "address", "method", "url", "headers"],
       "properties": {
         "time": {
           "type": "string"
