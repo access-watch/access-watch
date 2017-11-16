@@ -1,14 +1,14 @@
 const syslogd = require('syslogd')
 const nginx = require('../format/nginx.js')
 
-function create ({port = 514, parser = nginx.parser()} = {}) {
+function create ({port = 514, parse = nginx.parser()} = {}) {
   return {
     name: 'Syslog',
     start: (pipeline) => {
       syslogd(msg => {
         let log
         try {
-          log = parser(msg.msg)
+          log = parse(msg.msg)
         } catch (err) {
           return pipeline.error(err)
         }

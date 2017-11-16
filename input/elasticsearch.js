@@ -1,6 +1,6 @@
 const elasticsearch = require('elasticsearch')
 
-function create ({config, query, parser}) {
+function create ({config, query, parse}) {
   return {
     name: 'Elasticsearch',
     start: (pipeline) => {
@@ -35,7 +35,7 @@ function create ({config, query, parser}) {
             }
             // Parse log
             try {
-              const log = parser(hit._source)
+              const log = parse(hit._source)
               pipeline.success(log)
             } catch (err) {
               return pipeline.error(err)
