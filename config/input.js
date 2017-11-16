@@ -38,3 +38,22 @@ pipeline.registerInput(syslogInputNginxAccessWatch)
 // })
 
 // pipeline.registerInput(fileInputNginxAccessWatch)
+
+/* Elasticsearch input (polling) accepting a commonly used Logstash format */
+
+// const elasticsearchInput = input.elasticsearch.create({
+//   config: {
+//     host: '__HOST__:__PORT__'
+//   },
+//   query: {
+//     index: '__INDEX__',
+//     type: '__TYPE__',
+//     body: {
+//       size: 100,
+//       sort: [ { '@timestamp': { order: 'desc' } } ]
+//     }
+//   },
+//   parser: format.logstash.formats['HTTPD_COMBINEDLOG']
+// })
+
+// pipeline.registerInput(elasticsearchInput)

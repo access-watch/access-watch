@@ -1,5 +1,6 @@
 module.exports = {
   http: require('./http'),
   syslog: require('./syslog'),
-  file: require('./file')
+  file: require('./file'),
+  elasticsearch: require('./elasticsearch')
 }
