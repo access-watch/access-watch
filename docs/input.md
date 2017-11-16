@@ -91,6 +91,19 @@ The input accepts the following options.
 | exchange  | Map    | yes       | The name of the queue.                                                   |
 | parse     | Parser | yes       | A function to parse the messages from the queue (See Formats below)      |
 
+### WebSocket
+
+The WebSocket input subscribe to a WebSocket server sending access logs.
+
+The input accepts the following options.
+
+| Attribute | Type   | Required?                 | Description                                                         |
+| ---       | ---    | ---                       | ---                                                                 |
+| type      | string | yes                       | Either 'client' or 'server' (default to 'client')                   |
+| address   | string | yes (if type is 'client') | The WebSocket address to listen to (e.g. 'wss://localhost:3000')    |
+| endpoint  | string | yes (if type is 'server') | The endpoint WebSocket to send logs to                              |
+| parse     | Parser | yes                       | A function to parse the messages from the queue (See Formats below) |
+
 ## Formats
 
 ### Nginx
