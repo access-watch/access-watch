@@ -57,3 +57,12 @@ pipeline.registerInput(syslogInputNginxAccessWatch)
 // })
 
 // pipeline.registerInput(elasticsearchInput)
+
+/* WebSocket input accepting pre-formatted logs */
+
+// const websocketInput = input.websocket.create({
+//  address: 'ws://HOST:PORT',
+//  parse: format.json.parser()
+// })
+
+// pipeline.registerInput(websocketInput)
