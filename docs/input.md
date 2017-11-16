@@ -139,7 +139,7 @@ The JSON log parser parses access log in JSON that match the following schema.
   "properties": {
     "request": {
       "type": "object",
-      "required": ["time", "address", "scheme", "method", "url", "headers"],
+      "required": ["time", "address", "method", "url", "headers"],
       "properties": {
         "time": {
           "type": "string"
