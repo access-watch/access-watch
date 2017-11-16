@@ -64,7 +64,6 @@ stream
   .window({
     strategy: new FixedWindow(1),
     reducer: reducers.count(),
-    allowedLateness: 10
   })
   .store()
 
@@ -93,7 +92,6 @@ robotRequests
   .window({
     strategy: new SessionWindow(30 * 60),
     reducer: reducers.count(),
-    allowedLateness: 10,
     fireEvery: 5
   })
   .sessionUpdate(metric => {
@@ -108,7 +106,6 @@ robotRequests
   .window({
     strategy: new FixedWindow(60),
     reducer: reducers.count(),
-    allowedLateness: 10
   })
   .sessionUpdate(metric => {
     return session => {
