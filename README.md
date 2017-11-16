@@ -2,6 +2,8 @@
 
 Open Source Web Traffic Processor
 
+[![Build Status](https://travis-ci.org/access-watch/access-watch.svg?branch=master)](https://travis-ci.org/access-watch/access-watch)
+
 ## Install
 
 Make sure you have Node.js version >= 7. We recommend using [nvm](https://github.com/creationix/nvm).
