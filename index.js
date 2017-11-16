@@ -17,7 +17,6 @@ function start () {
 
 function stop () {
   pipeline.close()
-  app.close()
   db.close()
   session.close()
   process.exit()
