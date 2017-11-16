@@ -176,6 +176,12 @@ function getMetrics (parameters) {
     step: 3600
   })
   query = readParameters(query, parameters)
+  // If start is provided, we should insure that the step is smaller than the time asked for
+  if (query.has('start')) {
+    const start = query.get('start')
+    const end = query.get('end') || new Date().getTime() / 1000
+    query = query.set('step', Math.floor(end - start))
+  }
   return Map({
     requests: countAndSpeed(db.query(query)),
     status: sumTaggedMetrics(db.query(query.set('by', 'status'))),
