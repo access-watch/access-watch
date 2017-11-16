@@ -3,5 +3,5 @@ module.exports = {
   syslog: require('./syslog'),
   file: require('./file'),
   elasticsearch: require('./elasticsearch'),
-  ws: require('./ws')
+  websocket: require('./websocket')
 }
