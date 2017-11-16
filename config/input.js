@@ -53,7 +53,7 @@ pipeline.registerInput(syslogInputNginxAccessWatch)
 //       sort: [ { '@timestamp': { order: 'desc' } } ]
 //     }
 //   },
-//   parser: format.logstash.formats['HTTPD_COMBINEDLOG']
+//   parse: format.logstash.formats['HTTPD_COMBINEDLOG']
 // })
 
 // pipeline.registerInput(elasticsearchInput)
