@@ -33,9 +33,9 @@ const setupServerWebSocket = ({ pipeline, endpoint, listenSocket }) => {
   pipeline.status(null, 'Listening at ' + endpoint)
 }
 
-function create ({address, endpoint, type = 'client', parse}) {
+function create ({name = 'WebSocket', address, endpoint, type = 'client', parse}) {
   return {
-    name: 'WebSocket',
+    name: name,
     start: (pipeline) => {
       const listenSocket = socketToPipeline(pipeline, parse)
       if (type === 'client') {

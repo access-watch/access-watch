@@ -1,9 +1,9 @@
 const syslogd = require('syslogd')
 const nginx = require('../format/nginx.js')
 
-function create ({port = 514, parse = nginx.parser()} = {}) {
+function create ({name = 'Syslog', port = 514, parse = nginx.parser()} = {}) {
   return {
-    name: 'Syslog',
+    name: name,
     start: (pipeline) => {
       syslogd(msg => {
         let log
@@ -17,7 +17,8 @@ function create ({port = 514, parse = nginx.parser()} = {}) {
         if (err) {
           pipeline.status(err, 'Cannot start: ' + err.message)
         } else {
-          pipeline.status(null, 'Listening on port ' + port + '.')
+          pipeline.status(null, `Listening on port ${port}.`)
+          console.log(`${name} listening on port ${port}.`)
         }
       })
     }

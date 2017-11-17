@@ -6,6 +6,7 @@ const format = require('../format')
 /* Syslog inputs accepting Nginx format */
 
 const syslogNginxCombined = input.syslog.create({
+  name: 'Syslog (nginx combined format)',
   port: 1514,
   parse: format.nginx.parser({format: format.nginx.formats.combined})
 })
@@ -13,6 +14,7 @@ const syslogNginxCombined = input.syslog.create({
 pipeline.registerInput(syslogNginxCombined)
 
 const syslogInputNginxAccessWatch = input.syslog.create({
+  name: 'Syslog (nginx access_watch format)',
   port: 1515,
   parse: format.nginx.parser({format: format.nginx.formats.accessWatch})
 })
