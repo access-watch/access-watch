@@ -10,13 +10,12 @@ function create ({endpoint, parse}) {
         // Processing the message(s)
         let messages = Array.isArray(req.body) ? req.body : [req.body]
         messages.forEach(message => {
-          let log
           try {
-            log = parse(req.body)
+            const log = parse(req.body)
+            pipeline.success(log)
           } catch (err) {
-            return pipeline.error(err)
+            pipeline.error(err)
           }
-          pipeline.success(log)
         })
       })
       pipeline.status(null, 'Listening at ' + endpoint)

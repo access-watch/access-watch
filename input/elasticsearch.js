@@ -38,7 +38,7 @@ function create ({config, query, parse}) {
               const log = parse(hit._source)
               pipeline.success(log)
             } catch (err) {
-              return pipeline.error(err)
+              pipeline.error(err)
             }
           })
           done()
