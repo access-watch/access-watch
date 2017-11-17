@@ -8,7 +8,7 @@ const { Map } = require('immutable')
 const app = require('../lib/app')
 const metrics = require('../lib/metrics')
 const session = require('../lib/session')
-const { iso } = require('../lib/util')
+const { iso, now } = require('../lib/util')
 const { stream } = require('./pipeline')
 
 const db = metrics.getDatabase('traffic')
@@ -130,8 +130,12 @@ function sumTaggedMetrics (metrics) {
 }
 
 function getSpeed () {
-  const now = Date.now() / 1000
-  const query = Map({before: now, after: now - 300}).set('name', 'request')
+  const query = Map({
+    name: 'request',
+    step: 60,
+    end: now(),
+    start: now() - 300
+  })
   const result = db.query(query)
   if (result.size > 1) {
     const count = result.reduce(sum, 0)
