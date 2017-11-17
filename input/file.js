@@ -1,9 +1,9 @@
 const Tail = require('tail').Tail
 const nginx = require('../format/nginx.js')
 
-function create ({path, parse = nginx.parser()} = {}) {
+function create ({name = 'File', path, parse = nginx.parser()} = {}) {
   return {
-    name: 'File',
+    name: name,
     start: (pipeline) => {
       let tail
       try {
