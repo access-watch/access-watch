@@ -1,8 +1,8 @@
 const app = require('../lib/app')
 
-function create ({endpoint, parse}) {
+function create ({name = 'HTTP endpoint', endpoint, parse}) {
   return {
-    name: 'HTTP endpoint',
+    name: name,
     start: (pipeline) => {
       app.post(endpoint, (req, res) => {
         // No validation before sending the response to the client

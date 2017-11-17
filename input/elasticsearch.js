@@ -1,8 +1,8 @@
 const elasticsearch = require('elasticsearch')
 
-function create ({config, query, parse}) {
+function create ({name = 'Elasticsearch', config, query, parse}) {
   return {
-    name: 'Elasticsearch',
+    name: name,
     start: (pipeline) => {
       const client = new elasticsearch.Client(config)
       // Keep track of the processed ids
