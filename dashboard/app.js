@@ -132,7 +132,7 @@ function sumTaggedMetrics (metrics) {
 function getSpeed () {
   const query = Map({
     name: 'request',
-    step: 60,
+    step: 1,
     end: now(),
     start: now() - 300
   })
