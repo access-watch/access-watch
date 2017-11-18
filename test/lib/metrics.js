@@ -1,8 +1,12 @@
 /* eslint-env mocha */
 
 const assert = require('assert')
-const { fromJS } = require('immutable')
+const { fromJS, Map } = require('immutable')
 const metrics = require('../../lib/metrics.js')
+
+function assertMapEqual (m1, m2) {
+  assert.deepEqual(m1.toJS(), m2.toJS())
+}
 
 describe('Database', function () {
   let db
@@ -29,32 +33,28 @@ describe('Database', function () {
   })
 
   it('index by name', function () {
-    assert.deepEqual(db.query(fromJS({name: 'request'})),
-                     [[11, 4], [12, 3], [13, 2], [16, 2]])
+    assertMapEqual(Map({11: 4, 12: 3, 13: 2, 16: 2}),
+                   db.query(fromJS({name: 'request'})))
   })
 
   it('index by name and tags', function () {
-    assert.deepEqual(db.query(fromJS({name: 'request', tags: {status: 'nice'}})),
-                     [[11, 2], [12, 3], [16, 2]])
+    assertMapEqual(Map({11: 2, 12: 3, 16: 2}),
+                   db.query(fromJS({name: 'request', tags: {status: 'nice'}})))
   })
 
   it('index by name and time', function () {
-    assert.deepEqual(db.query(fromJS({name: 'request', start: 11, end: 12})),
-                     [[11, 4]])
+    assertMapEqual(Map({11: 4}),
+                   db.query(fromJS({name: 'request', start: 11, end: 12})))
   })
 
   it('index by name, time and tags', function () {
-    assert.deepEqual(db.query(fromJS({name: 'request', start: 11, end: 12, tags: {status: 'nice'}})),
-                     [[11, 2]])
+    assertMapEqual(Map({11: 2}),
+                   db.query(fromJS({name: 'request', start: 11, end: 12, tags: {status: 'nice'}})))
   })
 
   it('group by tag', function () {
-    assert.deepEqual(db.query(fromJS({name: 'request', by: 'status'})), [
-      [11, {nice: 2, bad: 2}],
-      [12, {nice: 3}],
-      [13, {bad: 2}],
-      [16, {nice: 2}]
-    ])
+    assertMapEqual(Map({11: {nice: 2, bad: 2}, 12: {nice: 3}, 13: {bad: 2}, 16: {nice: 2}}),
+                   db.query(fromJS({name: 'request', by: 'status'})))
   })
 
   it('index by name, time, and tags and groups by tag', function () {
@@ -67,11 +67,10 @@ describe('Database', function () {
       end: 12,
       by: 'status'
     })
-    assert.deepEqual(db.query(query), [[11, {nice: 2}]])
+    assertMapEqual(Map({11: {nice: 2}}), db.query(query))
   })
 
   it('groups by time periods and fills holes with zeroes', function () {
-    assert.deepEqual(db.query(fromJS({name: 'request', step: 2})),
-                     [[10, 4], [12, 5], [14, 0], [16, 2]])
+    assertMapEqual(Map({10: 4, 12: 5, 14: 0, 16: 2}), db.query(fromJS({name: 'request', step: 2})))
   })
 })
