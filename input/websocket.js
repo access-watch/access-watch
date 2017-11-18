@@ -3,13 +3,12 @@ const app = require('../lib/app')
 
 const socketToPipeline = (pipeline, parse) => socket => {
   socket.on('message', message => {
-    let log
     try {
-      log = parse(JSON.parse(message))
+      const log = parse(JSON.parse(message))
+      pipeline.success(log)
     } catch (err) {
-      return pipeline.error(err)
+      pipeline.error(err)
     }
-    pipeline.success(log)
   })
 }
 
