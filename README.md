@@ -39,7 +39,7 @@ npm start
 The Access Watch API and Interface will be served from port 3000 by default. You can change that using an environment variable.
 
 ```shell
-export PORT=3000 npm start
+PORT=3000 npm start
 ```
 
 **Warning**: There is no authentication mechanism in the Access Watch processor, if the server is on the public internet, you will need to setup your firewall properly to restrict access to it.
