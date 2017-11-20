@@ -195,7 +195,7 @@ function getMetrics (parameters) {
 
 function getSessions ({limit, reputation}) {
   return session
-    .list()
+    .list('robot')
     .valueSeq()
     .filter(s => (reputation.length === 0 || reputation.includes(s.getIn(['reputation', 'status']))))
     .map(s => s.update('updated', Date.now() / 1000, iso).toJS())
@@ -204,7 +204,7 @@ function getSessions ({limit, reputation}) {
 }
 
 function getSession (sessionId) {
-  const sess = session.get(sessionId)
+  const sess = session.get('robot', sessionId)
   if (sess) {
     return sess
       .update('updated', Date.now() / 1000, iso)

@@ -1,5 +1,5 @@
 const uuid = require('uuid/v4')
-const { Map, fromJS } = require('immutable')
+const { Set, Map, fromJS } = require('immutable')
 
 const pipeline = require('../lib/pipeline')
 
@@ -72,7 +72,7 @@ stream
 
 // Split the stream by session and augment each log with the session data
 const robotRequests = stream.session({
-  name: 'robot',
+  type: 'robot',
   gap: 30 * 60,
   id: log => log.getIn(['robot', 'id'])
 })
@@ -90,6 +90,36 @@ robotRequests
         .set('address', log.getIn(['address']))
         .set('user_agent', log.getIn(['user_agent']))
         .set('reputation', log.getIn(['robot', 'reputation']))
+        .set('count', cnt)
+        .set('speed', Map({
+          per_second: speedInSeconds,
+          per_minute: speedInSeconds * 60
+        }))
+    })
+  })
+  .map(log => {
+    session.save(log.get('session'))
+    return log
+  })
+
+
+// IPs
+
+const ipRequests = stream.session({
+  type: 'ip',
+  gap: 30 * 60,
+  id: log => log.getIn(['address', 'value'])
+})
+
+ipRequests
+  .map(log => {
+    return log.update('session', session => {
+      const cnt = session.get('count', 0) + 1
+      const duration = session.get('updated') - session.get('start')
+      const speedInSeconds = (duration === 0) ? cnt : cnt / duration
+      return session
+        .set('address', log.get('address'))
+        .update('robots', Set(), robots => robots.add(log.getIn(['robot', 'id'])))
         .set('count', cnt)
         .set('speed', Map({
           per_second: speedInSeconds,
