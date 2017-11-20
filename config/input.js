@@ -49,11 +49,7 @@ pipeline.registerInput(syslogInputNginxAccessWatch)
 //   },
 //   query: {
 //     index: '__INDEX__',
-//     type: '__TYPE__',
-//     body: {
-//       size: 100,
-//       sort: [ { '@timestamp': { order: 'desc' } } ]
-//     }
+//     type: '__TYPE__'
 //   },
 //   parse: format.logstash.formats['HTTPD_COMBINEDLOG']
 // })
