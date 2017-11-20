@@ -1,11 +1,20 @@
 const elasticsearch = require('elasticsearch')
 
 function create ({name = 'Elasticsearch', config, query, parse}) {
+  if (!query.body) {
+    query.body = {}
+  }
+  if (!query.body.size) {
+    query.body.size = 100
+  }
+  if (!query.body.sort) {
+    query.body.sort = [ { '_doc': { order: 'desc' } } ]
+  }
   return {
     name: name,
     start: (pipeline) => {
       const client = new elasticsearch.Client(config)
-      // Keep track of the processed ids
+      // Keep track of the latest processed ids
       let ids = []
       // Only run once
       let running = false
@@ -25,7 +34,7 @@ function create ({name = 'Elasticsearch', config, query, parse}) {
       const poll = () => {
         running = true
         client.search(query).then(resp => {
-          resp.hits.hits.forEach(hit => {
+          resp.hits.hits.reverse().forEach(hit => {
             // De-duplication
             let id = hit._id
             if (ids.includes(id)) {
@@ -41,6 +50,8 @@ function create ({name = 'Elasticsearch', config, query, parse}) {
               pipeline.error(err)
             }
           })
+          // Keep list short
+          ids.slice(-1 * query.body.size)
           done()
         }).catch(() => {
           done()
