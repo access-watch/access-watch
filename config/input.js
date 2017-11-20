@@ -6,6 +6,7 @@ const format = require('../format')
 /* Syslog inputs accepting Nginx format */
 
 const syslogNginxCombined = input.syslog.create({
+  name: 'Syslog (nginx combined format)',
   port: 1514,
   parse: format.nginx.parser({format: format.nginx.formats.combined})
 })
@@ -13,6 +14,7 @@ const syslogNginxCombined = input.syslog.create({
 pipeline.registerInput(syslogNginxCombined)
 
 const syslogInputNginxAccessWatch = input.syslog.create({
+  name: 'Syslog (nginx access_watch format)',
   port: 1515,
   parse: format.nginx.parser({format: format.nginx.formats.accessWatch})
 })
@@ -23,8 +25,8 @@ pipeline.registerInput(syslogInputNginxAccessWatch)
 
 // const fileInputNginxCombined = input.file.create({
 //   path: '/var/log/nginx/access.log',
-//   parse: nginx.parser({
-//     format: nginx.formats.combined
+//   parse: format.nginx.parser({
+//     format: format.nginx.formats.combined
 //   })
 // })
 
@@ -38,3 +40,41 @@ pipeline.registerInput(syslogInputNginxAccessWatch)
 // })
 
 // pipeline.registerInput(fileInputNginxAccessWatch)
+
+/* Elasticsearch input (polling) accepting a commonly used Logstash format */
+
+// const elasticsearchInput = input.elasticsearch.create({
+//   config: {
+//     host: '__HOST__:__PORT__'
+//   },
+//   query: {
+//     index: '__INDEX__',
+//     type: '__TYPE__',
+//     body: {
+//       size: 100,
+//       sort: [ { '@timestamp': { order: 'desc' } } ]
+//     }
+//   },
+//   parse: format.logstash.formats['HTTPD_COMBINEDLOG']
+// })
+
+// pipeline.registerInput(elasticsearchInput)
+
+/* WebSocket client input accepting pre-formatted logs */
+
+// const websocketInput = input.websocket.create({
+//  address: 'ws://HOST:PORT',
+//  parse: format.json.parser()
+// })
+
+// pipeline.registerInput(websocketInput)
+
+/* WebSocket server input accepting pre-formatted logs */
+
+// const websocketServerInput = input.websocket.create({
+//   type: 'server',
+//   endpoint: '/myLogs',
+//   parse: format.json.parser()
+// })
+
+// pipeline.registerInput(websocketServerInput)

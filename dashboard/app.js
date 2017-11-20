@@ -8,7 +8,7 @@ const { Map } = require('immutable')
 const app = require('../lib/app')
 const metrics = require('../lib/metrics')
 const session = require('../lib/session')
-const { iso } = require('../lib/util')
+const { iso, now } = require('../lib/util')
 const { stream } = require('./pipeline')
 
 const db = metrics.getDatabase('traffic')
@@ -130,8 +130,12 @@ function sumTaggedMetrics (metrics) {
 }
 
 function getSpeed () {
-  const now = Date.now() / 1000
-  const query = Map({before: now, after: now - 300}).set('name', 'request')
+  const query = Map({
+    name: 'request',
+    step: 1,
+    end: now(),
+    start: now() - 300
+  })
   const result = db.query(query)
   if (result.size > 1) {
     const count = result.reduce(sum, 0)
@@ -153,7 +157,11 @@ function getActivity (parameters) {
 }
 
 function getCountries (parameters) {
-  let query = Map({name: 'request', by: 'country'})
+  let query = Map({
+    name: 'request',
+    by: 'country',
+    step: 3600
+  })
   query = readParameters(query, parameters)
   if (parameters.type) {
     query = query.setIn(['tags', 'type'], parameters.type)
@@ -167,8 +175,17 @@ function getCountries (parameters) {
 }
 
 function getMetrics (parameters) {
-  let query = Map({name: 'request'})
+  let query = Map({
+    name: 'request',
+    step: 3600
+  })
   query = readParameters(query, parameters)
+  // If start is provided, we should insure that the step is smaller than the time asked for
+  if (query.has('start')) {
+    const start = query.get('start')
+    const end = query.get('end') || new Date().getTime() / 1000
+    query = query.set('step', Math.floor(end - start))
+  }
   return Map({
     requests: countAndSpeed(db.query(query)),
     status: sumTaggedMetrics(db.query(query.set('by', 'status'))),

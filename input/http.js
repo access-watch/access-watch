@@ -1,8 +1,8 @@
 const app = require('../lib/app')
 
-function create ({endpoint, parse}) {
+function create ({name = 'HTTP endpoint', endpoint, parse}) {
   return {
-    name: 'HTTP endpoint',
+    name: name,
     start: (pipeline) => {
       app.post(endpoint, (req, res) => {
         // No validation before sending the response to the client
@@ -10,13 +10,12 @@ function create ({endpoint, parse}) {
         // Processing the message(s)
         let messages = Array.isArray(req.body) ? req.body : [req.body]
         messages.forEach(message => {
-          let log
           try {
-            log = parse(req.body)
+            const log = parse(req.body)
+            pipeline.success(log)
           } catch (err) {
-            return pipeline.error(err)
+            pipeline.error(err)
           }
-          pipeline.success(log)
         })
       })
       pipeline.status(null, 'Listening at ' + endpoint)

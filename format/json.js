@@ -3,13 +3,12 @@ const { fromJS } = require('immutable')
 
 const ajv = new Ajv()
 const schema = require('./log-schema.json')
-const validate = ajv.compile(schema)
 
 function parser () {
   return function (msg) {
-    const valid = validate(msg)
+    const valid = ajv.validate(schema, msg)
     if (!valid) {
-      throw new Error('Incoming message is invalid.')
+      throw new Error('Invalid message: ' + ajv.errorsText())
     } else {
       return fromJS(msg)
     }

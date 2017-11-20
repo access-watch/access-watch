@@ -1,9 +1,8 @@
 const Tail = require('tail').Tail
-const nginx = require('../format/nginx.js')
 
-function create ({path, parse = nginx.parser()} = {}) {
+function create ({name = 'File', path, parse} = {}) {
   return {
-    name: 'File',
+    name: name,
     start: (pipeline) => {
       let tail
       try {
@@ -17,13 +16,12 @@ function create ({path, parse = nginx.parser()} = {}) {
         return pipeline.status(err, err.message)
       }
       tail.on('line', (data) => {
-        let log
         try {
-          log = parse(data)
+          const log = parse(data)
+          pipeline.success(log)
         } catch (err) {
-          return pipeline.error(err)
+          pipeline.error(err)
         }
-        pipeline.success(log)
       })
       tail.on('error', (err) => {
         pipeline.error(err)
