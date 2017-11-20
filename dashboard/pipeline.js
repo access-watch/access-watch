@@ -105,7 +105,7 @@ robotRequests
 // IPs
 
 const ipRequests = stream.session({
-  type: 'ip',
+  type: 'address',
   gap: 30 * 60,
   id: log => log.getIn(['address', 'value'])
 })
