@@ -1,6 +1,6 @@
 const syslogd = require('syslogd')
 
-function create ({name = 'Syslog', port = 514, parse} = {}) {
+function create ({name = 'Syslog', port = 514, parse}) {
   return {
     name: name,
     start: (pipeline) => {

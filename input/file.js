@@ -1,6 +1,6 @@
 const Tail = require('tail').Tail
 
-function create ({name = 'File', path, parse} = {}) {
+function create ({name = 'File', path, parse}) {
   return {
     name: name,
     start: (pipeline) => {
