@@ -80,9 +80,6 @@ const robotRequests = stream.session({
 robotRequests
   .map(log => {
     return log.update('session', session => {
-      const cnt = session.get('count', 0) + 1
-      const duration = session.get('updated') - session.get('start')
-      const speedInSeconds = (duration === 0) ? cnt : cnt / duration
       return session
         .set('robot', log.getIn(['robot']))
         .set('identity', log.get('identity')
@@ -90,11 +87,6 @@ robotRequests
         .set('address', log.getIn(['address']))
         .set('user_agent', log.getIn(['user_agent']))
         .set('reputation', log.getIn(['robot', 'reputation']))
-        .set('count', cnt)
-        .set('speed', Map({
-          per_second: speedInSeconds,
-          per_minute: speedInSeconds * 60
-        }))
     })
   })
   .map(log => {
@@ -113,17 +105,14 @@ const ipRequests = stream.session({
 ipRequests
   .map(log => {
     return log.update('session', session => {
-      const cnt = session.get('count', 0) + 1
-      const duration = session.get('updated') - session.get('start')
-      const speedInSeconds = (duration === 0) ? cnt : cnt / duration
       return session
         .set('address', log.get('address'))
-        .update('robots', Set(), robots => robots.add(log.getIn(['robot', 'id'])))
-        .set('count', cnt)
-        .set('speed', Map({
-          per_second: speedInSeconds,
-          per_minute: speedInSeconds * 60
-        }))
+        .update('robots', Set(), robots => {
+          if (log.hasIn(['robot', 'id'])) {
+            return robots.add(log.getIn(['robot', 'id']))
+          }
+          return robots
+        })
     })
   })
   .map(log => {
