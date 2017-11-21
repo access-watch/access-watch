@@ -1,11 +1,12 @@
 const uuid = require('uuid/v4')
-const { Map, fromJS } = require('immutable')
+const { Set, Map, fromJS } = require('immutable')
 
 const pipeline = require('../lib/pipeline')
 
 const reducers = require('../lib/reducers')
+const session = require('../lib/session')
 const { selectKeys } = require('../lib/util')
-const { FixedWindow, SessionWindow } = require('../lib/window')
+const { FixedWindow } = require('../lib/window')
 
 const hub = require('../plugins/hub')
 const proxy = require('../plugins/proxy')
@@ -69,51 +70,54 @@ stream
 
 // Robots
 
-function robotSession (log) {
-  if (log.hasIn(['robot', 'id'])) {
-    return fromJS({
-      id: log.getIn(['robot', 'id']),
-      robot: log.getIn(['robot']),
-      identity: log.get('identity')
-        .update('type', t => (t === 'unknown') ? null : t),
-      address: log.getIn(['address']),
-      user_agent: log.getIn(['user_agent']),
-      reputation: log.getIn(['robot', 'reputation']),
-      count: 0
-    })
-  }
-}
-
 // Split the stream by session and augment each log with the session data
-const robotRequests = stream.session(robotSession)
+const robotRequests = stream.session({
+  type: 'robot',
+  gap: 30 * 60,
+  id: log => log.getIn(['robot', 'id'])
+})
 
-// Count the requests per session and update the session store
 robotRequests
-  .window({
-    strategy: new SessionWindow(30 * 60),
-    reducer: reducers.count(),
-    fireEvery: 5
+  .map(log => {
+    return log.update('session', session => {
+      return session
+        .set('robot', log.getIn(['robot']))
+        .set('identity', log.get('identity')
+             .update('type', t => (t === 'unknown') ? null : t))
+        .set('address', log.getIn(['address']))
+        .set('user_agent', log.getIn(['user_agent']))
+        .set('reputation', log.getIn(['robot', 'reputation']))
+    })
   })
-  .sessionUpdate(metric => {
-    return session => {
-      return session.set('count', metric.get('value'))
-    }
+  .map(log => {
+    session.save(log.get('session'))
+    return log
   })
 
-// We count the number of requests per minute for each robot
-// so that we can store the speed in the session
-robotRequests
-  .window({
-    strategy: new FixedWindow(60),
-    reducer: reducers.count()
+// IPs
+
+const ipRequests = stream.session({
+  type: 'address',
+  gap: 30 * 60,
+  id: log => log.getIn(['address', 'value'])
+})
+
+ipRequests
+  .map(log => {
+    return log.update('session', session => {
+      return session
+        .set('address', log.get('address'))
+        .update('robots', Set(), robots => {
+          if (log.hasIn(['robot', 'id'])) {
+            return robots.add(log.getIn(['robot', 'id']))
+          }
+          return robots
+        })
+    })
   })
-  .sessionUpdate(metric => {
-    return session => {
-      return session.set('speed', Map({
-        per_second: metric.get('value') / 60,
-        per_minute: metric.get('value')
-      }))
-    }
+  .map(log => {
+    session.save(log.get('session'))
+    return log
   })
 
 // Post-Processing for Websocket logs
