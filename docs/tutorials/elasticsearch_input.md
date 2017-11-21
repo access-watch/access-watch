@@ -1,8 +1,8 @@
 ## Monitor traffic data from Elasticsearch
 
-These days, one of the most common setup to analyze 'access logs' is to store them in Elasticsearch, usually using Filebeat and/or Logstash in the process.
+These days, one of the most common setups to analyze 'access logs' is to store them in Elasticsearch, typically using Filebeat and/or Logstash in the process.
 
-In this setup, the logs are sometime useful but they are usually underused. However the data is easy to query, and they make a great first case to evaluate Access Watch. You just to have to configure Access Watch to poll data from the Elasticsearch cluster and configure it with the proper format.
+In this setup, the logs provide some usefulness but are often underutilized. However, this data is easy to query and makes a great first case to evaluate Access Watch. You just to have to configure Access Watch to poll data from the Elasticsearch cluster and configure it with the proper format.
 
 This is what we will do, step by step, with this tutorial.
 
@@ -26,7 +26,7 @@ npm install
 
 ### Configure Access Watch
 
-We will configure a new input polling data from Elasticsearch.
+We will configure a new input, polling data from Elasticsearch.
 
 Edit <strong>config/input.js</strong> and start with the following.
 
@@ -37,10 +37,7 @@ const elasticsearchInput = input.elasticsearch.create({
   },
   query: {
     index: '__INDEX__',
-    type: '__TYPE__',
-    body: {
-      sort: [ { '__TIME__': { order: 'desc' } } ]
-    }
+    type: '__TYPE__'
   },
   parse: __PARSER__
 })
@@ -48,7 +45,7 @@ const elasticsearchInput = input.elasticsearch.create({
 pipeline.registerInput(elasticsearchInput)
 ```
 
-You will need to replace ```__HOST__```, ```__PORT__```, ```__INDEX__``` and ```__TYPE__``` with the values that are matching your setup.
+You will need to replace ```__HOST__```, ```__PORT__```, ```__INDEX__```, ```__TYPE__ ``` and ```__PARSER__ ``` with the values that are matching your setup.
 
 So, if the URL to access the data in Elasticsearch is:
 
@@ -66,22 +63,17 @@ You will set the following configuration:
   }
 ```
 
-Now, we would like to make sure that we always query the latest results. Assuming that you have a date available as a ```@timestamp``` key, simply use:
+Now, we need to transform the logs from their current format in Elasticsearch to the internal format used for the Access Watch inputs.
 
-```
-  sort: [ { '@timestamp': { order: 'desc' } } ]
-```
-
-Finally, we need to transform the logs from their current format in Elasticsearch to the internal format used for the Access Watch inputs.
-
-Maybe you're lucky and you can reuse an existing format, such as the default Logstash setup. In that case:
+Maybe you're lucky and you can reuse an existing format, such as a [default Logstash format](https://github.com/access-watch/access-watch/blob/master/format/logstash.js). In that case:
 
 ```
   parse: format.logstash.formats['HTTPD_COMBINEDLOG']
 ```
 
-Otherwise, don't panic, you can write your own, you'll just have to make sure that the mandatory properties are set. To know more about [Access Watch's internal log format](https://github.com/access-watch/access-watch/blob/master/docs/log.md), [check the documentation](https://github.com/access-watch/access-watch/blob/master/docs/log.md).
+Otherwise, no problem, you can write your own. You'll just have to make sure that the mandatory properties are set.
 
+To know more about [Access Watch's internal log format](https://github.com/access-watch/access-watch/blob/master/docs/log.md), [check the documentation](https://github.com/access-watch/access-watch/blob/master/docs/log.md).
 
 When writing your own parser, you can start from this template and fill the blanks:
 
