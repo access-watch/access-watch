@@ -72,19 +72,18 @@ websocket('/logs', stream)
 
 function getSessions ({limit, reputation}) {
   return session
-    .list()
+    .list({type: 'robot', sort: 'count'})
     .valueSeq()
     .filter(s => (reputation.length === 0 || reputation.includes(s.getIn(['reputation', 'status']))))
-    .map(s => s.update('updated', Date.now() / 1000, iso).toJS())
-    .sort((a, b) => b.count - a.count)
+    .map(s => s.update('speed', speed => {
+      return Map({
+        per_second: speed.get(0) / 60,
+        per_minute: speed.get(0)
+      })
+    }))
     .slice(0, limit)
 }
 
 function getSession (sessionId) {
-  const sess = session.get(sessionId)
-  if (sess) {
-    return sess
-      .update('updated', Date.now() / 1000, iso)
-      .toJS()
-  }
+  return session.get('robot', sessionId)
 }
