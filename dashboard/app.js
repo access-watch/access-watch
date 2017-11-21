@@ -6,12 +6,11 @@ const uuid = require('uuid/v4')
 const { Map } = require('immutable')
 
 const app = require('../lib/app')
-const metrics = require('../lib/metrics')
-const session = require('../lib/session')
 const { iso, now } = require('../lib/util')
 const { stream } = require('./pipeline')
 
-const db = metrics.getDatabase('traffic')
+const metrics = require('../lib/metrics').getDatabase('traffic')
+const session = require('../lib/session').getDatabase('traffic')
 
 /* Dashboard and Assets */
 
@@ -136,7 +135,7 @@ function getSpeed () {
     end: now(),
     start: now() - 300
   })
-  const result = db.query(query)
+  const result = metrics.query(query)
   if (result.size > 1) {
     const count = result.reduce(sum, 0)
     const keys = result.keySeq().toArray()
@@ -151,8 +150,8 @@ function getSpeed () {
 function getActivity (parameters) {
   let query = Map({name: 'request'})
   query = readParameters(query, parameters)
-  const byStatus = db.query(query.set('by', 'status'))
-  const byType = db.query(query.set('by', 'type'))
+  const byStatus = metrics.query(query.set('by', 'status'))
+  const byType = metrics.query(query.set('by', 'type'))
   return byStatus.mergeWith((a, b) => a.merge(b), byType).mapKeys(k => iso(parseInt(k)))
 }
 
@@ -169,7 +168,7 @@ function getCountries (parameters) {
   if (parameters.status) {
     query = query.setIn(['tags', 'status'], parameters.status)
   }
-  return sumTaggedMetrics(db.query(query))
+  return sumTaggedMetrics(metrics.query(query))
     .map((v, k) => v.set('country_code', k))
     .valueSeq()
 }
@@ -187,9 +186,9 @@ function getMetrics (parameters) {
     query = query.set('step', Math.floor(end - start))
   }
   return Map({
-    requests: countAndSpeed(db.query(query)),
-    status: sumTaggedMetrics(db.query(query.set('by', 'status'))),
-    type: sumTaggedMetrics(db.query(query.set('by', 'type')))
+    requests: countAndSpeed(metrics.query(query)),
+    status: sumTaggedMetrics(metrics.query(query.set('by', 'status'))),
+    type: sumTaggedMetrics(metrics.query(query.set('by', 'type')))
   })
 }
 
