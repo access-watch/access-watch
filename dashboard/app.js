@@ -7,7 +7,6 @@ const { Map } = require('immutable')
 
 const app = require('../lib/app')
 const session = require('../lib/session')
-const { iso } = require('../lib/util')
 const { stream } = require('./pipeline')
 
 /* Dashboard and Assets */
