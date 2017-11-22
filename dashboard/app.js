@@ -27,7 +27,7 @@ app.get('/dashboard', (req, res) => {
 /* API endpoints */
 
 app.get('/robots', (req, res) => {
-  const limit = req.query.limit ? req.query.limit : 100
+  const limit = req.query.limit ? parseInt(req.query.limit) : 100
   const reputation = req.query.reputation ? req.query.reputation.split(',') : []
   res.send({sessions: getSessions({limit, reputation})})
 })
@@ -71,8 +71,7 @@ websocket('/logs', stream)
 
 function getSessions ({limit, reputation}) {
   return session
-    .list({type: 'robot', sort: 'count'})
-    .valueSeq()
+    .list({type: 'robot', sort: 'count', limit: limit})
     .filter(s => (reputation.length === 0 || reputation.includes(s.getIn(['reputation', 'status']))))
     .map(s => s.update('speed', speed => {
       return Map({
@@ -80,7 +79,6 @@ function getSessions ({limit, reputation}) {
         per_minute: speed.get(0)
       })
     }))
-    .slice(0, limit)
 }
 
 function getSession (sessionId) {
