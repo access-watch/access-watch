@@ -4,7 +4,7 @@ const { Map, fromJS } = require('immutable')
 const pipeline = require('../lib/pipeline')
 
 const reducers = require('../lib/reducers')
-const session = require('../lib/session')
+const session = require('../lib/session').getDatabase('traffic')
 const { selectKeys } = require('../lib/util')
 const { FixedWindow } = require('../lib/window')
 
@@ -119,6 +119,10 @@ ipRequests
     session.save(log.get('session'))
     return log
   })
+
+// Rule matching
+
+stream.match()
 
 // Post-Processing for Websocket logs
 

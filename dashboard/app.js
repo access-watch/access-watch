@@ -6,8 +6,9 @@ const uuid = require('uuid/v4')
 const { Map } = require('immutable')
 
 const app = require('../lib/app')
-const session = require('../lib/session')
 const { stream } = require('./pipeline')
+
+const session = require('../lib/session').getDatabase('traffic')
 
 /* Dashboard and Assets */
 
