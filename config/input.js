@@ -33,7 +33,7 @@ pipeline.registerInput(syslogInput)
 
 const httpInput = input.http.create({
   name: 'HTTP (JSON standard format)',
-  endpoint: '/input/log',
+  path: '/input/log',
   parse: format.json.parser()
 })
 
@@ -44,7 +44,7 @@ pipeline.registerInput(httpInput)
 // const webSocketServerInput = input.websocket.create({
 //   name: 'WebSocket server (JSON standard format)',
 //   type: 'server',
-//   endpoint: '/input/log',
+//   path: '/input/log',
 //   parse: format.json.parser()
 // })
 
