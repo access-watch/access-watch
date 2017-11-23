@@ -61,7 +61,7 @@ The input accepts the following options.
 
 | Attribute | Type   | Required? | Description                                                |
 | ---       | ---    | ---       | ---                                                        |
-| endpoint  | string | yes       | The endpoint where to listen for logs.                     |
+| path      | string | yes       | The path where to listen for logs.                         |
 | parse     | Parser | yes       | A function to parse the request's body (See Formats below) |
 
 **Note**: The input mounts the configured endpoint to the same web server as Access Watch.
@@ -100,8 +100,8 @@ The input accepts the following options.
 | Attribute | Type   | Required?                 | Description                                                         |
 | ---       | ---    | ---                       | ---                                                                 |
 | type      | string | yes                       | Either 'client' or 'server' (default to 'client')                   |
-| address   | string | yes (if type is 'client') | The WebSocket address to listen to (e.g. 'wss://localhost:3000')    |
-| endpoint  | string | yes (if type is 'server') | The endpoint WebSocket to send logs to                              |
+| address   | string | yes (if type is 'client') | The WebSocket address to connect to (e.g. 'wss://localhost:3000')   |
+| path      | string | yes (if type is 'server') | The path where to listen for logs                                   |
 | parse     | Parser | yes                       | A function to parse the messages from the queue (See Formats below) |
 
 ## Formats

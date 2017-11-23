@@ -3,23 +3,52 @@ const pipeline = require('../lib/pipeline')
 const input = require('../input')
 const format = require('../format')
 
-/* Syslog inputs accepting Nginx format */
+/* Syslog inputs */
 
-const syslogNginxCombined = input.syslog.create({
+const syslogNginxCombinedInput = input.syslog.create({
   name: 'Syslog (nginx combined format)',
   port: 1514,
   parse: format.nginx.parser({format: format.nginx.formats.combined})
 })
 
-pipeline.registerInput(syslogNginxCombined)
+pipeline.registerInput(syslogNginxCombinedInput)
 
-const syslogInputNginxAccessWatch = input.syslog.create({
+const syslogNginxAccessWatchInput = input.syslog.create({
   name: 'Syslog (nginx access_watch format)',
   port: 1515,
   parse: format.nginx.parser({format: format.nginx.formats.accessWatch})
 })
 
-pipeline.registerInput(syslogInputNginxAccessWatch)
+pipeline.registerInput(syslogNginxAccessWatchInput)
+
+const syslogInput = input.syslog.create({
+  name: 'Syslog (JSON standard format)',
+  port: 1516,
+  parse: format.json.parser()
+})
+
+pipeline.registerInput(syslogInput)
+
+/* HTTP input */
+
+const httpInput = input.http.create({
+  name: 'HTTP (JSON standard format)',
+  endpoint: '/input/log',
+  parse: format.json.parser()
+})
+
+pipeline.registerInput(httpInput)
+
+/* WebSocket input */
+
+// const webSocketServerInput = input.websocket.create({
+//   name: 'WebSocket server (JSON standard format)',
+//   type: 'server',
+//   endpoint: '/input/log',
+//   parse: format.json.parser()
+// })
+
+// pipeline.registerInput(webSocketServerInput)
 
 /* File inputs accepting Nginx format */
 

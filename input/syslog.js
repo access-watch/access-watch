@@ -15,8 +15,8 @@ function create ({name = 'Syslog', port = 514, parse}) {
         if (err) {
           pipeline.status(err, 'Cannot start: ' + err.message)
         } else {
-          pipeline.status(null, `Listening on port ${port}.`)
-          console.log(`${name} listening on port ${port}.`)
+          pipeline.status(null, `Listening on UDP port ${port}.`)
+          console.log(`${name} listening on UDP port ${port}.`)
         }
       })
     }

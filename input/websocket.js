@@ -27,12 +27,12 @@ const setupClientWebSocket = ({ pipeline, address, listenSocket }) => {
   listenSocket(socket)
 }
 
-const setupServerWebSocket = ({ pipeline, endpoint, listenSocket }) => {
-  app.ws(endpoint, listenSocket)
-  pipeline.status(null, 'Listening at ' + endpoint)
+const setupServerWebSocket = ({ pipeline, path, listenSocket }) => {
+  app.ws(path, listenSocket)
+  pipeline.status(null, 'Listening at ' + path)
 }
 
-function create ({name = 'WebSocket', address, endpoint, type = 'client', parse}) {
+function create ({name = 'WebSocket', address, path, type = 'client', parse}) {
   return {
     name: name,
     start: (pipeline) => {
@@ -40,7 +40,7 @@ function create ({name = 'WebSocket', address, endpoint, type = 'client', parse}
       if (type === 'client') {
         setupClientWebSocket({ pipeline, address, listenSocket })
       } else if (type === 'server') {
-        setupServerWebSocket({ pipeline, endpoint, listenSocket })
+        setupServerWebSocket({ pipeline, path, listenSocket })
       } else {
         const errMsg = 'WebSocket type is either client or server'
         pipeline.error(new Error(errMsg), errMsg)
