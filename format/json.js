@@ -6,11 +6,12 @@ const schema = require('./log-schema.json')
 
 function parser () {
   return function (msg) {
-    const valid = ajv.validate(schema, msg)
+    const object = typeof msg === 'string' ? JSON.parse(msg) : msg
+    const valid = ajv.validate(schema, object)
     if (!valid) {
       throw new Error('Invalid message: ' + ajv.errorsText())
     } else {
-      return fromJS(msg)
+      return fromJS(object)
     }
   }
 }
