@@ -32,7 +32,7 @@ pipeline.registerInput(syslogInput)
 /* HTTP input */
 
 const httpInput = input.http.create({
-  name: 'HTTP (JSON standard format)',
+  name: 'HTTP server (JSON standard format)',
   path: '/input/log',
   parse: format.json.parser()
 })

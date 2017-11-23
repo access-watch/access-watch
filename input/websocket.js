@@ -29,12 +29,12 @@ const setupClientWebSocket = ({ pipeline, address, listenSocket }) => {
 
 const setupServerWebSocket = ({ pipeline, path, listenSocket }) => {
   app.ws(path, listenSocket)
-  pipeline.status(null, 'Listening at ' + path)
+  pipeline.status(null, `Listening on ws://__HOST__${path}`)
 }
 
 function create ({name = 'WebSocket', address, path, type = 'client', parse}) {
   return {
-    name: name,
+    name: `${path} ${type}`,
     start: (pipeline) => {
       const listenSocket = socketToPipeline(pipeline, parse)
       if (type === 'client') {

@@ -1,6 +1,6 @@
 const app = require('../lib/app')
 
-function create ({name = 'HTTP', path, parse}) {
+function create ({name = 'HTTP server', path, parse}) {
   return {
     name: name,
     start: (pipeline) => {
@@ -18,7 +18,7 @@ function create ({name = 'HTTP', path, parse}) {
           }
         })
       })
-      pipeline.status(null, `Listening on port ${app.get('port')} at ${path}`)
+      pipeline.status(null, `Listening on http://__HOST__${path}`)
     }
   }
 }
