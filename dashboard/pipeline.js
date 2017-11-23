@@ -1,5 +1,5 @@
 const uuid = require('uuid/v4')
-const { Set, Map, fromJS } = require('immutable')
+const { Map, fromJS } = require('immutable')
 
 const pipeline = require('../lib/pipeline')
 
@@ -107,9 +107,9 @@ ipRequests
     return log.update('session', session => {
       return session
         .set('address', log.get('address'))
-        .update('robots', Set(), robots => {
-          if (log.hasIn(['robot', 'id'])) {
-            return robots.add(log.getIn(['robot', 'id']))
+        .update('robots', Map(), robots => {
+          if (log.has('robot')) {
+            return robots.set(log.getIn(['robot', 'id']), log.get('robot'))
           }
           return robots
         })
