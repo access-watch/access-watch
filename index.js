@@ -1,5 +1,3 @@
-const process = require('process')
-
 // create the databases
 const session = require('./lib/session').createDatabase('traffic')
 const metrics = require('./lib/metrics').createDatabase('traffic')
@@ -11,7 +9,6 @@ const pipeline = require('./lib/pipeline')
 
 // configure the application
 require('./config')
-require('./dashboard')
 
 // start the application
 function start () {
