@@ -1,7 +1,6 @@
-const { fromJS } = require('immutable')
-
 const parseBunyanRequest = (strSource) => {
   const source = typeof strSource === 'string' ? JSON.parse(strSource) : strSource
+
   const request = {
     time: source.time,
     address: source.ip,
@@ -14,7 +13,7 @@ const parseBunyanRequest = (strSource) => {
     status: source['status-code']
   }
 
-  return fromJS({request, response})
+  return {request, response}
 }
 
 function parser () {
