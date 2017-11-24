@@ -65,8 +65,8 @@ pipeline.registerInput(httpInput)
 /* WebSocket client input in standard JSON format (subscribing to logs) */
 
 // const websocketClientInput = input.websocket.create({
-//  address: 'ws://HOST:PORT/logs',
-//  parse: format.json.parser()
+//   address: 'ws://HOST:PORT/logs',
+//   parse: format.json.parser()
 // })
 
 // pipeline.registerInput(websocketClientInput)
