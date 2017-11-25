@@ -1,6 +1,10 @@
+const { fromJS } = require('immutable')
+
 function parser () {
   return function (msg) {
-    return typeof msg === 'string' ? JSON.parse(msg) : msg
+    const object = typeof msg === 'string' ? JSON.parse(msg) : msg
+
+    return fromJS(object)
   }
 }
 

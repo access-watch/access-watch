@@ -1,3 +1,5 @@
+const { fromJS } = require('immutable')
+
 const formats = {}
 
 // Source:
@@ -25,7 +27,7 @@ formats['HTTPD_COMBINEDLOG'] = (source) => {
     status: source.response
   }
 
-  return {request, response}
+  return fromJS({request, response})
 }
 
 function parser ({format}) {
