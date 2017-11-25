@@ -1,4 +1,5 @@
 const Tail = require('tail').Tail
+const { fromJS } = require('immutable')
 
 function create ({name = 'File', path, parse}) {
   return {
@@ -17,8 +18,11 @@ function create ({name = 'File', path, parse}) {
       }
       tail.on('line', (data) => {
         try {
-          const log = parse(data)
-          pipeline.success(log)
+          if (parse) {
+            pipeline.success(parse(data))
+          } else {
+            pipeline.success(fromJS(JSON.parse(data)))
+          }
         } catch (err) {
           pipeline.error(err)
         }

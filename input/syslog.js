@@ -1,4 +1,5 @@
 const syslogd = require('syslogd')
+const { fromJS } = require('immutable')
 
 function create ({name = 'Syslog', port = 514, parse}) {
   return {
@@ -6,8 +7,11 @@ function create ({name = 'Syslog', port = 514, parse}) {
     start: (pipeline) => {
       syslogd(msg => {
         try {
-          const log = parse(msg.msg)
-          pipeline.success(log)
+          if (parse) {
+            pipeline.success(parse(msg.msg))
+          } else {
+            pipeline.success(fromJS(JSON.parse(msg.msg)))
+          }
         } catch (err) {
           pipeline.error(err)
         }

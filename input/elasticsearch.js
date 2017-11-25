@@ -1,4 +1,5 @@
 const elasticsearch = require('elasticsearch')
+const { fromJS } = require('immutable')
 
 function create ({name = 'Elasticsearch', config, query, parse}) {
   if (!query.body) {
@@ -44,8 +45,11 @@ function create ({name = 'Elasticsearch', config, query, parse}) {
             }
             // Parse log
             try {
-              const log = parse(hit._source)
-              pipeline.success(log)
+              if (parse) {
+                pipeline.success(parse(hit._source))
+              } else {
+                pipeline.success(fromJS(hit._source))
+              }
             } catch (err) {
               pipeline.error(err)
             }

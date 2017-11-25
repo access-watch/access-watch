@@ -1,11 +1,16 @@
 const WebSocket = require('ws')
+const { fromJS } = require('immutable')
+
 const app = require('../lib/app')
 
 const socketToPipeline = (pipeline, parse) => socket => {
   socket.on('message', message => {
     try {
-      const log = parse(message)
-      pipeline.success(log)
+      if (parse) {
+        pipeline.success(parse(message))
+      } else {
+        pipeline.success(fromJS(JSON.parse(message)))
+      }
     } catch (err) {
       pipeline.error(err)
     }
