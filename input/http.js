@@ -2,11 +2,11 @@ const { fromJS } = require('immutable')
 
 const app = require('../lib/app')
 
-function create ({name = 'HTTP endpoint', endpoint, parse}) {
+function create ({name = 'HTTP server', path, parse}) {
   return {
     name: name,
     start: (pipeline) => {
-      app.post(endpoint, (req, res) => {
+      app.post(path, (req, res) => {
         // No validation before sending the response to the client
         res.send('Ok')
         // Processing the message(s)
@@ -23,7 +23,7 @@ function create ({name = 'HTTP endpoint', endpoint, parse}) {
           }
         })
       })
-      pipeline.status(null, 'Listening at ' + endpoint)
+      pipeline.status(null, `Listening on http://__HOST__${path}`)
     }
   }
 }

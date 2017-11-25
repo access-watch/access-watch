@@ -1,10 +1,10 @@
 const uuid = require('uuid/v4')
-const { Set, Map, fromJS } = require('immutable')
+const { Map, fromJS } = require('immutable')
 
 const pipeline = require('../lib/pipeline')
 
 const reducers = require('../lib/reducers')
-const session = require('../lib/session')
+const session = require('../lib/session').getDatabase('traffic')
 const { selectKeys } = require('../lib/util')
 const { FixedWindow } = require('../lib/window')
 
@@ -107,9 +107,9 @@ ipRequests
     return log.update('session', session => {
       return session
         .set('address', log.get('address'))
-        .update('robots', Set(), robots => {
-          if (log.hasIn(['robot', 'id'])) {
-            return robots.add(log.getIn(['robot', 'id']))
+        .update('robots', Map(), robots => {
+          if (log.has('robot')) {
+            return robots.set(log.getIn(['robot', 'id']), log.get('robot'))
           }
           return robots
         })
@@ -119,6 +119,10 @@ ipRequests
     session.save(log.get('session'))
     return log
   })
+
+// Rule matching
+
+stream.match()
 
 // Post-Processing for Websocket logs
 
