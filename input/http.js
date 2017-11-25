@@ -11,7 +11,7 @@ function create ({name = 'HTTP server', path, parse}) {
         let messages = Array.isArray(req.body) ? req.body : [req.body]
         messages.forEach(message => {
           try {
-            const log = parse(req.body)
+            const log = parse(message)
             pipeline.success(log)
           } catch (err) {
             pipeline.error(err)
