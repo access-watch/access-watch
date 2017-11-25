@@ -4,7 +4,7 @@ const app = require('../lib/app')
 const socketToPipeline = (pipeline, parse) => socket => {
   socket.on('message', message => {
     try {
-      const log = parse(message)
+      const log = parse(JSON.parse(message))
       pipeline.success(log)
     } catch (err) {
       pipeline.error(err)

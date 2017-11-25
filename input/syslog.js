@@ -4,9 +4,9 @@ function create ({name = 'Syslog', port = 514, parse}) {
   return {
     name: name,
     start: (pipeline) => {
-      syslogd(msg => {
+      syslogd(message => {
         try {
-          const log = parse(msg.msg)
+          const log = parse(message.msg)
           pipeline.success(log)
         } catch (err) {
           pipeline.error(err)
