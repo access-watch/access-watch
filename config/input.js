@@ -42,8 +42,7 @@ pipeline.registerInput(httpInput)
 // const webSocketServerInput = input.websocket.create({
 //   name: 'WebSocket server (JSON standard format)',
 //   type: 'server',
-//   path: '/input/log',
-//   parse: format.json.parser()
+//   path: '/input/log'
 // })
 
 // pipeline.registerInput(webSocketServerInput)
@@ -86,8 +85,7 @@ pipeline.registerInput(httpInput)
 /* WebSocket client input accepting pre-formatted logs */
 
 // const websocketInput = input.websocket.create({
-//  address: 'ws://HOST:PORT',
-//  parse: format.json.parser()
+//  address: 'ws://HOST:PORT'
 // })
 
 // pipeline.registerInput(websocketInput)
@@ -96,8 +94,7 @@ pipeline.registerInput(httpInput)
 
 // const websocketServerInput = input.websocket.create({
 //   type: 'server',
-//   endpoint: '/myLogs',
-//   parse: format.json.parser()
+//   endpoint: '/myLogs'
 // })
 
 // pipeline.registerInput(websocketServerInput)
