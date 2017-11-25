@@ -23,8 +23,7 @@ pipeline.registerInput(syslogNginxAccessWatchInput)
 
 const syslogInput = input.syslog.create({
   name: 'Syslog (JSON standard format)',
-  port: 1516,
-  parse: format.json.parser()
+  port: 1516
 })
 
 pipeline.registerInput(syslogInput)
@@ -33,8 +32,7 @@ pipeline.registerInput(syslogInput)
 
 const httpInput = input.http.create({
   name: 'HTTP server (JSON standard format)',
-  path: '/input/log',
-  parse: format.json.parser()
+  path: '/input/log'
 })
 
 pipeline.registerInput(httpInput)

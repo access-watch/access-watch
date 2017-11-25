@@ -3,14 +3,12 @@ const { fromJS } = require('immutable')
 
 const app = require('../lib/app')
 
-const socketToPipeline = (pipeline, parse) => socket => {
+const defaultParse = s => fromJS(JSON.parse(s))
+
+const socketToPipeline = (pipeline, parse = defaultParse) => socket => {
   socket.on('message', message => {
     try {
-      if (parse) {
-        pipeline.success(parse(message))
-      } else {
-        pipeline.success(fromJS(JSON.parse(message)))
-      }
+      pipeline.success(parse(message))
     } catch (err) {
       pipeline.error(err)
     }

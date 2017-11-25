@@ -2,7 +2,7 @@ const { fromJS } = require('immutable')
 
 const app = require('../lib/app')
 
-function create ({name = 'HTTP server', path, parse}) {
+function create ({name = 'HTTP server', path, parse = fromJS}) {
   return {
     name: name,
     start: (pipeline) => {
@@ -13,11 +13,7 @@ function create ({name = 'HTTP server', path, parse}) {
         let messages = Array.isArray(req.body) ? req.body : [req.body]
         messages.forEach(message => {
           try {
-            if (parse) {
-              pipeline.success(parse(message))
-            } else {
-              pipeline.success(fromJS(message))
-            }
+            pipeline.success(parse(message))
           } catch (err) {
             pipeline.error(err)
           }
