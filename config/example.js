@@ -11,23 +11,25 @@ const format = require('../format')
 
 /* Syslog input in Nginx 'combined' format */
 
-// const syslogNginxCombinedInput = input.syslog.create({
-//   name: 'Syslog (nginx combined format)',
-//   port: 1514,
-//   parse: format.nginx.parser({format: format.nginx.formats.combined})
-// })
+const syslogNginxCombinedInput = input.syslog.create({
+  name: 'Syslog (nginx combined format)',
+  port: 1514,
+  parse: format.nginx.parser({format: format.nginx.formats.combined})
+})
 
-// pipeline.registerInput(syslogNginxCombinedInput)
+pipeline.registerInput(syslogNginxCombinedInput)
 
 /* Syslog input in Nginx 'access_watch' format */
 
-// const syslogNginxAccessWatchInput = input.syslog.create({
-//   name: 'Syslog (nginx access_watch format)',
-//   port: 1515,
-//   parse: format.nginx.parser({format: format.nginx.formats.accessWatch})
-// })
+const syslogNginxAccessWatchInput = input.syslog.create({
+  name: 'Syslog (nginx access_watch format)',
+  port: 1515,
+  parse: format.nginx.parser({format: format.nginx.formats.accessWatch})
+})
 
-// pipeline.registerInput(syslogNginxAccessWatchInput)
+pipeline.registerInput(syslogNginxAccessWatchInput)
+
+/* Syslog input in Access Watch JSON format */
 
 const syslogInput = input.syslog.create({
   name: 'Syslog (JSON standard format)',
@@ -39,6 +41,8 @@ pipeline.registerInput(syslogInput)
 /* HTTP inputs
 -------------- */
 
+/* HTTP input in Access Watch JSON format */
+
 const httpInput = input.http.create({
   name: 'HTTP server (JSON standard format)',
   path: '/input/log'
@@ -49,7 +53,7 @@ pipeline.registerInput(httpInput)
 /* WebSocket inputs
 ------------------- */
 
-/* WebSocket server input in standard JSON format (listening for logs) */
+/* WebSocket server input in Access Watch JSON format (listening for logs) */
 
 // const webSocketServerInput = input.websocket.create({
 //   name: 'WebSocket server (JSON standard format)',
@@ -59,7 +63,7 @@ pipeline.registerInput(httpInput)
 
 // pipeline.registerInput(webSocketServerInput)
 
-/* WebSocket client input in standard JSON format (subscribing to logs) */
+/* WebSocket client input in Access Watch JSON format (subscribing to logs) */
 
 // const websocketClientInput = input.websocket.create({
 //   address: 'ws://HOST:PORT/logs'
@@ -70,7 +74,7 @@ pipeline.registerInput(httpInput)
 /* File inputs
 -------------- */
 
-/* File inputs accepting Nginx format */
+/* File input in Nginx 'combined' format */
 
 // const fileInputNginxCombined = input.file.create({
 //   path: '/var/log/nginx/access.log',
@@ -81,8 +85,10 @@ pipeline.registerInput(httpInput)
 
 // pipeline.registerInput(fileInputNginxCombined)
 
+/* File input in Nginx 'access_watch' format */
+
 // const fileInputNginxAccessWatch = input.file.create({
-//   path: '/var/log/nginx/blogmarks_access_watch.log',
+//   path: '/var/log/nginx/access_watch.log',
 //   parse: format.nginx.parser({
 //     format: format.nginx.formats.accessWatch
 //   })
