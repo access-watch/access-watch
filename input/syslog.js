@@ -7,9 +7,9 @@ function create ({name = 'Syslog', port = 514, parse = defaultParse}) {
   return {
     name: name,
     start: (pipeline) => {
-      syslogd(msg => {
+      syslogd(message => {
         try {
-          pipeline.success(parse(msg.msg))
+          pipeline.success(parse(message.msg))
         } catch (err) {
           pipeline.error(err)
         }
