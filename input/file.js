@@ -1,6 +1,9 @@
 const Tail = require('tail').Tail
+const { fromJS } = require('immutable')
 
-function create ({name = 'File', path, parse}) {
+const defaultParse = s => fromJS(JSON.parse(s))
+
+function create ({name = 'File', path, parse = defaultParse}) {
   return {
     name: name,
     start: (pipeline) => {
@@ -17,8 +20,7 @@ function create ({name = 'File', path, parse}) {
       }
       tail.on('line', (data) => {
         try {
-          const log = parse(data)
-          pipeline.success(log)
+          pipeline.success(parse(data))
         } catch (err) {
           pipeline.error(err)
         }

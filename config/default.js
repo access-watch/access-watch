@@ -1,14 +1,12 @@
 const pipeline = require('../lib/pipeline')
 
 const input = require('../input')
-const format = require('../format')
 
 /* Syslog input */
 
 const syslogInput = input.syslog.create({
   name: 'Syslog (JSON standard format)',
-  port: 1516,
-  parse: format.json.parser()
+  port: 1516
 })
 
 pipeline.registerInput(syslogInput)
@@ -17,8 +15,7 @@ pipeline.registerInput(syslogInput)
 
 const httpInput = input.http.create({
   name: 'HTTP server (JSON standard format)',
-  path: '/input/log',
-  parse: format.json.parser()
+  path: '/input/log'
 })
 
 pipeline.registerInput(httpInput)

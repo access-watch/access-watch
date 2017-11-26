@@ -31,8 +31,7 @@ const format = require('../format')
 
 const syslogInput = input.syslog.create({
   name: 'Syslog (JSON standard format)',
-  port: 1516,
-  parse: format.json.parser()
+  port: 1516
 })
 
 pipeline.registerInput(syslogInput)
@@ -42,8 +41,7 @@ pipeline.registerInput(syslogInput)
 
 const httpInput = input.http.create({
   name: 'HTTP server (JSON standard format)',
-  path: '/input/log',
-  parse: format.json.parser()
+  path: '/input/log'
 })
 
 pipeline.registerInput(httpInput)
@@ -56,8 +54,7 @@ pipeline.registerInput(httpInput)
 // const webSocketServerInput = input.websocket.create({
 //   name: 'WebSocket server (JSON standard format)',
 //   type: 'server',
-//   path: '/input/log',
-//   parse: format.json.parser()
+//   path: '/input/log'
 // })
 
 // pipeline.registerInput(webSocketServerInput)
@@ -65,8 +62,7 @@ pipeline.registerInput(httpInput)
 /* WebSocket client input in standard JSON format (subscribing to logs) */
 
 // const websocketClientInput = input.websocket.create({
-//   address: 'ws://HOST:PORT/logs',
-//   parse: format.json.parser()
+//   address: 'ws://HOST:PORT/logs'
 // })
 
 // pipeline.registerInput(websocketClientInput)
