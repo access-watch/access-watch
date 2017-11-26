@@ -14,8 +14,11 @@
     "Jean Duthon <jean@access.watch>"
   ],
   "scripts": {
-    "start": "node index.js",
+    "start": "node index",
     "test": "standard && mocha --recursive"
+  },
+  "bin": {
+    "access-watch": "./bin/access-watch"
   },
   "dependencies": {
     "access-watch-sdk": "^0.1.3",
