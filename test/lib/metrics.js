@@ -30,12 +30,12 @@ describe('Database', function () {
 
   it('index by name', function () {
     assert.deepEqual(db.query(fromJS({name: 'request'})),
-                     [[11, 4], [12, 3], [13, 2], [16, 2]])
+                     [[11, 4], [12, 3], [13, 2], [14, 0], [15, 0], [16, 2]])
   })
 
   it('index by name and tags', function () {
     assert.deepEqual(db.query(fromJS({name: 'request', tags: {status: 'nice'}})),
-                     [[11, 2], [12, 3], [16, 2]])
+                     [[11, 2], [12, 3], [13, 0], [14, 0], [15, 0], [16, 2]])
   })
 
   it('index by name and time', function () {
@@ -53,6 +53,8 @@ describe('Database', function () {
       [11, {nice: 2, bad: 2}],
       [12, {nice: 3}],
       [13, {bad: 2}],
+      [14, {}],
+      [15, {}],
       [16, {nice: 2}]
     ])
   })
@@ -73,5 +75,10 @@ describe('Database', function () {
   it('groups by time periods and fills holes with zeroes', function () {
     assert.deepEqual(db.query(fromJS({name: 'request', step: 2})),
                      [[10, 4], [12, 5], [14, 0], [16, 2]])
+  })
+
+  it('Fix #45', function () {
+    assert.deepEqual(db.query(fromJS({name: 'request'})),
+                     [[11, 4], [12, 3], [13, 2], [14, 0], [15, 0], [16, 2]])
   })
 })
