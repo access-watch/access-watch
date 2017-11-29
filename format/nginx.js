@@ -17,7 +17,7 @@ function compile (format) {
       }
       return matchVariable(tail, text.substring(head.length))
     } else {
-      throw new Error('Syntax error at ' + text)
+      throw new Error(`Syntax error. Was expecting the string ${head}. Got: ${text}`)
     }
   }
 
@@ -27,7 +27,7 @@ function compile (format) {
       const value = text.substring(0, len)
       return matchString(tail, text.substring(len)).set(head, value)
     } else {
-      throw new Error('Syntax error at ' + text)
+      throw new Error(`Syntax error. Was expecting the variable ${head}. Got ${text}.`)
     }
   }
 
