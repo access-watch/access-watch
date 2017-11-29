@@ -32,6 +32,20 @@ describe('Rules', function () {
     })
     db.add(rule2)
 
+    const badRules = fromJS(
+      [
+        {conditions: []},
+        {conditions: [{ type: 'ip' }]},
+        {conditions: [{ type: 'ip', ip: 1 }]},
+        {conditions: [{ type: 'ip', ip: '127.0.0.1' }, { type: 'ip' }]}
+      ])
+
+    badRules.forEach(r => {
+      assert.throws(() => {
+        db.add(r)
+      }, Error)
+    })
+
     const log = fromJS({
       address: {
         value: '127.0.0.2'
