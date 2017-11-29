@@ -8,9 +8,13 @@
   },
   "main": "index.js",
   "license": "Apache-2.0",
-  "author": "François Hodierne <francois@access.watch>",
+  "author": {
+    "name": "Access Watch Technologies GmbH",
+    "email": "team@access.watch"
+  },
   "contributors": [
     "Benoît Fleury <benoit@access.watch>",
+    "François Hodierne <francois@access.watch>",
     "Jean Duthon <jean@access.watch>"
   ],
   "scripts": {

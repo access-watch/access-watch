@@ -76,25 +76,25 @@ pipeline.registerInput(httpInput)
 
 /* File input in Nginx 'combined' format */
 
-// const fileInputNginxCombined = input.file.create({
+// const fileNginxCombinedInput = input.file.create({
 //   path: '/var/log/nginx/access.log',
 //   parse: format.nginx.parser({
 //     format: format.nginx.formats.combined
 //   })
 // })
 
-// pipeline.registerInput(fileInputNginxCombined)
+// pipeline.registerInput(fileNginxCombinedInput)
 
 /* File input in Nginx 'access_watch' format */
 
-// const fileInputNginxAccessWatch = input.file.create({
+// const fileNginxAccessWatchInput = input.file.create({
 //   path: '/var/log/nginx/access_watch.log',
 //   parse: format.nginx.parser({
 //     format: format.nginx.formats.accessWatch
 //   })
 // })
 
-// pipeline.registerInput(fileInputNginxAccessWatch)
+// pipeline.registerInput(fileNginxAccessWatchInput)
 
 /* Elasticsearch inputs
 ----------------------- */
