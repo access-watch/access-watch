@@ -14,8 +14,8 @@ describe('Rules', function () {
       id: '1',
       conditions: [
         {
-          type: 'ip',
-          ip: '127.0.0.1'
+          type: 'address',
+          address: '127.0.0.1'
         }
       ]
     })
@@ -25,8 +25,8 @@ describe('Rules', function () {
       id: '2',
       conditions: [
         {
-          type: 'ip',
-          ip: '127.0.0.2'
+          type: 'address',
+          address: '127.0.0.2'
         }
       ]
     })
@@ -35,9 +35,9 @@ describe('Rules', function () {
     const badRules = fromJS(
       [
         {conditions: []},
-        {conditions: [{ type: 'ip' }]},
-        {conditions: [{ type: 'ip', ip: 1 }]},
-        {conditions: [{ type: 'ip', ip: '127.0.0.1' }, { type: 'ip' }]}
+        {conditions: [{ type: 'address' }]},
+        {conditions: [{ type: 'address', address: 1 }]},
+        {conditions: [{ type: 'address', address: '127.0.0.1' }, { type: 'address' }]}
       ])
 
     badRules.forEach(r => {
