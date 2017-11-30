@@ -17,7 +17,7 @@ function compile (format) {
       }
       return matchVariable(tail, text.substring(head.length))
     } else {
-      throw new Error('Syntax error at ' + text)
+      throw new Error(`Syntax error. Was expecting the string ${head}. Got: ${text}`)
     }
   }
 
@@ -27,7 +27,7 @@ function compile (format) {
       const value = text.substring(0, len)
       return matchString(tail, text.substring(len)).set(head, value)
     } else {
-      throw new Error('Syntax error at ' + text)
+      throw new Error(`Syntax error. Was expecting the variable ${head}. Got ${text}.`)
     }
   }
 
@@ -97,7 +97,8 @@ function parser ({format = formats.combined,
 
 const formats = {
   combined: '$remote_addr - $remote_user [$time_local] "$request" $status $bytes_sent "$http_referer" "$http_user_agent"',
-  accessWatch: '"$time_iso8601" "$remote_addr" "$http_host" "$request" $status "$http_user_agent" "$http_accept" "$http_accept_language" "$http_accept_charset" "$http_accept_encoding" "$http_from" "$http_dnt" "$http_connection" "$http_referer"'
+  accessWatch: '"$time_iso8601" "$remote_addr" "$http_host" "$request" $status "$http_user_agent" "$http_accept" "$http_accept_language" "$http_accept_charset" "$http_accept_encoding" "$http_from" "$http_dnt" "$http_connection" "$http_referer"',
+  accessWatchCombined: '$remote_addr - $remote_user [$time_local] "$request" $status $bytes_sent "$http_referer" "$http_user_agent" "$http_accept" "$http_accept_charset" "$http_accept_encoding" "$http_accept_language" "$http_connection" "$http_dnt" "$http_from" "$http_host"'
 }
 
 module.exports = {
