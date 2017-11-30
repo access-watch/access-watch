@@ -1,42 +1,49 @@
 const { fromJS, Map, List } = require('immutable')
 const strptime = require('micro-strptime').strptime
 
-function compile (format) {
+/**
+ * Compile an Apache log format into a log parser.
+ *
+ * Return a function that parses a line of log into an immutable Map.
+ */
+function compileLineParser (format) {
   const parts = format.split(/(%[^ "]+)/)
 
   const matchString = ([head, ...tail], text) => {
-    if (text.startsWith(head)) {
-      if (tail.length === 0) {
-        return Map()
-      }
-      return matchVariable(tail, text.substring(head.length))
-    } else {
+    if (!text.startsWith(head)) {
       throw new Error(`Syntax error. Was expecting the string ${head}. Got: ${text}`)
     }
+    if (tail.length === 0) {
+      return Map()
+    }
+    return matchVariable(tail, text.substring(head.length))
   }
 
   const matchVariable = ([head, ...tail], text) => {
     const len = text.indexOf(tail[0])
-    if (len !== -1) {
-      const value = text.substring(0, len)
-      return matchString(tail, text.substring(len)).set(head, value)
-    } else {
+    if (len === -1) {
       throw new Error(`Syntax error. Was expecting the variable ${head}. Got ${text}.`)
     }
+    const value = text.substring(0, len)
+    return matchString(tail, text.substring(len)).set(head, value)
   }
 
-  return s => {
-    return matchString(parts, s)
-  }
+  return line => matchString(parts, line)
 }
 
-function addRequest (log, request) {
+function parseRequest (request) {
   const res = /([^ ]+)\s+([^ ]+)\s+([^ ]+)/.exec(request)
-  if (res) {
-    return log
-      .setIn(['request', 'method'], res[1])
-      .setIn(['request', 'url'], res[2])
-      .setIn(['request', 'protocol'], res[3])
+  if (!res) {
+    throw new Error(`Could not parse request: '${request}'.`)
+  }
+  return Map({ method: res[1], url: res[2], protocol: res[3] })
+}
+
+function addHeader (log, name, value) {
+  name = name.toLowerCase()
+  log = log.updateIn(['request', 'captured_headers'], List(), list => list.push(name))
+  if (value !== '-') {
+    log = log.setIn(['request', 'headers', name], value)
   }
   return log
 }
@@ -49,35 +56,31 @@ function parseTime (value) {
 const transformers = {
   '%h': (log, value) => log.setIn(['request', 'address'], value),
   '%t': (log, value) => log.setIn(['request', 'time'], parseTime(value)),
-  '%r': addRequest,
-  '%>s': (log, value) => log.setIn(['response', 'status'], parseInt(value))
+  '%>s': (log, value) => log.setIn(['response', 'status'], parseInt(value, 10)),
+  '%r': (log, value) => log.update('request', request => parseRequest(value).merge(request))
+}
+
+function reducer (log, value, key) {
+  const transform = transformers[key]
+  if (transform) {
+    return transform(log, value)
+  }
+  const header = key.match(/%\{([^}]+)\}i/)
+  if (header) {
+    return addHeader(log, header[1], value)
+  }
+  return log
 }
 
 function parser ({format}) {
-  const p = compile(format)
-  return (msg) => {
-    return p(msg).reduce((log, v, k) => {
-      const transform = transformers[k.toLowerCase()]
-      if (transform) {
-        return transform(log, v)
-      }
-      const header = k.match(/%\{([^}]+)\}i/)
-      if (header) {
-        const name = header[1].toLowerCase()
-        log = log.updateIn(['request', 'captured_headers'], List(), coll => coll.push(name))
-        if (v === '-') {
-          return log
-        }
-        return log.setIn(['request', 'headers', name], v)
-      }
-      return log
-    }, fromJS({request: {headers: {}}}))
-  }
+  const baseLog = fromJS({request: {headers: {}}})
+  const lineParser = compileLineParser(format)
+  return line => lineParser(line).reduce(reducer, baseLog)
 }
 
 const formats = {
   combined: '%h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-agent}i"',
-  accessWatch: '%h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-agent}i" "%{Accept}i" "%{Accept-Charset}i" "%{Accept-Encoding}i" "%{Accept-Language}i" "%{Connection}i" "%{Dnt}i" "%{From}i" "%{Host}i"'
+  accessWatchCombined: '%h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-agent}i" "%{Accept}i" "%{Accept-Charset}i" "%{Accept-Encoding}i" "%{Accept-Language}i" "%{Connection}i" "%{Dnt}i" "%{From}i" "%{Host}i"'
 }
 
 module.exports = {
