@@ -81,4 +81,9 @@ describe('Database', function () {
     assert.deepEqual(db.query(fromJS({name: 'request'})),
                      [[11, 4], [12, 3], [13, 2], [14, 0], [15, 0], [16, 2]])
   })
+
+  it('Fix #51', function () {
+    assert.deepEqual(db.query(fromJS({name: 'request', start: 12, end: 18, step: 5})),
+                     [[10, 5], [15, 2]])
+  })
 })
