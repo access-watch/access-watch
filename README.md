@@ -1,4 +1,4 @@
-![](https://access.watch/assets/img/access-watch-banner.png)
+![](https://access.watch/assets/img/access-watch-banner-3.png)
 
 [![Build Status](https://travis-ci.org/access-watch/access-watch.svg?branch=master)](https://travis-ci.org/access-watch/access-watch)
 [![Slack Channel](http://slack.access.watch/badge.svg)](http://slack.access.watch/)
