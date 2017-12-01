@@ -31,23 +31,21 @@ function compileLineParser (format) {
   return line => matchString(parts, line)
 }
 
+/**
+ * Parse a HTTP request header line.
+ */
 function parseRequest (request) {
   const res = /([^ ]+)\s+([^ ]+)\s+([^ ]+)/.exec(request)
   if (!res) {
-    throw new Error(`Could not parse request: '${request}'.`)
+    return Map()
+    // throw new Error(`Could not parse request: '${request}'.`)
   }
   return Map({ method: res[1], url: res[2], protocol: res[3] })
 }
 
-function addHeader (log, name, value) {
-  name = name.toLowerCase()
-  log = log.updateIn(['request', 'captured_headers'], List(), list => list.push(name))
-  if (value !== '-') {
-    log = log.setIn(['request', 'headers', name], value)
-  }
-  return log
-}
-
+/**
+ * Parse a Time formatted in CLF format - between brackets
+ */
 function parseTime (value) {
   value = value.substring(1, value.length - 1) // remove '[' and ']'
   return strptime(value, '%d/%B/%Y:%H:%M:%S %z').toISOString()
@@ -60,6 +58,14 @@ const transformers = {
   '%r': (log, value) => log.update('request', request => parseRequest(value).merge(request))
 }
 
+function addHeader (log, name, value) {
+  log = log.updateIn(['request', 'captured_headers'], List(), list => list.push(name))
+  if (value !== '-') {
+    log = log.setIn(['request', 'headers', name], value)
+  }
+  return log
+}
+
 function reducer (log, value, key) {
   const transform = transformers[key]
   if (transform) {
@@ -67,7 +73,8 @@ function reducer (log, value, key) {
   }
   const header = key.match(/%\{([^}]+)\}i/)
   if (header) {
-    return addHeader(log, header[1], value)
+    const name = header[1].toLowerCase()
+    return addHeader(log, name, value)
   }
   return log
 }
