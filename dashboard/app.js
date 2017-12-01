@@ -8,8 +8,6 @@ const { Map } = require('immutable')
 const app = require('../lib/app')
 const { stream } = require('./pipeline')
 
-const session = require('../lib/session').getDatabase('traffic')
-
 /* Dashboard and Assets */
 
 app.get('/', (req, res) => res.redirect('/dashboard'))
@@ -23,27 +21,6 @@ app.get('/dashboard', (req, res) => {
   const websocket = `ws://${host}:${port}`
   const index = path.join(__dirname, 'views', 'index.ejs')
   res.render(index, {apiBaseUrl, websocket})
-})
-
-/* API endpoints */
-
-app.get('/robots', (req, res) => {
-  const limit = req.query.limit ? parseInt(req.query.limit) : 100
-  const reputation = req.query.reputation ? req.query.reputation.split(',') : []
-  res.send({sessions: getSessions({limit, reputation})})
-})
-
-app.get('/session/:sessionId', (req, res) => {
-  let sess = getSession(req.params.sessionId)
-  if (sess) {
-    res.send(sess)
-  } else {
-    res.status(404).send('Unknown session.')
-  }
-})
-
-app.get('/logs', (req, res) => {
-  res.send({ logs: [] })
 })
 
 /* Websocket */
@@ -67,21 +44,3 @@ function websocket (endpoint, stream) {
 }
 
 websocket('/logs', stream)
-
-/* API Helpers */
-
-function getSessions ({limit, reputation}) {
-  return session
-    .list({type: 'robot', sort: 'count', limit: limit})
-    .filter(s => (reputation.length === 0 || reputation.includes(s.getIn(['reputation', 'status']))))
-    .map(s => s.update('speed', speed => {
-      return Map({
-        per_second: speed.get(0) / 60,
-        per_minute: speed.get(0)
-      })
-    }))
-}
-
-function getSession (sessionId) {
-  return session.get('robot', sessionId)
-}
