@@ -1,39 +1,34 @@
 const { fromJS, Map, List } = require('immutable')
 const strptime = require('micro-strptime').strptime
-const { fnull } = require('../lib/util.js')
 
 /**
  * Compile a Nginx log format into a log parser.
  *
  * Return a function that parses a line of log into an immutable Map.
  */
-function compile (format) {
+function compileLineParser (format) {
   const parts = format.split(/\$([A-Za-z0-9_]+)/)
 
   const matchString = ([head, ...tail], text) => {
-    if (text.startsWith(head)) {
-      if (tail.length === 0) {
-        return Map()
-      }
-      return matchVariable(tail, text.substring(head.length))
-    } else {
+    if (!text.startsWith(head)) {
       throw new Error(`Syntax error. Was expecting the string ${head}. Got: ${text}`)
     }
+    if (tail.length === 0) {
+      return Map()
+    }
+    return matchVariable(tail, text.substring(head.length))
   }
 
   const matchVariable = ([head, ...tail], text) => {
     const len = text.indexOf(tail[0])
-    if (len !== -1) {
-      const value = text.substring(0, len)
-      return matchString(tail, text.substring(len)).set(head, value)
-    } else {
+    if (len === -1) {
       throw new Error(`Syntax error. Was expecting the variable ${head}. Got ${text}.`)
     }
+    const value = text.substring(0, len)
+    return matchString(tail, text.substring(len)).set(head, value)
   }
 
-  return s => {
-    return matchString(parts, s)
-  }
+  return line => matchString(parts, line)
 }
 
 /**
@@ -41,58 +36,52 @@ function compile (format) {
  */
 function parseRequest (request) {
   const res = /([^ ]+)\s+([^ ]+)\s+([^ ]+)/.exec(request)
-  if (res) {
-    return Map({
-      method: res[1],
-      url: res[2],
-      protocol: res[3]
-    })
-  } else {
-    return Map()
+  if (!res) {
+    return Map({})
+    // throw new Error(`Could not parse request: '${request}'.`)
   }
+  return Map({ method: res[1], url: res[2], protocol: res[3] })
 }
 
 /**
- * Transform a log line following `format` into a log map.
- *
- * `timeFormat` can be specified to parse the `time_local` variable.
+ * Parse a Time formatted in CLF format
  */
-function parser ({format = formats.combined,
-                  timeFormat = '%d/%B/%Y:%H:%M:%S %z'} = {}) {
-  const parse = compile(format)
+function parseTime (value) {
+  return strptime(value, '%d/%B/%Y:%H:%M:%S %z').toISOString()
+}
 
-  const transformers = {
-    remote_addr: (log, value) => log.setIn(['request', 'address'], value),
-    time_local: (log, value) => log.setIn(['request', 'time'], strptime(value, timeFormat).toISOString()),
-    time_iso8601: (log, value) => log.setIn(['request', 'time'], value),
-    status: (log, value) => log.setIn(['response', 'status'], parseInt(value)),
-    request: (log, value) => log.update('request', r => parseRequest(value).merge(r))
-  }
+const transformers = {
+  remote_addr: (log, value) => log.setIn(['request', 'address'], value),
+  time_local: (log, value) => log.setIn(['request', 'time'], parseTime(value)),
+  time_iso8601: (log, value) => log.setIn(['request', 'time'], value),
+  status: (log, value) => log.setIn(['response', 'status'], parseInt(value, 10)),
+  request: (log, value) => log.update('request', r => parseRequest(value).merge(r))
+}
 
-  return (msg) => {
-    let m
-    try {
-      m = parse(msg)
-    } catch (error) {
-      throw new Error('Cannot parse message: [' + msg + ']. ' + error.message)
-    }
-    return m.reduce((log, v, k) => {
-      const transform = transformers[k]
-      if (transform) {
-        return transform(log, v)
-      } else if (k.startsWith('http_')) {
-        const name = k.substring(5).replace('_', '-')
-        log = log.updateIn(['request', 'captured_headers'],
-                           fnull(l => l.push(name), List()))
-        if (v === undefined || v === '-') {
-          return log
-        } else {
-          return log.setIn(['request', 'headers', name], v)
-        }
-      }
-      return log
-    }, fromJS({request: {headers: {}}}))
+function addHeader (log, name, value) {
+  log = log.updateIn(['request', 'captured_headers'], List(), list => list.push(name))
+  if (value !== '-') {
+    log = log.setIn(['request', 'headers', name], value)
   }
+  return log
+}
+
+function reducer (log, value, key) {
+  const transform = transformers[key]
+  if (transform) {
+    return transform(log, value)
+  }
+  if (key.startsWith('http_')) {
+    const name = key.substring(5).replace('_', '-')
+    return addHeader(log, name, value)
+  }
+  return log
+}
+
+function parser ({format = formats.combined} = {}) {
+  const baseLog = fromJS({request: {headers: {}}})
+  const lineParser = compileLineParser(format)
+  return line => lineParser(line).reduce(reducer, baseLog)
 }
 
 const formats = {
