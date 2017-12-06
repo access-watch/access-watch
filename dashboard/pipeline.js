@@ -113,6 +113,12 @@ ipRequests
           }
           return robots
         })
+        .update('user_agents', Map(), userAgents => {
+          if (log.has('user_agent')) {
+            return userAgents.set(log.getIn(['user_agent', 'id']), log.get('user_agent'))
+          }
+          return userAgents
+        })
     })
   })
   .map(log => {
