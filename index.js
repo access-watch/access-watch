@@ -1,7 +1,9 @@
+const path = require('path')
+
 // create the databases
 const session = require('./lib/session').createDatabase('traffic')
 const metrics = require('./lib/metrics').createDatabase('traffic')
-const rules = require('./lib/rules').createDatabase('traffic', {path: 'rules.json'})
+const rules = require('./lib/rules').createDatabase('traffic', {path: path.resolve(__dirname, 'data/rules.json')})
 
 // import the framework
 const app = require('./lib/app')
