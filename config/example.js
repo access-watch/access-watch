@@ -38,6 +38,28 @@ const syslogInput = input.syslog.create({
 
 pipeline.registerInput(syslogInput)
 
+/* Syslog input in Apache 'combined' format */
+
+// const syslogApacheCombinedInput = input.syslog.create({
+//   port: 1517,
+//   parse: format.apache.parser({
+//     format: format.apache.formats.combined
+//   })
+// })
+
+// pipeline.registerInput(syslogApacheCombinedInput)
+
+/* Syslog input in Apache 'access_watch_combined' format */
+
+// const syslogApacheAccessWatchCombinedInput = input.syslog.create({
+//   port: 1518,
+//   parse: format.apache.parser({
+//     format: format.apache.formats.accessWatchCombined
+//   })
+// })
+
+// pipeline.registerInput(syslogApacheAccessWatchCombinedInput)
+
 /* HTTP inputs
 -------------- */
 
