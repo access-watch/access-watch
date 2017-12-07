@@ -184,11 +184,11 @@ npm start
 
 ### Browse the interface
 
-<p>Now, you can point your browser to the IP/port where Access Watch is running. If you're trying from your own computer, that would be http://0.0.0.0:3000/. If you see data flowing, congrats you made it!</p>
+Now, you can point your browser to the IP/port where Access Watch is running. If you see data flowing, congrats you made it!
 
-<img style="display:block;margin:20px auto" src="http://access.watch/assets/2/img/dashboard-metrics.png" alt="" style="max-width:85%;">
+![Access Watch Metrics](https://access.watch/assets/2/img/dashboard-metrics.png)
 
-<img style="display:block;margin:20px auto" src="http://access.watch//assets/2/img/dashboard-robots.png" alt="" style="max-width:85%;">
+![Access Watch Robots](https://access.watch/assets/2/img/dashboard-robots.png)
 
 ### More than 'watch'
 

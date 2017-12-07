@@ -92,9 +92,9 @@ npm start config/apache.js
 
 Now, you can point your browser to the IP/port where Access Watch is running. If you see data flowing, congrats you made it!
 
-![Access Watch Metrics](http://0.0.0.0:8006/assets/2/img/dashboard-metrics.png)
+![Access Watch Metrics](https://access.watch/assets/2/img/dashboard-metrics.png)
 
-![Access Watch Robots](http://0.0.0.0:8006/assets/2/img/dashboard-robots.png)
+![Access Watch Robots](https://access.watch/assets/2/img/dashboard-robots.png)
 
 ### More than 'watch'
 
