@@ -43,6 +43,12 @@ let stream = pipeline
     })
   })
 
+  // Share activity metrics with Access Watch Hub and get updates
+  .map(log => {
+    hub.activityFeedback(log)
+    return log
+  })
+
 // Output to the console as JS object
 // stream.map(log => console.log(log.toJS()))
 

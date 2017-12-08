@@ -107,6 +107,107 @@ function getIdentities (identities) {
     })
 }
 
+let activityBuffer = {}
+
+const types = {
+  '/robots.txt': 'robot',
+  '/favicon.ico': 'favicon',
+  '.png': 'img',
+  '.gif': 'img',
+  '.jpg': 'img',
+  '.css': 'css',
+  '.js': 'js'
+}
+
+function detectType (url) {
+  let type = 'mixed'
+
+  Object.keys(types).some(key => {
+    if (url.slice(key.length * -1) === key) {
+      type = types[key]
+      return true
+    }
+  })
+
+  return type
+}
+
+function activityFeedback (log) {
+  // Get identity id
+  let identityId = log.getIn(['identity', 'id'])
+  if (!identityId) {
+    identityId = signature.getIdentityId({
+      address: log.get('address'),
+      headers: log.get('headers').toJS()
+    })
+  }
+  if (!activityBuffer[identityId]) {
+    activityBuffer[identityId] = {}
+  }
+
+  // Get host
+  let host = log.getIn(['request', 'headers', 'host'])
+  if (!host) {
+    return
+  }
+  if (host.indexOf(':') !== -1) {
+    [host] = host.split(':')
+  }
+  if (!activityBuffer[identityId][host]) {
+    activityBuffer[identityId][host] = {}
+  }
+
+  // Track methods
+  const method = log.getIn(['request', 'method'])
+  if (!activityBuffer[identityId][host][method]) {
+    activityBuffer[identityId][host][method] = 1
+  } else {
+    activityBuffer[identityId][host][method] ++
+  }
+
+  // Track type
+  const type = detectType(log.getIn(['request', 'url']))
+  if (!activityBuffer[identityId][host][type]) {
+    activityBuffer[identityId][host][type] = 1
+  } else {
+    activityBuffer[identityId][host][type] ++
+  }
+}
+
+function batchIdentityFeedback () {
+  let activity = {}
+
+  Object.keys(activityBuffer).forEach(key => {
+    activity[key] = Object.assign({}, activityBuffer[key])
+    delete activityBuffer[key]
+  })
+
+  if (activity) {
+    client
+      .post('/activity', {activity})
+      .then(response => {
+        if (typeof response.data !== 'object') {
+          throw new TypeError('Response not an object')
+        }
+        if (!response.data.identities || !Array.isArray(response.data.identities)) {
+          throw new TypeError('Response identities not an array')
+        }
+        response.data.identities.forEach(identity => {
+          const identityMap = fromJS(identity)
+          if (cache.get(identity.id) !== identityMap) {
+            cache.set(identity.id, identityMap)
+          }
+        })
+      })
+      .catch(err => {
+        console.log('activity feedback', err)
+      })
+  }
+}
+
+setInterval(batchIdentityFeedback, 60 * 1000)
+
 module.exports = {
-  fetchIdentity
+  fetchIdentity,
+  activityFeedback
 }
