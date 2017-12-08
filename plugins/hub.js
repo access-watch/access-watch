@@ -2,16 +2,19 @@
 // Plugin to discuss with the Access Watch Hub
 //
 
-const LRU = require('lru-cache')
-const request = require('axios')
+const LRUCache = require('lru-cache')
+const axios = require('axios')
 const { fromJS } = require('immutable')
 
 const { signature } = require('access-watch-sdk')
 
-const HUB_ENDPOINT = 'https://api.access.watch/1.2/hub'
-const REQUEST_TIMEOUT = 5000
+const client = axios.create({
+  baseURL: 'https://api.access.watch/1.2/hub',
+  timeout: 1000,
+  headers: {'User-Agent': 'Access Watch Hub Plugin'}
+})
 
-const cache = LRU({size: 10000, maxAge: 3600 * 1000})
+const cache = new LRUCache({size: 10000, maxAge: 3600 * 1000})
 
 let buffer = {}
 
@@ -41,7 +44,7 @@ function fetchIdentityPromise (key, identity) {
       return
     }
     if (!buffer[key]) {
-      buffer[key] = {identity: identity, promises: []}
+      buffer[key] = {identity, promises: []}
     }
     buffer[key].promises.push({resolve, reject})
     if (!batchScheduled) {
@@ -91,22 +94,19 @@ function fetchIdentityBatch () {
 }
 
 function getIdentities (identities) {
-  return request({
-    method: 'POST',
-    url: HUB_ENDPOINT + '/identities',
-    data: JSON.stringify({identities}),
-    timeout: REQUEST_TIMEOUT
-  }).then(response => {
-    if (typeof response.data !== 'object') {
-      throw new Error('Response not an object')
-    }
-    if (!response.data.identities || !Array.isArray(response.data.identities)) {
-      throw new Error('Response identities not an array')
-    }
-    return response.data.identities
-  })
+  return client
+    .post('/identities', {identities})
+    .then(response => {
+      if (typeof response.data !== 'object') {
+        throw new TypeError('Response not an object')
+      }
+      if (!response.data.identities || !Array.isArray(response.data.identities)) {
+        throw new TypeError('Response identities not an array')
+      }
+      return response.data.identities
+    })
 }
 
 module.exports = {
-  fetchIdentity: fetchIdentity
+  fetchIdentity
 }
