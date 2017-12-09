@@ -12,32 +12,27 @@ describe('Rules', function () {
     const db = rules.createDatabase('test', {path: path})
     const rule1 = fromJS({
       id: '1',
-      conditions: [
-        {
-          type: 'address',
-          address: '127.0.0.1'
-        }
-      ]
+      condition: {
+        type: 'address',
+        address: {value: '127.0.0.1'}
+      }
     })
     db.add(rule1)
 
     const rule2 = fromJS({
       id: '2',
-      conditions: [
-        {
-          type: 'address',
-          address: '127.0.0.2'
-        }
-      ]
+      condition: {
+        type: 'address',
+        address: {value: '127.0.0.2'}
+      }
     })
     db.add(rule2)
 
     const badRules = fromJS(
       [
-        {conditions: []},
-        {conditions: [{ type: 'address' }]},
-        {conditions: [{ type: 'address', address: 1 }]},
-        {conditions: [{ type: 'address', address: '127.0.0.1' }, { type: 'address' }]}
+        {},
+        {condition: { type: 'address' }},
+        {condition: { type: 'address', address: 1 }}
       ])
 
     badRules.forEach(r => {
