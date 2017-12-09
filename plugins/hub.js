@@ -4,7 +4,7 @@
 
 const LRUCache = require('lru-cache')
 const axios = require('axios')
-const { fromJS } = require('immutable')
+const { Map, fromJS, is } = require('immutable')
 
 const { signature } = require('access-watch-sdk')
 
@@ -107,7 +107,7 @@ function getIdentities (identities) {
     })
 }
 
-let activityBuffer = {}
+let activityBuffer = Map()
 
 const types = {
   '/robots.txt': 'robot',
@@ -141,9 +141,6 @@ function activityFeedback (log) {
       headers: log.get('headers').toJS()
     })
   }
-  if (!activityBuffer[identityId]) {
-    activityBuffer[identityId] = {}
-  }
 
   // Get host
   let host = log.getIn(['request', 'headers', 'host'])
@@ -153,34 +150,22 @@ function activityFeedback (log) {
   if (host.indexOf(':') !== -1) {
     [host] = host.split(':')
   }
-  if (!activityBuffer[identityId][host]) {
-    activityBuffer[identityId][host] = {}
-  }
 
-  // Track methods
-  const method = log.getIn(['request', 'method'])
-  if (!activityBuffer[identityId][host][method]) {
-    activityBuffer[identityId][host][method] = 1
-  } else {
-    activityBuffer[identityId][host][method] ++
-  }
-
-  // Track type
-  const type = detectType(log.getIn(['request', 'url']))
-  if (!activityBuffer[identityId][host][type]) {
-    activityBuffer[identityId][host][type] = 1
-  } else {
-    activityBuffer[identityId][host][type] ++
-  }
+  const values = [
+    log.getIn(['request', 'method']),
+    detectType(log.getIn(['request', 'url']))
+  ]
+  values.forEach(value => {
+    if (value) {
+      activityBuffer = activityBuffer.updateIn([identityId, host, value], 0, n => n + 1)
+    }
+  })
 }
 
 function batchIdentityFeedback () {
-  let activity = {}
+  const activity = activityBuffer.toJS()
 
-  Object.keys(activityBuffer).forEach(key => {
-    activity[key] = Object.assign({}, activityBuffer[key])
-    delete activityBuffer[key]
-  })
+  activityBuffer = activityBuffer.clear()
 
   if (activity) {
     client
@@ -194,7 +179,8 @@ function batchIdentityFeedback () {
         }
         response.data.identities.forEach(identity => {
           const identityMap = fromJS(identity)
-          if (cache.get(identity.id) !== identityMap) {
+          const cachedMap = cache.get(identity.id)
+          if (!is(cachedMap, identityMap)) {
             cache.set(identity.id, identityMap)
           }
         })
