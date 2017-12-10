@@ -115,6 +115,7 @@ const types = {
   '.png': 'img',
   '.gif': 'img',
   '.jpg': 'img',
+  '.svg': 'svg',
   '.css': 'css',
   '.js': 'js'
 }
@@ -152,7 +153,7 @@ function activityFeedback (log) {
   }
 
   const values = [
-    log.getIn(['request', 'method']),
+    log.getIn(['request', 'method']).toLowerCase(),
     detectType(log.getIn(['request', 'url']))
   ]
   values.forEach(value => {
@@ -163,11 +164,9 @@ function activityFeedback (log) {
 }
 
 function batchIdentityFeedback () {
-  const activity = activityBuffer.toJS()
-
-  activityBuffer = activityBuffer.clear()
-
-  if (activity) {
+  if (activityBuffer.size > 0) {
+    const activity = activityBuffer.toJS()
+    activityBuffer = activityBuffer.clear()
     client
       .post('/activity', {activity})
       .then(response => {
