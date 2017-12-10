@@ -29,6 +29,7 @@
     "ajv": "^5.3.0",
     "axios": "^0.17.0",
     "body-parser": "^1.18.2",
+    "carrier": "^0.3.0",
     "date-format-lite": "^17.7.0",
     "ejs": "^2.5.7",
     "elasticsearch": "^13.3.1",
