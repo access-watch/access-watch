@@ -215,7 +215,5 @@ function batchIdentityFeedback () {
 setInterval(batchIdentityFeedback, 60 * 1000)
 
 module.exports = {
-  augment,
-  fetchIdentity,
-  activityFeedback
+  augment
 }
