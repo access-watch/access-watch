@@ -1,6 +1,5 @@
 const dgram = require('dgram')
 const net = require('net')
-const carrier = require('carrier')
 
 const { fromJS } = require('immutable')
 
@@ -9,7 +8,13 @@ const defaultParse = s => fromJS(JSON.parse(s))
 function createTcpServer ({pipeline, name, port, handler}) {
   return net
     .createServer(socket => {
-      carrier.carry(socket, handler)
+      socket.on('data', data => {
+        data.toString().split('\n').forEach(line => {
+          if (line) {
+            handler(line)
+          }
+        })
+      })
     })
     .listen(port, err => {
       if (err) {
@@ -22,7 +27,14 @@ function createTcpServer ({pipeline, name, port, handler}) {
 }
 
 function createUdpServer ({pipeline, name, port, handler}) {
-  const socket = dgram.createSocket('udp4')
+  return dgram.createSocket('udp4')
+    .on('message', message => {
+      message.toString().split('\n').forEach(line => {
+        if (line) {
+          handler(line)
+        }
+      })
+    })
     .on('error', err => {
       pipeline.status(err, 'Cannot start: ' + err.message)
     })
@@ -31,8 +43,6 @@ function createUdpServer ({pipeline, name, port, handler}) {
       console.log(`${name} listening on UDP port ${port}.`)
     })
     .bind(port)
-
-  carrier.carry(socket, handler)
 }
 
 function create ({name = 'Socket', protocol, port, parse = defaultParse}) {
