@@ -53,12 +53,14 @@ describe('Rules', function () {
     assert.equal(db.get('2').get('count'), 1)
 
     db.close()
+
     const newDb = rules.createDatabase('test2', {path: path})
     newDb.match(log)
 
     assert.equal(newDb.get('1').get('count'), 0)
     assert.equal(newDb.get('2').get('count'), 2)
 
+    newDb.close()
     fs.unlinkSync(path)
   })
 })
