@@ -8,7 +8,7 @@ describe('Database', function () {
   let db
 
   before(function () {
-    db = metrics.createDatabase('test', {persist: false})
+    db = metrics.connect('aw:mem://metrics')
     const metric = fromJS({
       name: 'request',
       time: 11,

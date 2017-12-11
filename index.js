@@ -1,13 +1,7 @@
-const path = require('path')
-
-// create the databases
-const session = require('./lib/session').createDatabase('traffic')
-const metrics = require('./lib/metrics').createDatabase('traffic')
-const rules = require('./lib/rules').createDatabase('traffic', {path: path.resolve(__dirname, 'data/rules.json')})
-
 // import the framework
 const app = require('./lib/app')
 const pipeline = require('./lib/pipeline')
+const database = require('./lib/database')
 
 // configure the application
 require('./config')
@@ -18,15 +12,12 @@ function start () {
   app.start()
 }
 
-start()
-
 // stop the application
 function stop () {
-  pipeline.close()
-  rules.close()
-  metrics.close()
-  session.close()
+  database.close()
   process.exit()
 }
+
+start()
 
 process.on('SIGINT', stop)
