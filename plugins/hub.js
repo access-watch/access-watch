@@ -8,6 +8,8 @@ const { Map, fromJS, is } = require('immutable')
 
 const { signature } = require('access-watch-sdk')
 
+const { selectKeys } = require('../lib/util')
+
 const client = axios.create({
   baseURL: 'https://api.access.watch/1.2/hub',
   timeout: 1000,
@@ -20,6 +22,29 @@ let buffer = {}
 
 let batchScheduled
 
+function augment (log) {
+  // Share activity metrics and get updates
+  activityFeedback(log)
+  // Fetch identity and augment log (promise based)
+  return fetchIdentity(Map({
+    address: log.getIn(['address', 'value']),
+    headers: log.getIn(['request', 'headers']),
+    captured_headers: log.getIn(['request', 'captured_headers'])
+  })).then(identity => {
+    if (identity) {
+      // Add identity properties
+      log = log.set('identity', selectKeys(identity, ['id', 'type', 'label']))
+      // Add identity objects
+      ;['address', 'user_agent', 'robot', 'reputation'].forEach(key => {
+        if (identity.has(key)) {
+          log = log.set(key, identity.get(key))
+        }
+      })
+    }
+    return log
+  })
+}
+
 function fetchIdentity (identity) {
   let key = cacheKey(identity)
   if (cache.has(key)) {
@@ -30,10 +55,7 @@ function fetchIdentity (identity) {
 }
 
 function cacheKey (identity) {
-  return signature.getIdentityId({
-    address: identity.get('address'),
-    headers: identity.get('headers').toJS()
-  })
+  return signature.getIdentityId(identity.toJS())
 }
 
 function fetchIdentityPromise (key, identity) {
@@ -193,6 +215,7 @@ function batchIdentityFeedback () {
 setInterval(batchIdentityFeedback, 60 * 1000)
 
 module.exports = {
+  augment,
   fetchIdentity,
   activityFeedback
 }

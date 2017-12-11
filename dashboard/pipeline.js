@@ -5,7 +5,6 @@ const pipeline = require('../lib/pipeline')
 
 const reducers = require('../lib/reducers')
 const session = require('../lib/session').getDatabase('traffic')
-const { selectKeys } = require('../lib/util')
 const { FixedWindow } = require('../lib/window')
 
 const hub = require('../plugins/hub')
@@ -23,31 +22,7 @@ let stream = pipeline
                                             log.getIn(['request', 'headers']))))
 
   // Augment with data from the Access Watch Hub
-  .map(log => {
-    return hub.fetchIdentity(Map({
-      address: log.getIn(['address', 'value']),
-      headers: log.getIn(['request', 'headers']),
-      captured_headers: log.getIn(['request', 'captured_headers'])
-    })).then(identity => {
-      if (identity) {
-        // Add identity properties
-        log = log.set('identity', selectKeys(identity, ['id', 'type', 'label']))
-        // Add identity objects
-        ;['address', 'user_agent', 'robot', 'reputation'].forEach(key => {
-          if (identity.has(key)) {
-            log = log.set(key, identity.get(key))
-          }
-        })
-      }
-      return log
-    })
-  })
-
-  // Share activity metrics with Access Watch Hub and get updates
-  .map(log => {
-    hub.activityFeedback(log)
-    return log
-  })
+  .map(log => hub.augment(log))
 
 // Output to the console as JS object
 // stream.map(log => console.log(log.toJS()))
