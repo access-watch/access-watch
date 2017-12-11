@@ -2,20 +2,48 @@
 // Plugin to discuss with the Access Watch Hub
 //
 
-const LRU = require('lru-cache')
-const request = require('axios')
-const { fromJS } = require('immutable')
+const LRUCache = require('lru-cache')
+const axios = require('axios')
+const { Map, fromJS, is } = require('immutable')
 
 const { signature } = require('access-watch-sdk')
 
-const HUB_ENDPOINT = 'https://api.access.watch/1.2/hub'
-const REQUEST_TIMEOUT = 5000
+const { selectKeys } = require('../lib/util')
 
-const cache = LRU({size: 10000, maxAge: 3600 * 1000})
+const client = axios.create({
+  baseURL: 'https://api.access.watch/1.2/hub',
+  timeout: 1000,
+  headers: {'User-Agent': 'Access Watch Hub Plugin'}
+})
+
+const cache = new LRUCache({size: 10000, maxAge: 3600 * 1000})
 
 let buffer = {}
 
 let batchScheduled
+
+function augment (log) {
+  // Share activity metrics and get updates
+  activityFeedback(log)
+  // Fetch identity and augment log (promise based)
+  return fetchIdentity(Map({
+    address: log.getIn(['address', 'value']),
+    headers: log.getIn(['request', 'headers']),
+    captured_headers: log.getIn(['request', 'captured_headers'])
+  })).then(identity => {
+    if (identity) {
+      // Add identity properties
+      log = log.set('identity', selectKeys(identity, ['id', 'type', 'label']))
+      // Add identity objects
+      ;['address', 'user_agent', 'robot', 'reputation'].forEach(key => {
+        if (identity.has(key)) {
+          log = log.set(key, identity.get(key))
+        }
+      })
+    }
+    return log
+  })
+}
 
 function fetchIdentity (identity) {
   let key = cacheKey(identity)
@@ -27,10 +55,7 @@ function fetchIdentity (identity) {
 }
 
 function cacheKey (identity) {
-  return signature.getIdentityId({
-    address: identity.get('address'),
-    headers: identity.get('headers').toJS()
-  })
+  return signature.getIdentityId(identity.toJS())
 }
 
 function fetchIdentityPromise (key, identity) {
@@ -41,7 +66,7 @@ function fetchIdentityPromise (key, identity) {
       return
     }
     if (!buffer[key]) {
-      buffer[key] = {identity: identity, promises: []}
+      buffer[key] = {identity, promises: []}
     }
     buffer[key].promises.push({resolve, reject})
     if (!batchScheduled) {
@@ -91,22 +116,104 @@ function fetchIdentityBatch () {
 }
 
 function getIdentities (identities) {
-  return request({
-    method: 'POST',
-    url: HUB_ENDPOINT + '/identities',
-    data: JSON.stringify({identities}),
-    timeout: REQUEST_TIMEOUT
-  }).then(response => {
-    if (typeof response.data !== 'object') {
-      throw new Error('Response not an object')
+  return client
+    .post('/identities', {identities})
+    .then(response => {
+      if (typeof response.data !== 'object') {
+        throw new TypeError('Response not an object')
+      }
+      if (!response.data.identities || !Array.isArray(response.data.identities)) {
+        throw new TypeError('Response identities not an array')
+      }
+      return response.data.identities
+    })
+}
+
+let activityBuffer = Map()
+
+const types = {
+  '/robots.txt': 'robot',
+  '/favicon.ico': 'favicon',
+  '.png': 'img',
+  '.gif': 'img',
+  '.jpg': 'img',
+  '.svg': 'svg',
+  '.css': 'css',
+  '.js': 'js'
+}
+
+function detectType (url) {
+  let type = 'mixed'
+
+  Object.keys(types).some(key => {
+    if (url.slice(key.length * -1) === key) {
+      type = types[key]
+      return true
     }
-    if (!response.data.identities || !Array.isArray(response.data.identities)) {
-      throw new Error('Response identities not an array')
+  })
+
+  return type
+}
+
+function activityFeedback (log) {
+  // Get identity id
+  let identityId = log.getIn(['identity', 'id'])
+  if (!identityId) {
+    identityId = signature.getIdentityId({
+      address: log.get('address'),
+      headers: log.get('headers').toJS()
+    })
+  }
+
+  // Get host
+  let host = log.getIn(['request', 'headers', 'host'])
+  if (!host) {
+    return
+  }
+  if (host.indexOf(':') !== -1) {
+    [host] = host.split(':')
+  }
+
+  const values = [
+    log.getIn(['request', 'method']).toLowerCase(),
+    detectType(log.getIn(['request', 'url']))
+  ]
+  values.forEach(value => {
+    if (value) {
+      activityBuffer = activityBuffer.updateIn([identityId, host, value], 0, n => n + 1)
     }
-    return response.data.identities
   })
 }
 
+function batchIdentityFeedback () {
+  if (activityBuffer.size > 0) {
+    const activity = activityBuffer.toJS()
+    activityBuffer = activityBuffer.clear()
+    client
+      .post('/activity', {activity})
+      .then(response => {
+        if (typeof response.data !== 'object') {
+          throw new TypeError('Response not an object')
+        }
+        if (!response.data.identities || !Array.isArray(response.data.identities)) {
+          throw new TypeError('Response identities not an array')
+        }
+        response.data.identities.forEach(identity => {
+          const identityMap = fromJS(identity)
+          const cachedMap = cache.get(identity.id)
+          if (!is(cachedMap, identityMap)) {
+            cache.set(identity.id, identityMap)
+          }
+        })
+      })
+      .catch(err => {
+        console.log('activity feedback', err)
+      })
+  }
+}
+
+setInterval(batchIdentityFeedback, 60 * 1000)
+
 module.exports = {
-  fetchIdentity: fetchIdentity
+  augment
 }
