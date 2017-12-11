@@ -3,7 +3,7 @@
 const assert = require('assert')
 const fs = require('fs')
 const { fromJS } = require('immutable')
-const rules = require('../../lib/rules.js')
+const rules = require('../../lib/rules')
 
 const path = './test-rules.json'
 
