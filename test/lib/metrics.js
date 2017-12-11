@@ -3,8 +3,9 @@
 const assert = require('assert')
 const { fromJS } = require('immutable')
 const metrics = require('../../lib/metrics.js')
+const database = require('../../lib/database.js')
 
-describe('Database', function () {
+describe('Metrics', function () {
   let db
 
   before(function () {
@@ -25,7 +26,7 @@ describe('Database', function () {
   })
 
   after(function () {
-    db.close()
+    database.close()
   })
 
   it('index by name', function () {

@@ -3,12 +3,17 @@
 const assert = require('assert')
 const { fromJS } = require('immutable')
 const rules = require('../../lib/rules.js')
+const database = require('../../lib/database.js')
 
 describe('Rules', function () {
   let db
 
   before(function () {
     db = rules.connect('aw:mem://rules')
+  })
+
+  after(function () {
+    database.close()
   })
 
   it('works', function () {
