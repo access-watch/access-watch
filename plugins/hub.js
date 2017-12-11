@@ -160,8 +160,8 @@ function activityFeedback (log) {
   let identityId = log.getIn(['identity', 'id'])
   if (!identityId) {
     identityId = signature.getIdentityId({
-      address: log.get('address'),
-      headers: log.get('headers').toJS()
+      address: log.getIn(['address', 'value']),
+      headers: log.getIn(['request', 'headers']).toJS()
     })
   }
 
