@@ -143,7 +143,6 @@ Pipeline configuration
 
 const proxy = require('../plugins/proxy')
 const hub = require('../plugins/hub')
-const { selectKeys } = require('../lib/util')
 
 let stream = pipeline
 
