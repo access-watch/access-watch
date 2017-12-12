@@ -4,7 +4,7 @@ const assert = require('assert')
 const { fromJS } = require('immutable')
 const rules = require('../../lib/rules')
 const database = require('../../lib/database')
-const { now } = require('../../lib/util')
+const { now, iso } = require('../../lib/util')
 
 describe('Rules', function () {
   let db
@@ -52,7 +52,7 @@ describe('Rules', function () {
     db.add(rule2)
 
     const log = fromJS({
-      time: now(),
+      time: iso(now()),
       response: {
         status: 200
       },
