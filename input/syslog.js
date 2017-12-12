@@ -1,26 +1,29 @@
-const syslogd = require('syslogd')
+const syslogParse = require('syslog-parse')
+
 const { fromJS } = require('immutable')
+
+const socket = require('./socket')
 
 const defaultParse = s => fromJS(JSON.parse(s))
 
-function create ({name = 'Syslog', port = 514, parse = defaultParse}) {
+function create ({name = 'Syslog', protocol, port = 514, parse = defaultParse}) {
   return {
     name: name,
-    start: (pipeline) => {
-      syslogd(message => {
+    start: pipeline => {
+      const handler = message => {
         try {
-          pipeline.success(parse(message.msg))
+          const result = syslogParse(message)
+          pipeline.success(parse(result.message))
         } catch (err) {
           pipeline.error(err)
         }
-      }).listen(port, err => {
-        if (err) {
-          pipeline.status(err, 'Cannot start: ' + err.message)
-        } else {
-          pipeline.status(null, `Listening on UDP port ${port}.`)
-          console.log(`${name} listening on UDP port ${port}.`)
-        }
-      })
+      }
+      if (!protocol || protocol === 'udp') {
+        socket.createUdpServer({pipeline, name, port, handler})
+      }
+      if (!protocol || protocol === 'tcp') {
+        socket.createTcpServer({pipeline, name, port, handler})
+      }
     }
   }
 }

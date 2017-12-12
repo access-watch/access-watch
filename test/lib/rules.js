@@ -1,15 +1,22 @@
 /* eslint-env mocha */
 
 const assert = require('assert')
-const fs = require('fs')
 const { fromJS } = require('immutable')
 const rules = require('../../lib/rules')
-
-const path = './test-rules.json'
+const database = require('../../lib/database.js')
 
 describe('Rules', function () {
+  let db
+
+  before(function () {
+    db = rules.connect('aw:mem://rules')
+  })
+
+  after(function () {
+    database.close()
+  })
+
   it('works', function () {
-    const db = rules.createDatabase('test', {path: path})
     const rule1 = fromJS({
       id: '1',
       condition: {
@@ -51,16 +58,5 @@ describe('Rules', function () {
 
     assert.equal(db.get('1').get('count'), 0)
     assert.equal(db.get('2').get('count'), 1)
-
-    db.close()
-
-    const newDb = rules.createDatabase('test2', {path: path})
-    newDb.match(log)
-
-    assert.equal(newDb.get('1').get('count'), 0)
-    assert.equal(newDb.get('2').get('count'), 2)
-
-    newDb.close()
-    fs.unlinkSync(path)
   })
 })
