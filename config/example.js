@@ -159,29 +159,11 @@ let stream = pipeline
 
   /* Augment with data from the Access Watch Hub */
 
-  .map(log => {
-    return hub.fetchIdentity(Map({
-      address: log.getIn(['address', 'value']),
-      headers: log.getIn(['request', 'headers']),
-      captured_headers: log.getIn(['request', 'captured_headers'])
-    })).then(identity => {
-      if (identity) {
-        // Add identity properties
-        log = log.set('identity', selectKeys(identity, ['id', 'type', 'label']))
-        // Add identity objects
-        ;['address', 'user_agent', 'robot', 'reputation'].forEach(key => {
-          if (identity.has(key)) {
-            log = log.set(key, identity.get(key))
-          }
-        })
-      }
-      return log
-    })
-  })
+  .map(log => hub.augment(log))
 
   /* Output to the console as JS object */
 
-  // .map(log => console.log(log.toJS()))
+  .map(log => console.log(log.toJS()))
 
 module.exports = {
   stream
