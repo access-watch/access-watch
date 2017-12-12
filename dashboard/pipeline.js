@@ -4,7 +4,7 @@ const { Map, fromJS } = require('immutable')
 const pipeline = require('../lib/pipeline')
 
 const reducers = require('../lib/reducers')
-const session = require('../lib/session').getDatabase('traffic')
+const session = require('../lib/session').connect('aw:file://sessions')
 const { FixedWindow } = require('../lib/window')
 
 const hub = require('../plugins/hub')
