@@ -5,6 +5,7 @@ const pipeline = require('../lib/pipeline')
 
 const reducers = require('../lib/reducers')
 const session = require('../lib/session').connect('aw:file://sessions')
+const rules = require('../lib/rules').connect('aw:file://rules')
 const { FixedWindow } = require('../lib/window')
 
 const hub = require('../plugins/hub')
@@ -109,7 +110,7 @@ ipRequests
 
 // Rule matching
 
-stream.match()
+stream.map(log => rules.match(log))
 
 // Post-Processing for Websocket logs
 
