@@ -20,7 +20,7 @@ function createTcpServer ({pipeline, name, port, handler}) {
       if (err) {
         pipeline.status(err, 'Cannot start: ' + err.message)
       } else {
-        pipeline.status(null, `${name} listening on TCP port ${port}.`)
+        pipeline.status(null, `Listening on TCP port ${port}.`)
       }
     })
 }
@@ -38,7 +38,7 @@ function createUdpServer ({pipeline, name, port, handler}) {
       pipeline.status(err, 'Cannot start: ' + err.message)
     })
     .on('listening', () => {
-      pipeline.status(null, `${name} listening on UDP port ${port}.`)
+      pipeline.status(null, `Listening on UDP port ${port}.`)
     })
     .bind(port)
 }
