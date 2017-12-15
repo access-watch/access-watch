@@ -72,7 +72,7 @@ function reducer (log, value, key) {
     return transform(log, value)
   }
   if (key.startsWith('http_')) {
-    const name = key.substring(5).replace('_', '-')
+    const name = key.substring(5).replace(/_/g, '-')
     return addHeader(log, name, value)
   }
   return log
