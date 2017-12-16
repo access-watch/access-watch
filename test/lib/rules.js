@@ -64,10 +64,10 @@ describe('Rules', function () {
     db.match(log)                                      // request didn't get blocked
     db.match(log.setIn(['response', 'status'], 403))   // request did get blocked
 
-    assert.deepEqual(db.get('1').getIn(['speed', 'passed', 'per_minute']).toJS(), [])
-    assert.deepEqual(db.get('1').getIn(['speed', 'blocked', 'per_minute']).toJS(), [])
+    assert.deepEqual(db.get('1').getIn(['passed', 'per_minute']).toJS(), [])
+    assert.deepEqual(db.get('1').getIn(['blocked', 'per_minute']).toJS(), [])
 
-    assert.deepEqual(db.get('2').getIn(['speed', 'passed', 'per_minute']).toJS(), [1])
-    assert.deepEqual(db.get('2').getIn(['speed', 'blocked', 'per_minute']).toJS(), [1])
+    assert.deepEqual(db.get('2').getIn(['passed', 'per_minute']).toJS(), [1])
+    assert.deepEqual(db.get('2').getIn(['blocked', 'per_minute']).toJS(), [1])
   })
 })
