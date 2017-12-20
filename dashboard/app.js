@@ -10,7 +10,7 @@ const { stream } = require('./pipeline')
 
 app.get('/', (req, res) => res.redirect('/dashboard'))
 
-app.use('/dashboard', express.static(path.join(__dirname, 'static')))
+app.use('/dashboard', express.static(path.join(__dirname, '../node_modules/access-watch-ui/dist')))
 
 app.get('/dashboard', (req, res) => {
   const host = req.hostname
