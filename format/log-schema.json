@@ -9,13 +9,19 @@
       "required": ["time", "address", "method", "url", "headers"],
       "properties": {
         "time": {
-          "type": "string"
+          "type": "string",
+          "format": "date-time"
         },
         "address": {
-          "type": "string"
+          "type": "string",
+          "anyOf": [
+            {"format": "ipv4"},
+            {"format": "ipv6"}
+          ]
         },
         "scheme": {
-          "type": "string"
+          "type": "string",
+          "enum": ["http", "https"]
         },
         "method": {
           "type": "string"
