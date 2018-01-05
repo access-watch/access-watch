@@ -16,7 +16,7 @@ const client = axios.create({
   headers: {'User-Agent': 'Access Watch Hub Plugin'}
 })
 
-const cache = new LRUCache({size: 10000, maxAge: 3600 * 1000})
+const cache = new LRUCache({max: 10000, maxAge: 3600 * 1000})
 
 let buffer = {}
 
