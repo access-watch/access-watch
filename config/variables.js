@@ -1,6 +1,7 @@
 const rc = require('rc')
 
 const constants = {
+  port: 3000,
   metrics: {
     gc: {
       expiration: 24 * 3600,
@@ -10,7 +11,7 @@ const constants = {
   session: {
     gc: {
       expiration: 3600,
-      interval: 3600 * 1000,
+      interval: 3600 * 1000
     }
   }
 }
