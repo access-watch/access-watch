@@ -28,7 +28,7 @@ function augment (log) {
   activityFeedback(log)
   // Fetch identity and augment log (promise based)
   return fetchIdentity(Map({
-    address: log.getIn(['address', 'value']),
+    address: log.getIn(['address', 'value'], log.getIn(['request', 'address'])),
     headers: log.getIn(['request', 'headers']),
     captured_headers: log.getIn(['request', 'captured_headers'])
   })).then(identity => {
@@ -161,7 +161,7 @@ function activityFeedback (log) {
   let identityId = log.getIn(['identity', 'id'])
   if (!identityId) {
     identityId = signature.getIdentityId({
-      address: log.getIn(['address', 'value']),
+      address: log.getIn(['address', 'value'], log.getIn(['request', 'address'])),
       headers: log.getIn(['request', 'headers']).toJS()
     })
   }

@@ -48,7 +48,7 @@
     "ws": "^3.3.3"
   },
   "devDependencies": {
-    "mocha": "^4.0.1",
+    "mocha": "^4.1.0",
     "standard": "^10.0.3"
   }
 }

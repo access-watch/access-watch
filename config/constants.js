@@ -26,7 +26,7 @@ const constants = {
   },
   hub: {
     cache: {
-      max: 1000,
+      max: 10000,
       maxAge: 3600 * 1000
     },
     timeout: 1000
