@@ -12,7 +12,7 @@ Here is an example of how this file can look like :
   "port": 4000,
   "metrics": {
     "gc": {
-      "expiration": 3600,
+      "expiration": 3600
     }
   }
 }
