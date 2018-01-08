@@ -9,7 +9,7 @@ const { Map, fromJS, is } = require('immutable')
 const { signature } = require('access-watch-sdk')
 
 const { selectKeys } = require('../lib/util')
-const config = require('../config/variables')
+const config = require('../config/constants')
 
 const client = axios.create({
   baseURL: 'https://api.access.watch/1.2/hub',
