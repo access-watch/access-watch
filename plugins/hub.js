@@ -9,6 +9,7 @@ const { Map, fromJS, is } = require('immutable')
 const { signature } = require('access-watch-sdk')
 
 const { selectKeys } = require('../lib/util')
+const config = require('../config/variables')
 
 const client = axios.create({
   baseURL: 'https://api.access.watch/1.2/hub',
@@ -16,7 +17,7 @@ const client = axios.create({
   headers: {'User-Agent': 'Access Watch Hub Plugin'}
 })
 
-const cache = new LRUCache({size: 10000, maxAge: 3600 * 1000})
+const cache = new LRUCache(config.hub.cache)
 
 let buffer = {}
 

@@ -2,7 +2,17 @@ const rc = require('rc')
 
 const constants = {
   port: 3000,
+  pipeline: {
+    allowedEventLateness: 60,
+    watermarkDelay: 5
+  },
   metrics: {
+    gc: {
+      expiration: 24 * 3600,
+      interval: 3600 * 1000
+    }
+  },
+  rules: {
     gc: {
       expiration: 24 * 3600,
       interval: 3600 * 1000
@@ -12,6 +22,12 @@ const constants = {
     gc: {
       expiration: 3600,
       interval: 3600 * 1000
+    }
+  },
+  hub: {
+    cache: {
+      maxAge: 3600 * 1000,
+      size: 1000
     }
   }
 }
