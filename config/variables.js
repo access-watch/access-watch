@@ -26,8 +26,8 @@ const constants = {
   },
   hub: {
     cache: {
-      maxAge: 3600 * 1000,
-      size: 1000
+      max: 1000,
+      maxAge: 3600 * 1000
     }
   }
 }
