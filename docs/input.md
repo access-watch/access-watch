@@ -37,7 +37,12 @@ log_format access_watch_combined_with_x_forwarded_for '$remote_addr - $remote_us
 access_log /logs/access.log access_watch_combined_with_x_forwarded_for;
 ```
 
-With the following configuration for Access Watch:
+It can then be specified in Nginx's `server_name` sections:
+```
+access_log /var/log/nginx/access.log access_watch_combined_with_x_forwarded_for;
+```
+
+And parsed by Access Watch with the following configuration:
 ```
 const defaultInput = input.file.create({
   path: '/logs/access.log',
