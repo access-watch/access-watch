@@ -68,9 +68,10 @@ You can find below the list of all configurable constants:
 
 ## Hub
 
-| Constant name | Type            | Description                             |
-| ------------- | --------------- | --------------------------------------- |
-| cache         | [cache](#cache) | The cache property, see [cache](#cache) |
+| Constant name | Type            | Description                                              |
+| ------------- | --------------- | -------------------------------------------------------- |
+| cache         | [cache](#cache) | The cache property, see [cache](#cache)                  |
+| timeout       | integer         | Timeout of the request made towards the access.watch hub |
 
 ### Cache
 

@@ -13,7 +13,7 @@ const config = require('../config/constants')
 
 const client = axios.create({
   baseURL: 'https://api.access.watch/1.2/hub',
-  timeout: 1000,
+  timeout: config.hub.timeout,
   headers: {'User-Agent': 'Access Watch Hub Plugin'}
 })
 

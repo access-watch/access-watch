@@ -28,7 +28,8 @@ const constants = {
     cache: {
       max: 1000,
       maxAge: 3600 * 1000
-    }
+    },
+    timeout: 1000
   }
 }
 
