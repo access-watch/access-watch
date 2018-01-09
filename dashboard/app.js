@@ -26,7 +26,7 @@ app.get('/dashboard', (req, res) => {
 function websocket (endpoint, stream) {
   let clients = Map()
 
-  app.ws(endpoint, function (ws, req) {
+  app.ws(endpoint, (ws, req) => {
     const clientId = uuid()
     clients = clients.set(clientId, ws)
     ws.on('close', () => { clients = clients.delete(clientId) })
