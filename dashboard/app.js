@@ -5,6 +5,7 @@ const { Map } = require('immutable')
 
 const app = require('../lib/app')
 const { stream } = require('./pipeline')
+const config = require('../config/constants')
 
 /* Dashboard and Assets */
 
@@ -18,7 +19,15 @@ app.get('/dashboard', (req, res) => {
   const apiBaseUrl = `http://${host}:${port}`
   const websocket = `ws://${host}:${port}`
   const index = path.join(__dirname, 'views', 'index.ejs')
-  res.render(index, {apiBaseUrl, websocket})
+  res.render(index, {
+    apiBaseUrl,
+    websocket,
+    uiConfig: JSON.stringify({
+      ...config.ui,
+      metrics: {
+        expiration: config.metrics.gc.expiration
+      }})
+  })
 })
 
 /* Websocket */

@@ -33,6 +33,7 @@ You can find below the list of all configurable constants:
 | session       | [session](#session)   | Session properties             |
 | rules         | [rules](#rules)       | Rules properties               |
 | hub           | [hub](#hub)           | Hub properties                 |
+| ui            | [ui](#ui)             | User Interface properties      |
 
 ## Pipeline
 
@@ -79,3 +80,15 @@ You can find below the list of all configurable constants:
 | ------------- | ------- | -------------------------------------------- |
 | max           | integer | Maximum length of items the cache will keep. |
 | maxAge        | integer | Maximum age of an item kept in cache, in ms. |
+
+## UI
+
+| Constant name | Type          | Description                          |
+| ------------- | ------------- | ------------------------------------ |
+| time          | [time](#time) | The time property, see [time](#time) |
+
+### Time
+
+| Constant name | Type           | Description                                                                                                |
+| ------------- | -------------- | ---------------------------------------------------------------------------------------------------------- |
+| sliderValues  | Array<integer> | An array of integer (in minutes) for the slider values and a special keyword 'auto' for the auto behaviour |

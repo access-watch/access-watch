@@ -30,6 +30,11 @@ const constants = {
       maxAge: 3600 * 1000
     },
     timeout: 1000
+  },
+  ui: {
+    time: {
+      sliderValues: ['auto', 30, 60, 60 * 6, 60 * 24]
+    }
   }
 }
 
