@@ -4,6 +4,7 @@
 
 const LRUCache = require('lru-cache')
 const axios = require('axios')
+const uuid = require('uuid/v4')
 const { Map, fromJS, is } = require('immutable')
 
 const { signature } = require('access-watch-sdk')
@@ -19,9 +20,11 @@ const client = axios.create({
 
 const cache = new LRUCache(config.hub.cache)
 
-let buffer = {}
+const identityBuffer = {}
 
-let batchScheduled
+const identityRequests = {}
+
+const identityMaxConcurrentRequests = 2
 
 function augment (log) {
   // Share activity metrics and get updates
@@ -61,30 +64,31 @@ function cacheKey (identity) {
 
 function fetchIdentityPromise (key, identity) {
   return new Promise((resolve, reject) => {
-    if (Object.keys(buffer).length >= 100) {
+    if (Object.keys(identityBuffer).length >= 100) {
       console.log('Buffer Full. Skipping augmentation.')
       resolve()
       return
     }
-    if (!buffer[key]) {
-      buffer[key] = {identity, promises: []}
+    if (!identityBuffer[key]) {
+      identityBuffer[key] = {identity, promises: []}
     }
-    buffer[key].promises.push({resolve, reject})
-    if (!batchScheduled) {
-      batchScheduled = setTimeout(fetchIdentityBatch, 333)
-    }
+    identityBuffer[key].promises.push({resolve, reject})
   })
 }
 
-function fetchIdentityBatch () {
-  batchScheduled = null
+function batchIdentityFetch () {
+  const countCurrentRequests = Object.keys(identityRequests).length
+  if (countCurrentRequests >= identityMaxConcurrentRequests) {
+    console.log('Max concurrent requests for identity batch. Skipping.')
+    return
+  }
 
   let batch = []
 
   // Move entries from the buffer to the batch
-  Object.keys(buffer).forEach(key => {
-    batch.push(Object.assign({key}, buffer[key]))
-    delete buffer[key]
+  Object.keys(identityBuffer).forEach(key => {
+    batch.push(Object.assign({key}, identityBuffer[key]))
+    delete identityBuffer[key]
   })
 
   if (batch.length === 0) {
@@ -93,11 +97,15 @@ function fetchIdentityBatch () {
 
   const requestIdentities = batch.map(batchEntry => batchEntry.identity)
 
-  getIdentities(requestIdentities)
+  const requestId = uuid()
+
+  identityRequests[requestId] = getIdentities(requestIdentities)
     .then(responseIdentities => {
       if (batch.length !== responseIdentities.length) {
         throw new Error('Length mismatch')
       }
+      // Releasing concurrent requests count
+      delete identityRequests[requestId]
       batch.forEach((batchEntry, i) => {
         const identityMap = fromJS(responseIdentities[i])
         cache.set(batchEntry.key, identityMap)
@@ -106,7 +114,10 @@ function fetchIdentityBatch () {
         })
       })
     })
-    .catch(() => {
+    .catch((err) => {
+      console.error('identities', err)
+      // Releasing concurrent requests count
+      delete identityRequests[requestId]
       // Resolving all the requests with an empty response
       batch.forEach(batchEntry => {
         batchEntry.promises.forEach(({resolve}) => {
@@ -131,6 +142,10 @@ function getIdentities (identities) {
 }
 
 let activityBuffer = Map()
+
+const activityRequests = {}
+
+const activityMaxConcurrentRequests = 2
 
 const types = {
   '/robots.txt': 'robot',
@@ -157,6 +172,11 @@ function detectType (url) {
 }
 
 function activityFeedback (log) {
+  if (Object.keys(activityBuffer).length >= 100) {
+    console.log('Activity feedback buffer full. Skipping.')
+    return
+  }
+
   // Get identity id
   let identityId = log.getIn(['identity', 'id'])
   if (!identityId) {
@@ -187,33 +207,50 @@ function activityFeedback (log) {
 }
 
 function batchIdentityFeedback () {
-  if (activityBuffer.size > 0) {
-    const activity = activityBuffer.toJS()
-    activityBuffer = activityBuffer.clear()
-    client
-      .post('/activity', {activity})
-      .then(response => {
-        if (typeof response.data !== 'object') {
-          throw new TypeError('Response not an object')
-        }
-        if (!response.data.identities || !Array.isArray(response.data.identities)) {
-          throw new TypeError('Response identities not an array')
-        }
-        response.data.identities.forEach(identity => {
-          const identityMap = fromJS(identity)
-          const cachedMap = cache.get(identity.id)
-          if (!is(cachedMap, identityMap)) {
-            cache.set(identity.id, identityMap)
-          }
-        })
-      })
-      .catch(err => {
-        console.log('activity feedback', err)
-      })
+  if (activityBuffer.size === 0) {
+    return
   }
+
+  const countCurrentRequests = Object.keys(activityRequests).length
+  if (countCurrentRequests >= activityMaxConcurrentRequests) {
+    console.log('Max concurrent requests for activity feedback batch. Skipping.')
+    return
+  }
+
+  const activity = activityBuffer.toJS()
+  activityBuffer = activityBuffer.clear()
+
+  const requestId = uuid()
+
+  activityRequests[requestId] = client
+    .post('/activity', {activity})
+    .then(response => {
+      if (typeof response.data !== 'object') {
+        throw new TypeError('Response not an object')
+      }
+      if (!response.data.identities || !Array.isArray(response.data.identities)) {
+        throw new TypeError('Response identities not an array')
+      }
+      // Releasing concurrent requests count
+      delete activityRequests[requestId]
+      response.data.identities.forEach(identity => {
+        const identityMap = fromJS(identity)
+        const cachedMap = cache.get(identity.id)
+        if (!is(cachedMap, identityMap)) {
+          cache.set(identity.id, identityMap)
+        }
+      })
+    })
+    .catch(err => {
+      console.error('activity feedback', err)
+      // Releasing concurrent requests count
+      delete activityRequests[requestId]
+    })
 }
 
-setInterval(batchIdentityFeedback, 60 * 1000)
+setInterval(batchIdentityFetch, 333)
+
+setInterval(batchIdentityFeedback, 333)
 
 module.exports = {
   augment

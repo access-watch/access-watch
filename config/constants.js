@@ -29,7 +29,7 @@ const constants = {
       max: 10000,
       maxAge: 3600 * 1000
     },
-    timeout: 1000
+    timeout: 2000
   },
   ui: {
     time: {
