@@ -69,10 +69,11 @@ You can find below the list of all configurable constants:
 
 ## Hub
 
-| Constant name | Type            | Description                                              |
-| ------------- | --------------- | -------------------------------------------------------- |
-| cache         | [cache](#cache) | The cache property, see [cache](#cache)                  |
-| timeout       | integer         | Timeout of the request made towards the access.watch hub |
+| Constant name | Type                  | Description                                              |
+| ------------- | --------------------- | -------------------------------------------------------- |
+| cache         | [cache](#cache)       | The cache property, see [cache](#cache)                  |
+| identity      | [identity](#identity) | The identity property, see [identity](#identity)         |
+| timeout       | integer               | Timeout of the request made towards the access.watch hub |
 
 ### Cache
 
@@ -80,6 +81,13 @@ You can find below the list of all configurable constants:
 | ------------- | ------- | -------------------------------------------- |
 | max           | integer | Maximum length of items the cache will keep. |
 | maxAge        | integer | Maximum age of an item kept in cache, in ms. |
+
+### Identity
+
+| Constant name         | Type    | Description                                                |
+| --------------------- | ------- | ---------------------------------------------------------- |
+| batchInterval         | integer | Interval (in ms) at which the batch will be processed.     |
+| maxConcurrentRequests | integer | Maximum number of requests which will be ran concurrently. |
 
 ## UI
 

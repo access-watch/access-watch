@@ -24,8 +24,6 @@ const identityBuffer = {}
 
 const identityRequests = {}
 
-const identityMaxConcurrentRequests = 2
-
 function augment (log) {
   // Share activity metrics and get updates
   activityFeedback(log)
@@ -78,7 +76,7 @@ function fetchIdentityPromise (key, identity) {
 
 function batchIdentityFetch () {
   const countCurrentRequests = Object.keys(identityRequests).length
-  if (countCurrentRequests >= identityMaxConcurrentRequests) {
+  if (countCurrentRequests >= config.hub.identity.maxConcurrentRequests) {
     console.log('Max concurrent requests for identity batch. Skipping.')
     return
   }
@@ -248,7 +246,7 @@ function batchIdentityFeedback () {
     })
 }
 
-setInterval(batchIdentityFetch, 333)
+setInterval(batchIdentityFetch, config.hub.identity.batchInterval)
 
 setInterval(batchIdentityFeedback, 333)
 

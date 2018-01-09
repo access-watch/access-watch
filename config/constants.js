@@ -29,6 +29,10 @@ const constants = {
       max: 10000,
       maxAge: 3600 * 1000
     },
+    identity: {
+      batchInterval: 333,
+      maxConcurrentRequests: 2
+    },
     timeout: 2000
   },
   ui: {
