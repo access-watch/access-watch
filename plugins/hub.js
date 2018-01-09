@@ -19,9 +19,9 @@ const client = axios.create({
 
 const cache = new LRUCache({max: 10000, maxAge: 3600 * 1000})
 
-let identityBuffer = {}
+const identityBuffer = {}
 
-let identityRequests = {}
+const identityRequests = {}
 
 const identityMaxConcurrentRequests = 2
 
@@ -142,7 +142,7 @@ function getIdentities (identities) {
 
 let activityBuffer = Map()
 
-let activityRequests = {}
+const activityRequests = {}
 
 const activityMaxConcurrentRequests = 2
 
