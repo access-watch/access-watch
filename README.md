@@ -47,6 +47,8 @@ In order to do this, you need to create a new configuration file such as `config
 
 See [Input Configuration](./docs/input.md) for the list of available input types and how to configure them.
 
+There are also a couple of constants you might configure with a simple config file, to learn more you can head to [Constants Configuration](./docs/configuration.md).
+
 ### Start with custom configuration
 
 ```shell

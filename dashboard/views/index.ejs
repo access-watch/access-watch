@@ -19,6 +19,9 @@
 <div id="react-main">
 </div>
 
+<script>
+  window.config = JSON.parse('<%- uiConfig %>');
+</script>
 <script data-api-base-url="<%= apiBaseUrl %>" data-websocket="<%= websocket %>" src="./main.js"></script>
 
 </body>
