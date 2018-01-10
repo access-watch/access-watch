@@ -1,23 +1,24 @@
 // import the framework
-const app = require('./lib/app')
-const pipeline = require('./lib/pipeline')
-const database = require('./lib/database')
+const app = require('./lib/app');
+const pipeline = require('./lib/pipeline');
+const database = require('./lib/database');
 
 // configure the application
-require('./config')
+require('./config');
 
 // start the application
-function start () {
-  pipeline.start()
-  app.start()
+function start() {
+  pipeline.start();
+  app.start();
 }
 
 // stop the application
-function stop () {
-  database.close()
-  process.exit()
+function stop() {
+  database.close();
+  // eslint-disable-next-line no-process-exit
+  process.exit();
 }
 
-start()
+start();
 
-process.on('SIGINT', stop)
+process.on('SIGINT', stop);
