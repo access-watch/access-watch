@@ -13,7 +13,7 @@ const { selectKeys } = require('../lib/util')
 
 const client = axios.create({
   baseURL: 'https://api.access.watch/1.2/hub',
-  timeout: 2000,
+  timeout: 1000,
   headers: {'User-Agent': 'Access Watch Hub Plugin'}
 })
 
@@ -63,8 +63,9 @@ function cacheKey (identity) {
 
 function fetchIdentityPromise (key, identity) {
   return new Promise((resolve, reject) => {
-    if (Object.keys(identityBuffer).length >= 100) {
-      console.log('Buffer Full. Skipping augmentation.')
+    const identityBufferCount = Object.keys(identityBuffer).length
+    if (identityBufferCount >= 25) {
+      console.log('Identity buffer full. Skipping.', identityBufferCount)
       resolve()
       return
     }
@@ -171,8 +172,9 @@ function detectType (url) {
 }
 
 function activityFeedback (log) {
-  if (Object.keys(activityBuffer).length >= 100) {
-    console.log('Activity feedback buffer full. Skipping.')
+  const activityBufferCount = activityBuffer.size
+  if (activityBufferCount >= 100) {
+    console.log('Activity feedback buffer full. Skipping.', activityBufferCount)
     return
   }
 
@@ -212,7 +214,7 @@ function batchIdentityFeedback () {
 
   const countCurrentRequests = Object.keys(activityRequests).length
   if (countCurrentRequests >= activityMaxConcurrentRequests) {
-    console.log('Max concurrent requests for activity feedback batch. Skipping.')
+    console.log('Max concurrent requests for activity feedback. Skipping.')
     return
   }
 
