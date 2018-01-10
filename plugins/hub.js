@@ -147,8 +147,6 @@ let activityBuffer = Map()
 
 const activityRequests = {}
 
-const activityMaxConcurrentRequests = 2
-
 const types = {
   '/robots.txt': 'robot',
   '/favicon.ico': 'favicon',
@@ -219,13 +217,13 @@ function activityFeedback (log) {
   })
 }
 
-function batchIdentityFeedback () {
+function batchActivityFeedback () {
   if (activityBuffer.size === 0) {
     return
   }
 
   const countCurrentRequests = Object.keys(activityRequests).length
-  if (countCurrentRequests >= activityMaxConcurrentRequests) {
+  if (countCurrentRequests >= config.hub.activity.maxConcurrentRequests) {
     console.log('Max concurrent requests for activity feedback. Skipping.')
     return
   }
@@ -266,7 +264,7 @@ function batchIdentityFeedback () {
 
 setInterval(batchIdentityFetch, config.hub.identity.batchInterval)
 
-setInterval(batchIdentityFeedback, 333)
+setInterval(batchActivityFeedback, config.hub.activity.batchInterval)
 
 module.exports = {
   augment

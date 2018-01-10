@@ -33,6 +33,10 @@ const constants = {
       batchInterval: 333,
       maxConcurrentRequests: 2
     },
+    activity: {
+      batchInterval: 333,
+      maxConcurrentRequests: 2
+    },
     timeout: 1000
   },
   ui: {
