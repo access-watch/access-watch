@@ -124,17 +124,6 @@ stream = stream
     }
     return log
   })
-  // Set top level time as iso
-  .map(log => {
-    return log.set('time', log.getIn(['request', 'time']))
-  })
-  // Set request host
-  .map(log => {
-    if (!log.hasIn(['request', 'host']) && log.hasIn(['request', 'headers', 'host'])) {
-      log = log.setIn(['request', 'host'], log.getIn(['request', 'headers', 'host']))
-    }
-    return log
-  })
   // Normalise unknown identity as null
   .map(log => {
     if (log.getIn(['identity', 'type']) === 'unknown') {
@@ -146,13 +135,6 @@ stream = stream
   .map(log => {
     if (!log.hasIn(['identity', 'name']) && log.hasIn(['identity', 'robot', 'name'])) {
       log = log.setIn(['identity', 'name'], log.getIn(['identity', 'robot', 'name']))
-    }
-    return log
-  })
-  // Set address label
-  .map(log => {
-    if (!log.hasIn(['address', 'label'])) {
-      log = log.setIn(['address', 'label'], log.getIn(['address', 'hostname']) || log.getIn(['address', 'value']))
     }
     return log
   })
