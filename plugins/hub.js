@@ -28,16 +28,11 @@ function augment (log) {
   // Share activity metrics and get updates
   activityFeedback(log)
   // Fetch identity and augment log (promise based)
-  return fetchIdentity(
-    Map({
-      address: log.getIn(
-        ['address', 'value'],
-        log.getIn(['request', 'address'])
-      ),
-      headers: log.getIn(['request', 'headers']),
-      captured_headers: log.getIn(['request', 'captured_headers'])
-    })
-  ).then(identity => {
+  return fetchIdentity(Map({
+    address: log.getIn(['address', 'value'], log.getIn(['request', 'address'])),
+    headers: log.getIn(['request', 'headers']),
+    captured_headers: log.getIn(['request', 'captured_headers'])
+  })).then(identity => {
     if (identity) {
       // Add identity properties
       log = log.set('identity', selectKeys(identity, ['id', 'type', 'label']));
@@ -132,15 +127,17 @@ function batchIdentityFetch () {
 }
 
 function getIdentities (identities) {
-  return client.post('/identities', { identities }).then(response => {
-    if (typeof response.data !== 'object') {
-      throw new TypeError('Response not an object')
-    }
-    if (!response.data.identities || !Array.isArray(response.data.identities)) {
-      throw new TypeError('Response identities not an array')
-    }
-    return response.data.identities
-  })
+  return client
+    .post('/identities', { identities })
+    .then(response => {
+      if (typeof response.data !== 'object') {
+        throw new TypeError('Response not an object')
+      }
+      if (!response.data.identities || !Array.isArray(response.data.identities)) {
+        throw new TypeError('Response identities not an array')
+      }
+      return response.data.identities
+    })
 }
 
 let activityBuffer = Map()
@@ -174,10 +171,7 @@ function detectType (url) {
 function activityFeedback (log) {
   const activityBufferCount = activityBuffer.size
   if (activityBufferCount >= 100) {
-    console.log(
-      'Activity feedback buffer full. Skipping.',
-      activityBufferCount
-    )
+    console.log('Activity feedback buffer full. Skipping.', activityBufferCount)
     return
   }
 
@@ -185,10 +179,7 @@ function activityFeedback (log) {
   let identityId = log.getIn(['identity', 'id'])
   if (!identityId) {
     identityId = signature.getIdentityId({
-      address: log.getIn(
-        ['address', 'value'],
-        log.getIn(['request', 'address'])
-      ),
+      address: log.getIn(['address', 'value'], log.getIn(['request', 'address'])),
       headers: log.getIn(['request', 'headers']).toJS()
     })
   }
@@ -208,11 +199,7 @@ function activityFeedback (log) {
   ]
   values.forEach(value => {
     if (value) {
-      activityBuffer = activityBuffer.updateIn(
-        [identityId, host, value],
-        0,
-        n => n + 1
-      )
+      activityBuffer = activityBuffer.updateIn([identityId, host, value], 0, n => n + 1)
     }
   })
 }
@@ -239,9 +226,7 @@ function batchActivityFeedback () {
       if (typeof response.data !== 'object') {
         throw new TypeError('Response not an object')
       }
-      if (
-        !response.data.identities ||
-        !Array.isArray(response.data.identities)
+      if (!response.data.identities || !Array.isArray(response.data.identities)
       ) {
         throw new TypeError('Response identities not an array')
       }
