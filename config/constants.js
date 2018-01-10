@@ -3,7 +3,7 @@ const rc = require('rc')
 const constants = {
   port: 3000,
   pipeline: {
-    allowedEventLateness: 60,
+    allowedLateness: 60,
     watermarkDelay: 5
   },
   metrics: {

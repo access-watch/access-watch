@@ -39,7 +39,7 @@ You can find below the list of all configurable constants:
 
 | Constant name        | Type    | Description                                                                                          |
 | -------------------- | ------- | ---------------------------------------------------------------------------------------------------- |
-| allowedEventLateness | integer | The allowed lateness of an event entering the pipeline, if the event comes later, it will be dropped |
+| allowedLateness | integer | The allowed lateness of an event entering the pipeline, if the event comes later, it will be dropped |
 | watermarkDelay       | integer | Delay removed from the current time when comparing to the event time                                 |
 
 ## Metrics
