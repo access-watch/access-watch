@@ -89,6 +89,13 @@ You can find below the list of all configurable constants:
 | batchInterval         | integer | Interval (in ms) at which the batch will be processed.     |
 | maxConcurrentRequests | integer | Maximum number of requests which will be ran concurrently. |
 
+### Activity
+
+| Constant name         | Type    | Description                                                |
+| --------------------- | ------- | ---------------------------------------------------------- |
+| batchInterval         | integer | Interval (in ms) at which the batch will be processed.     |
+| maxConcurrentRequests | integer | Maximum number of requests which will be ran concurrently. |
+
 ## UI
 
 | Constant name | Type          | Description                          |
