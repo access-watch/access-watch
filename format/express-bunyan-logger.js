@@ -1,26 +1,27 @@
-const { fromJS } = require('immutable')
+const { fromJS } = require('immutable');
 
-const parseBunyanRequest = (strSource) => {
-  const source = typeof strSource === 'string' ? JSON.parse(strSource) : strSource
+const parseBunyanRequest = strSource => {
+  const source =
+    typeof strSource === 'string' ? JSON.parse(strSource) : strSource;
   const request = {
     time: source.time,
     address: source.ip,
     method: source.method,
     url: source.url,
-    headers: source.req.headers
-  }
+    headers: source.req.headers,
+  };
 
   const response = {
-    status: source['status-code']
-  }
+    status: source['status-code'],
+  };
 
-  return fromJS({request, response})
-}
+  return fromJS({ request, response });
+};
 
-function parser () {
-  return parseBunyanRequest
+function parser() {
+  return parseBunyanRequest;
 }
 
 module.exports = {
-  parser
-}
+  parser,
+};
