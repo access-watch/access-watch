@@ -1,5 +1,5 @@
-const proxyaddr = require('proxy-addr')
-const { Map } = require('immutable')
+const proxyaddr = require('proxy-addr');
+const { Map } = require('immutable');
 
 const ipRanges = {
   cloudflare: [
@@ -22,7 +22,7 @@ const ipRanges = {
     '2405:8100::/32',
     '2405:b500::/32',
     '2606:4700::/32',
-    '2803:f800::/32'
+    '2803:f800::/32',
   ],
   cloudfront: [
     '13.32.0.0/15',
@@ -58,13 +58,9 @@ const ipRanges = {
     '205.251.250.0/23',
     '205.251.252.0/23',
     '205.251.254.0/24',
-    '216.137.32.0/19'
+    '216.137.32.0/19',
   ],
-  cloudproxy: [
-    '192.88.134.0/23',
-    '185.93.228.0/22',
-    '66.248.200.0/22'
-  ],
+  cloudproxy: ['192.88.134.0/23', '185.93.228.0/22', '66.248.200.0/22'],
   incapsula: [
     '199.83.128.0/21',
     '198.143.32.0/19',
@@ -76,27 +72,33 @@ const ipRanges = {
     '107.154.0.0/16',
     '45.60.0.0/16',
     '45.223.0.0/16',
-    '2a02:e980::/29'
-  ]
-}
+    '2a02:e980::/29',
+  ],
+};
 
-const trusted = ['loopback', 'linklocal', 'uniquelocal'].concat(...Object.values(ipRanges))
+const trusted = ['loopback', 'linklocal', 'uniquelocal'].concat(
+  ...Object.values(ipRanges)
+);
 
 /**
  * Detect the actual IP address, ignoring the proxies.
  */
-function detectAddress (remoteAddress, headers) {
-  let address = remoteAddress
+function detectAddress(remoteAddress, headers) {
+  let address = remoteAddress;
 
   if (headers.has('x-forwarded-for')) {
-    address = proxyaddr({'headers': headers.toJS(),
-      'connection': {'remoteAddress': remoteAddress}},
-                        trusted)
+    address = proxyaddr(
+      {
+        headers: headers.toJS(),
+        connection: { remoteAddress: remoteAddress },
+      },
+      trusted
+    );
   }
 
-  return Map({value: address})
+  return Map({ value: address });
 }
 
 module.exports = {
-  detectAddress: detectAddress
-}
+  detectAddress: detectAddress,
+};

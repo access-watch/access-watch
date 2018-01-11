@@ -4,5 +4,5 @@ module.exports = {
   socket: require('./socket'),
   file: require('./file'),
   elasticsearch: require('./elasticsearch'),
-  websocket: require('./websocket')
-}
+  websocket: require('./websocket'),
+};

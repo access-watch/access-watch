@@ -1,15 +1,15 @@
-const uuid = require('uuid/v4')
-const { Map, fromJS } = require('immutable')
+const uuid = require('uuid/v4');
+const { Map, fromJS } = require('immutable');
 
-const pipeline = require('../lib/pipeline')
+const pipeline = require('../lib/pipeline');
 
-const reducers = require('../lib/reducers')
-const session = require('../lib/session').connect('aw:file://sessions')
-const rules = require('../lib/rules').connect('aw:file://rules')
-const { FixedWindow } = require('../lib/window')
+const reducers = require('../lib/reducers');
+const session = require('../lib/session').connect('aw:file://sessions');
+const rules = require('../lib/rules').connect('aw:file://rules');
+const { FixedWindow } = require('../lib/window');
 
-const hub = require('../plugins/hub')
-const proxy = require('../plugins/proxy')
+const hub = require('../plugins/hub');
+const proxy = require('../plugins/proxy');
 
 // Pre-Processing before Analytics & Robots
 
@@ -18,37 +18,43 @@ let stream = pipeline
   // .filter(log => log.getIn(['request', 'host']) === 'example.com')
 
   // Detect the public IP address if it's behind a proxy
-  .map(log => log.set('address',
-                        proxy.detectAddress(log.getIn(['request', 'address']),
-                                            log.getIn(['request', 'headers']))))
+  .map(log =>
+    log.set(
+      'address',
+      proxy.detectAddress(
+        log.getIn(['request', 'address']),
+        log.getIn(['request', 'headers'])
+      )
+    )
+  )
 
   // Augment with data from the Access Watch Hub
-  .map(log => hub.augment(log))
+  .map(log => hub.augment(log));
 
 // Output to the console as JS object
 // stream.map(log => console.log(log.toJS()))
 
 // Analytics
 
-function requestMetrics (log) {
+function requestMetrics(log) {
   return fromJS({
     name: 'request',
     tags: {
       type: log.getIn(['identity', 'type'], 'unknown'),
       status: log.getIn(['reputation', 'status'], 'ok'),
-      country: log.getIn(['address', 'country_code'], 'unknown')
+      country: log.getIn(['address', 'country_code'], 'unknown'),
     },
-    value: 1
-  })
+    value: 1,
+  });
 }
 
 stream
   .metrics(requestMetrics)
   .window({
     strategy: new FixedWindow(1),
-    reducer: reducers.count()
+    reducer: reducers.count(),
   })
-  .store()
+  .store();
 
 // Robots
 
@@ -56,33 +62,35 @@ stream
 const robotRequests = stream.session({
   type: 'robot',
   gap: 30 * 60,
-  id: log => log.getIn(['robot', 'id'])
-})
+  id: log => log.getIn(['robot', 'id']),
+});
 
 robotRequests
   .map(log => {
     return log.update('session', session => {
       return session
         .set('robot', log.getIn(['robot']))
-        .set('identity', log.get('identity')
-             .update('type', t => (t === 'unknown') ? null : t))
+        .set(
+          'identity',
+          log.get('identity').update('type', t => (t === 'unknown' ? null : t))
+        )
         .set('address', log.getIn(['address']))
         .set('user_agent', log.getIn(['user_agent']))
-        .set('reputation', log.getIn(['robot', 'reputation']))
-    })
+        .set('reputation', log.getIn(['robot', 'reputation']));
+    });
   })
   .map(log => {
-    session.save(log.get('session'))
-    return log
-  })
+    session.save(log.get('session'));
+    return log;
+  });
 
 // IPs
 
 const ipRequests = stream.session({
   type: 'address',
   gap: 30 * 60,
-  id: log => log.getIn(['address', 'value'])
-})
+  id: log => log.getIn(['address', 'value']),
+});
 
 ipRequests
   .map(log => {
@@ -91,26 +99,29 @@ ipRequests
         .set('address', log.get('address'))
         .update('robots', Map(), robots => {
           if (log.has('robot')) {
-            return robots.set(log.getIn(['robot', 'id']), log.get('robot'))
+            return robots.set(log.getIn(['robot', 'id']), log.get('robot'));
           }
-          return robots
+          return robots;
         })
         .update('user_agents', Map(), userAgents => {
           if (log.has('user_agent')) {
-            return userAgents.set(log.getIn(['user_agent', 'id']), log.get('user_agent'))
+            return userAgents.set(
+              log.getIn(['user_agent', 'id']),
+              log.get('user_agent')
+            );
           }
-          return userAgents
-        })
-    })
+          return userAgents;
+        });
+    });
   })
   .map(log => {
-    session.save(log.get('session'))
-    return log
-  })
+    session.save(log.get('session'));
+    return log;
+  });
 
 // Rule matching
 
-stream.map(log => rules.match(log))
+stream.map(log => rules.match(log));
 
 // Post-Processing for Websocket logs
 
@@ -120,37 +131,43 @@ stream = stream
   // Set a UUID if no one is defined
   .map(log => {
     if (!log.has('uuid')) {
-      log = log.set('uuid', uuid())
+      log = log.set('uuid', uuid());
     }
-    return log
+    return log;
   })
   // Normalise unknown identity as null
   .map(log => {
     if (log.getIn(['identity', 'type']) === 'unknown') {
-      log = log.setIn(['identity', 'type'], null)
+      log = log.setIn(['identity', 'type'], null);
     }
-    return log
+    return log;
   })
   // Set identity name
   .map(log => {
-    if (!log.hasIn(['identity', 'name']) && log.hasIn(['identity', 'robot', 'name'])) {
-      log = log.setIn(['identity', 'name'], log.getIn(['identity', 'robot', 'name']))
+    if (
+      !log.hasIn(['identity', 'name']) &&
+      log.hasIn(['identity', 'robot', 'name'])
+    ) {
+      log = log.setIn(
+        ['identity', 'name'],
+        log.getIn(['identity', 'robot', 'name'])
+      );
     }
-    return log
+    return log;
   })
   // Set session id
   .map(log => {
     if (log.hasIn(['robot', 'id'])) {
-      log = log.setIn(['session', 'id'], log.getIn(['robot', 'id']))
+      log = log.setIn(['session', 'id'], log.getIn(['robot', 'id']));
     } else if (log.hasIn(['identity', 'id'])) {
-      log = log.setIn(['session', 'id'], log.getIn(['identity', 'id']))
+      log = log.setIn(['session', 'id'], log.getIn(['identity', 'id']));
     }
-    return log
-  })
+    return log;
+  });
 
 // Output to the console as JS object
 // stream.map(log => console.log(log.toJS()))
 
 module.exports = {
-  stream
-}
+  stream,
+};

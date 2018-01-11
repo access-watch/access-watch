@@ -1,3 +1,3 @@
-require('./app')
+require('./app');
 
-require('./pipeline')
+require('./pipeline');
