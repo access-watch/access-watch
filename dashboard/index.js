@@ -16,7 +16,7 @@ app.get('/', (req, res) => res.redirect('/dashboard'));
 
 app.use(
   '/dashboard',
-  express.static(path.join(__dirname, '../node_modules/access-watch-ui/dist'))
+  express.static(path.dirname(require.resolve('access-watch-ui')))
 );
 
 app.get('/dashboard', (req, res) => {
