@@ -1,10 +1,15 @@
 const rc = require('rc');
+const path = require('path');
 
 const constants = {
   port: 3000,
   pipeline: {
     allowedLateness: 60,
     watermarkDelay: 5,
+  },
+  data: {
+    protocol: 'file',
+    directory: path.resolve(__dirname, '../data'),
   },
   metrics: {
     gc: {
@@ -47,6 +52,4 @@ const constants = {
   },
 };
 
-const config = rc('access-watch', constants);
-
-module.exports = config;
+module.exports = rc('access-watch', constants);
