@@ -20,6 +20,7 @@ const constants = {
   },
   session: {
     gc: {
+      indexSize: 1000,
       expiration: 3600,
       interval: 60 * 1000,
     },
