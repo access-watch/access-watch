@@ -20,10 +20,12 @@ app.use(
 );
 
 app.get('/dashboard', (req, res) => {
-  const host = req.headers.host;
+  const host = req.get('host');
   const baseUrl = req.baseUrl;
-  const apiBaseUrl = `http://${host}${baseUrl}`;
-  const websocket = `ws://${host}${baseUrl}`;
+  const scheme = req.protocol;
+  const apiBaseUrl = `${scheme}://${host}${baseUrl}`;
+  const websocketScheme = scheme === 'https' ? 'wss' : 'ws';
+  const websocket = `${websocketScheme}://${host}${baseUrl}`;
   const index = path.join(__dirname, 'views', 'index.ejs');
   res.render(index, {
     apiBaseUrl,
