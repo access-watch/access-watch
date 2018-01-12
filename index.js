@@ -1,6 +1,15 @@
-const api = require('./lib/api');
-const dashboard = require('./dashboard');
-const pipeline = require('./lib/pipeline');
-const util = require('./lib/util');
+const merge = require('lodash.merge');
 
-module.exports = { api, dashboard, pipeline, util };
+const constants = require('./config/constants');
+
+module.exports = (config = {}) => {
+  merge(constants, config);
+
+  const pipeline = require('./lib/pipeline');
+  const api = require('./lib/api');
+  const util = require('./lib/util');
+  const dashboard = require('./dashboard');
+  const plugins = require('./plugins');
+
+  return { pipeline, api, dashboard, util, plugins, constants };
+};
