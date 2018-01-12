@@ -12,7 +12,7 @@ expressWs(app);
 
 app.set('view engine', 'ejs');
 
-app.get('/', (req, res) => res.redirect('/dashboard'));
+app.get('/', (req, res) => res.redirect(`${req.baseUrl}/dashboard`));
 
 app.use(
   '/dashboard',
