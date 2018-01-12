@@ -9,5 +9,3 @@ if (process.argv[2]) {
 }
 
 require(config);
-
-require('../dashboard');

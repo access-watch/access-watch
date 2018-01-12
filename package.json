@@ -18,7 +18,7 @@
     "Jean Duthon <jean@access.watch>"
   ],
   "scripts": {
-    "start": "node index",
+    "start": "node start",
     "lint": "eslint '**/*.js'",
     "lint:fix": "eslint '**/*.js' --fix",
     "test": "npm run lint && mocha --recursive"
