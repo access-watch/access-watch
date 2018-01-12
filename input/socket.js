@@ -50,11 +50,20 @@ function createUdpServer({ pipeline, name, port, handler }) {
     .bind(port);
 }
 
-function create({ name = 'Socket', protocol, port, parse = defaultParse }) {
+function create({
+  name = 'Socket',
+  protocol,
+  port,
+  parse = defaultParse,
+  sample = 1,
+}) {
   return {
     name: name,
     start: pipeline => {
       const handler = message => {
+        if (sample !== 1 && Math.random() > sample) {
+          return;
+        }
         try {
           pipeline.success(parse(message));
         } catch (err) {
