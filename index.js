@@ -9,7 +9,6 @@ module.exports = (config = {}) => {
   const api = require('./lib/api');
   const util = require('./lib/util');
   const dashboard = require('./dashboard');
-  const plugins = require('./plugins');
 
-  return { pipeline, api, dashboard, util, plugins, constants };
+  return { pipeline, api, dashboard, util, constants };
 };
