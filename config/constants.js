@@ -9,19 +9,20 @@ const constants = {
   metrics: {
     gc: {
       expiration: 24 * 3600,
-      interval: 3600 * 1000,
+      interval: 60 * 1000,
     },
   },
   rules: {
     gc: {
       expiration: 24 * 3600,
-      interval: 3600 * 1000,
+      interval: 60 * 1000,
     },
   },
   session: {
     gc: {
+      indexSize: 1000,
       expiration: 3600,
-      interval: 3600 * 1000,
+      interval: 60 * 1000,
     },
   },
   hub: {
