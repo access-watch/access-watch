@@ -74,10 +74,9 @@ If you see data flowing, congratulations you made it!
 ## Tutorials
 
  - [Monitor web traffic with syslog input from Nginx](https://access.watch/documentation/nginx)
+ - [Monitor web traffic with syslog input from Apache](https://access.watch/documentation/apache)
+ - [Monitor web traffic with input from Node/Express middleware](https://access.watch/documentation/express)
  - [Monitor web traffic with input from Elasticsearch](https://access.watch/documentation/elasticsearch)
-
-## License
-
 
 ## License
 
