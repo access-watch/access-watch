@@ -1,0 +1,134 @@
+{
+  "mappings": {
+    "access-log": {
+      "dynamic": "true",
+      "_all": { "enabled": false, "norms": false },
+      "_routing": { "required": true },
+      "date_detection": false,
+      "properties": {
+        "address": {
+          "dynamic": "true",
+          "properties": {
+            "as_number": { "type": "integer" },
+            "country_code": { "type": "keyword" },
+            "flags": { "type": "keyword" },
+            "hostname": { "type": "keyword" },
+            "id": { "type": "keyword" },
+            "label": { "type": "keyword" },
+            "network_name": { "type": "keyword" },
+            "value": { "type": "ip" }
+          }
+        },
+        "context": { "type": "object", "enabled": false },
+        "fingerprint": {
+          "dynamic": "true",
+          "properties": {
+            "country_code": { "type": "keyword" },
+            "id": { "type": "keyword" },
+            "language_code": { "type": "keyword" }
+          }
+        },
+        "identity": {
+          "dynamic": "true",
+          "properties": {
+            "description": { "type": "text", "index": false, "norms": false },
+            "id": { "type": "keyword" },
+            "label": { "type": "keyword" },
+            "name": { "type": "keyword" },
+            "type": { "type": "keyword" }
+          }
+        },
+        "key": {
+          "dynamic": "strict",
+          "properties": { "id": { "type": "keyword" } }
+        },
+        "reputation": {
+          "dynamic": "true",
+          "properties": {
+            "status": { "type": "keyword" },
+            "threats": { "type": "keyword" }
+          }
+        },
+        "request": {
+          "dynamic": "true",
+          "properties": {
+            "captured_headers": {
+              "type": "keyword"
+            },
+            "headers": {
+              "properties": {
+                "accept": { "type": "keyword" },
+                "accept-charset": { "type": "keyword" },
+                "accept-encoding": { "type": "keyword" },
+                "accept-language": { "type": "keyword" },
+                "connection": { "type": "keyword" },
+                "dnt": { "type": "keyword" },
+                "from": { "type": "keyword" },
+                "host": { "type": "keyword" },
+                "referer": { "type": "keyword" },
+                "user-agent": {
+                  "type": "text",
+                  "norms": false,
+                  "analyzer": "whitespace"
+                },
+                "via": { "type": "keyword" },
+                "x-connection": { "type": "keyword" },
+                "x-forward-via": { "type": "keyword" },
+                "x-forwarded-for": { "type": "keyword" }
+              }
+            },
+            "host": { "type": "keyword" },
+            "method": { "type": "keyword" },
+            "port": { "type": "integer" },
+            "protocol": { "type": "keyword" },
+            "scheme": { "type": "keyword" },
+            "session": { "type": "keyword" },
+            "time": { "type": "date" },
+            "url": { "type": "text", "norms": false, "analyzer": "standard" }
+          }
+        },
+        "response": {
+          "dynamic": "true",
+          "properties": { "status": { "type": "integer" } }
+        },
+        "robot": {
+          "dynamic": "true",
+          "properties": {
+            "id": { "type": "keyword" },
+            "name": { "type": "keyword" }
+          }
+        },
+        "session": {
+          "dynamic": "strict",
+          "properties": {
+            "blocked": { "type": "boolean" },
+            "id": { "type": "keyword" }
+          }
+        },
+        "user_agent": {
+          "dynamic": "true",
+          "properties": {
+            "agent": {
+              "dynamic": "true",
+              "properties": {
+                "icon": { "type": "keyword" },
+                "label": { "type": "text", "index": false, "norms": false },
+                "name": { "type": "keyword" }
+              }
+            },
+            "id": { "type": "keyword" },
+            "system": {
+              "dynamic": "strict",
+              "properties": {
+                "icon": { "type": "keyword" },
+                "label": { "type": "text", "index": false, "norms": false },
+                "name": { "type": "keyword" }
+              }
+            },
+            "type": { "type": "keyword" }
+          }
+        }
+      }
+    }
+  }
+}
