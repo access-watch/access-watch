@@ -1,7 +1,8 @@
 /* eslint-env mocha */
 
 const assert = require('assert');
-const nginx = require('../../format/nginx.js');
+
+const nginx = require('../../src/format/nginx.js');
 
 const cases = [
   {

@@ -1,9 +1,9 @@
 // import the framework
-const app = require('./lib/app');
-const api = require('./lib/api');
-const pipeline = require('./lib/pipeline');
-const database = require('./lib/database');
-const dashboard = require('./dashboard');
+const app = require('./src/lib/app');
+const api = require('./src/lib/api');
+const pipeline = require('./src/lib/pipeline');
+const database = require('./src/lib/database');
+const dashboard = require('./src/dashboard');
 
 // load the configuration
 require('./config');

@@ -1,4 +1,4 @@
-const config = require('../config/constants');
+const config = require('../constants');
 
 /* Dashboard and Assets */
 

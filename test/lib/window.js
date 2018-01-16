@@ -2,7 +2,8 @@
 
 const assert = require('assert');
 const { Map } = require('immutable');
-const { FixedWindow, SlidingWindow } = require('../../lib/window.js');
+
+const { FixedWindow, SlidingWindow } = require('../../src/lib/window.js');
 
 function assertWindows(expected, actual) {
   assert.deepEqual(expected, actual.toJS());

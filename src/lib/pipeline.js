@@ -14,7 +14,7 @@ const { Map, List } = require('immutable');
 const { now, complement, iso } = require('./util');
 const { Speed } = require('./speed');
 
-const config = require('../config/constants');
+const config = require('../constants');
 const session = require('./session').connect();
 const metrics = require('./metrics').connect();
 

@@ -12,7 +12,7 @@
 const { fromJS, Set, Map, isKeyed } = require('immutable');
 const { iso } = require('./util');
 const database = require('./database');
-const config = require('../config/constants');
+const config = require('../constants');
 
 // A time series is identified by a name and a set of named tags.
 function seriesFor(metric) {

@@ -1,10 +1,10 @@
-const pipeline = require('../lib/pipeline');
+const pipeline = require('../src/lib/pipeline');
 
 /* Input configuration
 ====================== */
 
-const input = require('../input');
-const format = require('../format');
+const input = require('../src/input');
+const format = require('../src/format');
 
 /* Syslog inputs
 ---------------- */

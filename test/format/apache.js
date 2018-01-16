@@ -1,7 +1,8 @@
 /* eslint-env mocha */
 
 const assert = require('assert');
-const apache = require('../../format/apache.js');
+
+const apache = require('../../src/format/apache.js');
 
 const cases = [
   {

@@ -7,7 +7,7 @@ const { fromJS, Map } = require('immutable');
 const { now, iso } = require('./util');
 const { Speed } = require('./speed');
 const database = require('./database');
-const config = require('../config/constants');
+const config = require('../constants');
 
 const ajv = new Ajv();
 

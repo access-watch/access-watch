@@ -1,8 +1,9 @@
 /* eslint-env mocha */
 
 const assert = require('assert');
-const { Speed } = require('../../lib/speed');
-const { now } = require('../../lib/util');
+
+const { Speed } = require('../../src/lib/speed');
+const { now } = require('../../src/lib/util');
 
 describe('Speed', function() {
   it('count hits per fixed time windows', function() {

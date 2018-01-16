@@ -1,6 +1,6 @@
 const merge = require('lodash.merge');
 
-const constants = require('./config/constants');
+const constants = require('./constants');
 
 module.exports = (config = {}) => {
   merge(constants, config);

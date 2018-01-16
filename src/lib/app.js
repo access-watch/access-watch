@@ -1,7 +1,7 @@
 const express = require('express');
 const expressWs = require('express-ws');
 
-const config = require('../config/constants');
+const config = require('../constants');
 
 const app = express();
 expressWs(app);

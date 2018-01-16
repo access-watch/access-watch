@@ -2,9 +2,10 @@
 
 const assert = require('assert');
 const { fromJS } = require('immutable');
-const rules = require('../../lib/rules');
-const database = require('../../lib/database');
-const { now, iso } = require('../../lib/util');
+
+const rules = require('../../src/lib/rules');
+const database = require('../../src/lib/database');
+const { now, iso } = require('../../src/lib/util');
 
 describe('Rules', function() {
   let db;

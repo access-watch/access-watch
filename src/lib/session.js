@@ -6,7 +6,7 @@ const { fromJS, Map } = require('immutable');
 const { iso, now } = require('./util');
 const { Speed } = require('./speed');
 const database = require('./database');
-const config = require('../config/constants');
+const config = require('../constants');
 
 function withSpeed(session) {
   return session

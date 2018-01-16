@@ -4,7 +4,7 @@
 const path = require('path');
 const fs = require('fs');
 
-const config = require('../config/constants');
+const config = require('../constants');
 
 // cache the connections by name
 const connections = {};
