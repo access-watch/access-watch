@@ -1,4 +1,5 @@
 const rc = require('rc');
+const path = require('path');
 
 const constants = {
   port: 3000,
@@ -6,22 +7,27 @@ const constants = {
     allowedLateness: 60,
     watermarkDelay: 5,
   },
+  data: {
+    protocol: 'file',
+    directory: path.resolve(__dirname, '../data'),
+  },
   metrics: {
     gc: {
       expiration: 24 * 3600,
-      interval: 3600 * 1000,
+      interval: 60 * 1000,
     },
   },
   rules: {
     gc: {
       expiration: 24 * 3600,
-      interval: 3600 * 1000,
+      interval: 60 * 1000,
     },
   },
   session: {
     gc: {
+      indexSize: 1000,
       expiration: 3600,
-      interval: 3600 * 1000,
+      interval: 60 * 1000,
     },
   },
   hub: {
@@ -46,6 +52,4 @@ const constants = {
   },
 };
 
-const config = rc('access-watch', constants);
-
-module.exports = config;
+module.exports = rc('access-watch', constants);
