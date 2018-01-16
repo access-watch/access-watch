@@ -5,8 +5,15 @@ const app = require('../lib/app');
 
 const defaultParse = s => fromJS(JSON.parse(s));
 
-const socketToPipeline = (pipeline, parse = defaultParse) => socket => {
+const socketToPipeline = (
+  pipeline,
+  parse = defaultParse,
+  sample = 1
+) => socket => {
   socket.on('message', message => {
+    if (sample !== 1 && Math.random() > sample) {
+      return;
+    }
     try {
       pipeline.success(parse(message));
     } catch (err) {
@@ -35,11 +42,18 @@ const setupServerWebSocket = ({ pipeline, path, listenSocket }) => {
   pipeline.status(null, `Listening on ws://__HOST__${path}`);
 };
 
-function create({ name = 'WebSocket', address, path, type = 'client', parse }) {
+function create({
+  name = 'WebSocket',
+  address,
+  path,
+  type = 'client',
+  parse,
+  sample = 1,
+}) {
   return {
     name: `${name} ${type}`,
     start: pipeline => {
-      const listenSocket = socketToPipeline(pipeline, parse);
+      const listenSocket = socketToPipeline(pipeline, parse, sample);
       if (type === 'client') {
         setupClientWebSocket({ pipeline, address, listenSocket });
       } else if (type === 'server') {

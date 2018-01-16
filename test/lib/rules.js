@@ -10,7 +10,7 @@ describe('Rules', function() {
   let db;
 
   before(function() {
-    db = rules.connect('aw:mem://rules');
+    db = rules.connect({ protocol: 'memory' });
   });
 
   after(function() {

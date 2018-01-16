@@ -9,7 +9,7 @@ describe('Metrics', function() {
   let db;
 
   before(function() {
-    db = metrics.connect('aw:mem://metrics');
+    db = metrics.connect({ protocol: 'memory' });
     const metric = fromJS({
       name: 'request',
       time: 11,
