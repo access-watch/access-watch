@@ -142,19 +142,6 @@ stream = stream
     }
     return log;
   })
-  // Set identity name
-  .map(log => {
-    if (
-      !log.hasIn(['identity', 'name']) &&
-      log.hasIn(['identity', 'robot', 'name'])
-    ) {
-      log = log.setIn(
-        ['identity', 'name'],
-        log.getIn(['identity', 'robot', 'name'])
-      );
-    }
-    return log;
-  })
   // Set session id
   .map(log => {
     if (log.hasIn(['robot', 'id'])) {
