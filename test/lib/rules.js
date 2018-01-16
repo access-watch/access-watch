@@ -51,7 +51,9 @@ describe('Rules', function() {
     db.add(rule2);
 
     const log = fromJS({
-      time: iso(now()),
+      request: {
+        time: iso(now()),
+      },
       response: {
         status: 200,
       },
