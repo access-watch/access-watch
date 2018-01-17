@@ -72,13 +72,6 @@ ipRequests
 
 const app = require('../lib/api');
 
-class NotFound extends Error {
-  constructor(...args) {
-    super(...args);
-    this.httpStatus = 404;
-  }
-}
-
 function parseFilter(query, name) {
   const filter = query[name];
   const [path, values] = filter.split(':');
@@ -103,6 +96,6 @@ app.get('/sessions/:type/:id', (req, res) => {
   if (s) {
     res.send(s);
   } else {
-    throw new NotFound('Unknown session.');
+    res.status(404).send({ error: 'Unknown session.' });
   }
 });

@@ -12,12 +12,17 @@ module.exports = (config = {}) => {
     rules: require('./lib/rules').connect(),
   };
 
-  // Express Apps (not mounted)
-  const api = require('./lib/api');
-  const dashboard = require('./dashboard');
+  // Apps (not mounted)
+  const apps = {
+    api: require('./lib/api'),
+    websocket: require('./lib/websocket'),
+    dashboard: require('./dashboard'),
+  };
 
   // Libraries
+  const app = require('./lib/app');
   const pipeline = require('./lib/pipeline');
+  const database = require('./lib/database');
   const util = require('./lib/util');
 
   // Plugins
@@ -25,10 +30,11 @@ module.exports = (config = {}) => {
 
   return {
     constants,
+    app,
     pipeline,
+    database,
     util,
-    api,
-    dashboard,
+    apps,
     databases,
     plugins,
   };

@@ -1,23 +1,27 @@
+const path = require('path');
+
 // import the framework
-const app = require('./src/lib/app');
-const api = require('./src/lib/api');
-const websocket = require('./src/lib/websocket');
-const pipeline = require('./src/lib/pipeline');
-const database = require('./src/lib/database');
-const dashboard = require('./src/dashboard');
+
+const accessWatch = require('.');
+const { app, apps, pipeline, database } = accessWatch();
 
 // load the configuration
-require('./config');
+if (process.argv[2]) {
+  require(path.resolve(process.cwd(), process.argv[2]));
+} else {
+  require(path.resolve(__dirname, './default'));
+}
 
 // Modules
 require('./src/modules/metrics');
 require('./src/modules/session');
 require('./src/modules/rules');
 
-// mount API, Dashboard and Websocket
+// mount Apps (API, Dashboard and Websocket) on main App
+const { api, websocket, dashboard } = apps;
 app.use(api);
-app.use(dashboard);
 app.use(websocket);
+app.use(dashboard);
 
 // start the application
 function start() {

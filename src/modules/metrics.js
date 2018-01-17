@@ -34,17 +34,10 @@ stream
 
 const app = require('../lib/api');
 
-class UserError extends Error {
-  constructor(...args) {
-    super(...args);
-    this.httpStatus = 400;
-  }
-}
-
 function parseTimestamp(query, name) {
   const ts = parseInt(query[name]);
   if (isNaN(ts) || ts < 0) {
-    throw new UserError(
+    throw new Error(
       'The parameter "' + name + '" should be a timestamp in seconds.'
     );
   }
@@ -54,7 +47,7 @@ function parseTimestamp(query, name) {
 function parsePosInt(query, name) {
   const n = parseInt(query[name]);
   if (isNaN(n) || n < 0) {
-    throw new UserError(
+    throw new Error(
       'The parameter "' + name + '" should be a positive integer.'
     );
   }
@@ -90,7 +83,12 @@ function parseRequest(req) {
 }
 
 app.get('/metrics/:name', (req, res) => {
-  const query = parseRequest(req);
+  let query;
+  try {
+    query = parseRequest(req);
+  } catch (err) {
+    res.status(400).send({ error: err.message });
+  }
   let data = metrics.query(query);
   if (req.query && req.query.dateFormat === 'iso8601') {
     data = data.map(([t, v]) => [iso(t), v]);
