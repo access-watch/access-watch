@@ -4,15 +4,37 @@ const session = require('../lib/session').connect();
 
 const { stream } = require('../pipeline/augmented');
 
+/**
+ * Assign a session to the log event, create it if necessary.
+ */
+function sessionHandler({ type, gap, id }) {
+  return stream => {
+    return event => {
+      const sessId = id(event.get('data'));
+      if (sessId !== undefined) {
+        const sess = session.assign({
+          type: type,
+          id: sessId,
+          time: event.get('time'),
+          gap: gap,
+        });
+        stream(event.setIn(['data', 'session'], sess));
+      }
+    };
+  };
+}
+
 // Split the stream by session and augment each log with the session data
 
 // Robots
 
-const robotRequests = stream.session({
-  type: 'robot',
-  gap: 30 * 60,
-  id: log => log.getIn(['robot', 'id']),
-});
+const robotRequests = stream.add(
+  sessionHandler({
+    type: 'robot',
+    gap: 30 * 60,
+    id: log => log.getIn(['robot', 'id']),
+  })
+);
 
 robotRequests
   .map(log => {
@@ -35,11 +57,13 @@ robotRequests
 
 // IPs
 
-const ipRequests = stream.session({
-  type: 'address',
-  gap: 30 * 60,
-  id: log => log.getIn(['address', 'value']),
-});
+const ipRequests = stream.add(
+  sessionHandler({
+    type: 'address',
+    gap: 30 * 60,
+    id: log => log.getIn(['address', 'value']),
+  })
+);
 
 ipRequests
   .map(log => {

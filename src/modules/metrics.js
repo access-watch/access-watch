@@ -23,12 +23,18 @@ function requestMetrics(log) {
 }
 
 stream
-  .metrics(requestMetrics)
+  .map(requestMetrics)
+  .by(metrics.encodeSeries)
   .window({
     strategy: new FixedWindow(1),
     reducer: reducers.count(),
   })
-  .store();
+  .add(() => {
+    return event => {
+      metrics.add(event.get('data').set('time', event.get('time')));
+      return event;
+    };
+  });
 
 // API endpoints
 
