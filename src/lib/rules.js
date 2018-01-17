@@ -4,7 +4,7 @@
 const Ajv = require('ajv');
 const uuid = require('uuid/v4');
 const { fromJS, Map } = require('immutable');
-const { now, iso } = require('./util');
+const { now } = require('./util');
 const { Speed } = require('./speed');
 const database = require('./database');
 const config = require('../constants');
@@ -145,16 +145,11 @@ class Database {
 
   gc() {
     const cutoff = now() - config.rules.gc.expiration;
-    const oldCount = this.rules.size;
     this.rules = this.rules.filter(rule => {
       return (
         !rule.has('ttl') || rule.get('created') + rule.get('ttl') >= cutoff
       );
     });
-    console.log(
-      `Garbage collected ${oldCount -
-        this.rules.size} rules expired before ${iso(cutoff)}.`
-    );
   }
 
   serialize() {

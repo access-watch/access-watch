@@ -242,7 +242,7 @@ function window({
  * Add a metric to the store.
  */
 function store() {
-  return stream => {
+  return () => {
     return event => {
       metrics.add(event.get('data').set('time', event.get('time')));
       return event;
@@ -361,7 +361,7 @@ class Pipeline extends Builder {
   }
 
   start() {
-    this.stream = super.create()(e => {});
+    this.stream = super.create()(() => {});
     var pipeline = this;
     this.inputs.map(function(input, idx) {
       input.start({

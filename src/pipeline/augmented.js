@@ -1,3 +1,5 @@
+const uuid = require('uuid/v4');
+
 const pipeline = require('../lib/pipeline');
 
 const hub = require('../plugins/hub');

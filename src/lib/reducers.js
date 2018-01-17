@@ -38,7 +38,7 @@ function count() {
       return 0;
     },
     step: (result, val) => {
-      return result + 1;
+      return result + val;
     },
     result: res => {
       return res;

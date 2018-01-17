@@ -3,7 +3,7 @@
  */
 
 const { fromJS, Map } = require('immutable');
-const { iso, now } = require('./util');
+const { now } = require('./util');
 const { Speed } = require('./speed');
 const database = require('./database');
 const config = require('../constants');
@@ -18,11 +18,6 @@ function aggregateSpeed(session, type) {
   return session.getIn(['speed', type]).reduce((p, c) => p + c, 0);
 }
 
-// The size of the session database
-function size(sessions) {
-  return sessions.reduce((total, sessions) => total + sessions.size, 0);
-}
-
 class Database {
   constructor() {
     this.sessions = Map();
@@ -32,7 +27,6 @@ class Database {
   gc() {
     // Filtering old Sessions
     const cutoff = now() - config.session.gc.expiration;
-    const oldCount = size(this.sessions);
     this.sessions = this.sessions.map(sessions =>
       sessions.filter(s => s.get('end') >= cutoff)
     );

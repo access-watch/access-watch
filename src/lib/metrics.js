@@ -10,7 +10,6 @@
  */
 
 const { fromJS, Set, Map, isKeyed } = require('immutable');
-const { iso } = require('./util');
 const database = require('./database');
 const config = require('../constants');
 
@@ -91,13 +90,13 @@ function insertOrReplacePoint(data, time, value) {
 
 function filter(start, end) {
   if (start && end) {
-    return ([t, v]) => t >= start && t < end;
+    return ([t]) => t >= start && t < end;
   }
   if (start) {
-    return ([t, v]) => t >= start;
+    return ([t]) => t >= start;
   }
   if (end) {
-    return ([t, v]) => t < end;
+    return ([t]) => t < end;
   }
 }
 
@@ -160,10 +159,7 @@ function gc(data, deleteAfter) {
       timeSeries.map(a => (a.length ? a[a.length - 1][0] : 0))
     );
     const cutoff = now - deleteAfter;
-    const total = timeSeries
-      .map(points => gcPoints(points, cutoff))
-      .reduce((a, b) => a + b, 0);
-    console.log(`Garbage collected ${total} points older than ${iso(cutoff)}.`);
+    timeSeries.map(points => gcPoints(points, cutoff));
   }
 }
 

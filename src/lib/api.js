@@ -1,6 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const pipeline = require('../lib/pipeline');
+const metrics = require('./metrics').connect();
+const session = require('./metrics').connect();
+
 const app = express();
 
 app.use(bodyParser.json());
@@ -20,7 +24,7 @@ app.get('/stats', (req, res) => {
   });
 });
 
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   const httpStatus = err.httpStatus || 500;
   res.status(httpStatus).send({ error: err.message });
 });
