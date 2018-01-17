@@ -4,16 +4,13 @@ const accessLogsIndexConfig = require('./access-logs_index.json');
 
 const accessLogsIndex = 'access-watch-access-logs';
 
-const indexAccessLog = client => log => {
-  const logJS = isImmutable(log) ? log.toJS() : log;
-  delete logJS.uuid;
-  return client.index({
+const indexAccessLog = client => log =>
+  client.index({
     index: accessLogsIndex,
     type: 'access-log',
-    routing: logJS.address.value,
-    body: logJS,
+    routing: log.getIn(['address', 'value']),
+    body: log.toJS(),
   });
-};
 
 const logsSearchArguments = {
   address: value => ({ address: { value } }),
