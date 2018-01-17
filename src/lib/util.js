@@ -28,3 +28,20 @@ exports.selectKeys = (m, keys) => {
  */
 exports.iso = time => new Date(time * 1000).format('iso');
 
+/**
+ * Create a log from Express req/res
+ */
+exports.createLog = (req, res) => {
+  return fromJS({
+    request: {
+      time: new Date().toISOString(),
+      address: req.ip,
+      method: req.method,
+      url: req.originalUrl || req.url,
+      headers: req.headers,
+    },
+    response: {
+      status: res.statusCode,
+    },
+  });
+};
