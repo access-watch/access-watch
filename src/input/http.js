@@ -1,6 +1,6 @@
 const { fromJS } = require('immutable');
 
-const app = require('../lib/app');
+const app = require('../lib/api');
 
 function create({ name = 'HTTP server', path, parse = fromJS }) {
   return {

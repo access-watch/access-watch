@@ -10,13 +10,6 @@ module.exports = (config = {}) => {
   require('./modules/session');
   require('./modules/rules');
 
-  // Databases
-  const databases = {
-    metrics: require('./lib/metrics').connect(),
-    session: require('./lib/session').connect(),
-    rules: require('./lib/rules').connect(),
-  };
-
   // Apps (not mounted)
   const apps = {
     api: require('./lib/api'),
@@ -25,17 +18,18 @@ module.exports = (config = {}) => {
   };
 
   // Libraries
-  const app = require('./lib/app');
   const pipeline = require('./lib/pipeline');
   const database = require('./lib/database');
   const util = require('./lib/util');
+
+  // Databases
+  const databases = require('./databases');
 
   // Plugins
   const plugins = require('./plugins');
 
   return {
     constants,
-    app,
     pipeline,
     database,
     util,

@@ -1,36 +1,43 @@
 const path = require('path');
+const express = require('express');
+const expressWs = require('express-ws');
 
-// import the framework
+const accessWatch = require('.')();
 
-const accessWatch = require('.');
-const { app, apps, pipeline, database } = accessWatch();
+// Load configuration
 
-// load the configuration
 if (process.argv[2]) {
   require(path.resolve(process.cwd(), process.argv[2]));
 } else {
   require(path.resolve(__dirname, './default'));
 }
 
-// mount Apps (API, Dashboard and Websocket) on main App
-const { api, websocket, dashboard } = apps;
-app.use(api);
-app.use(websocket);
-app.use(dashboard);
+// Load Express
 
-// start the application
-function start() {
-  pipeline.start();
-  app.start();
-}
+const app = express();
+expressWs(app);
 
-// stop the application
-function stop() {
-  database.close();
+app.use(accessWatch.apps.api);
+app.use(accessWatch.apps.websocket);
+app.use(accessWatch.apps.dashboard);
+
+app.set('port', process.env.PORT || accessWatch.constants.port);
+
+app.listen(app.get('port'), () => {
+  console.log(
+    'HTTP and Websocket Server listening on port %d',
+    app.get('port')
+  );
+});
+
+// Start Pipeline
+
+accessWatch.pipeline.start();
+
+// Handle Shutdown
+
+process.on('SIGINT', () => {
+  accessWatch.database.close();
   // eslint-disable-next-line no-process-exit
   process.exit();
-}
-
-start();
-
-process.on('SIGINT', stop);
+});
