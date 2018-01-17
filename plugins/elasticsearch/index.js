@@ -1,16 +1,43 @@
 const elasticsearch = require('elasticsearch');
 const { isImmutable } = require('immutable');
 const accessLogsIndexConfig = require('./access-logs_index.json');
+const config = require('../../config/constants');
 
 const accessLogsIndex = 'access-watch-access-logs';
 
+const getIndexSuffix = date =>
+  [date.getMonth() + 1, date.getDate(), date.getFullYear()].join('-');
+
+const generateIndex = date => `${accessLogsIndex}-${getIndexSuffix(date)}`;
+
+const generateCurrentIndex = () => generateIndex(new Date());
+const getIndexDate = index =>
+  index.slice(accessLogsIndex.length + 1).replace(/-/g, '/');
+
 const indexAccessLog = client => log =>
   client.index({
-    index: accessLogsIndex,
+    index: generateCurrentIndex(),
     type: 'access-log',
     routing: log.getIn(['address', 'value']),
     body: log.toJS(),
   });
+
+const indexesGc = client => _ => {
+  client.indices.get({ index: '*' }).then(indices => {
+    Object.keys(indices)
+      .filter(i => i.indexOf(accessLogsIndex) !== -1)
+      .forEach(index => {
+        const indexDate = new Date(getIndexDate(index));
+        const gcDate = new Date(
+          new Date().getTime() -
+            config.elasticsearch.retention * 24 * 3600 * 1000
+        );
+        if (indexDate.getTime() < gcDate.getTime()) {
+          client.indices.delete({ index });
+        }
+      });
+  });
+};
 
 const logsSearchArguments = {
   address: value => ({ address: { value } }),
@@ -78,7 +105,7 @@ const searchLogs = client => (query = {}) => {
   }
   return client
     .search({
-      index: accessLogsIndex,
+      index: `${accessLogsIndex}-*`,
       type: 'access-log',
       body,
       size,
@@ -88,8 +115,7 @@ const searchLogs = client => (query = {}) => {
         return hits.hits.map(({ _source }) => _source);
       }
       return [];
-    })
-    .catch(e => console.log(e));
+    });
 };
 
 const logsEndpoint = client => {
@@ -102,15 +128,17 @@ const logsEndpoint = client => {
 
 const elasticSearchBuilder = config => {
   const esClient = new elasticsearch.Client(config);
-  esClient.indices.delete({ index: accessLogsIndex }).then(_ => {
-    esClient.indices.exists({ index: accessLogsIndex }).then(exists => {
-      if (!exists) {
-        esClient.indices.create({
-          index: accessLogsIndex,
-          body: accessLogsIndexConfig,
-        });
-      }
-    });
+  const index = generateCurrentIndex();
+  const gc = indexesGc(esClient);
+  gc();
+  setInterval(gc, 24 * 3600 * 1000);
+  esClient.indices.exists({ index }).then(exists => {
+    if (!exists) {
+      esClient.indices.create({
+        index,
+        body: accessLogsIndexConfig,
+      });
+    }
   });
   return {
     index: indexAccessLog(esClient),

@@ -44,6 +44,9 @@ const constants = {
       sliderValues: ['auto', 30, 60, 60 * 6, 60 * 24],
     },
   },
+  elasticsearch: {
+    retention: 5,
+  },
 };
 
 const config = rc('access-watch', constants);
