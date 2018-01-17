@@ -1,6 +1,7 @@
 // import the framework
 const app = require('./src/lib/app');
 const api = require('./src/lib/api');
+const websocket = require('./src/lib/websocket');
 const pipeline = require('./src/lib/pipeline');
 const database = require('./src/lib/database');
 const dashboard = require('./src/dashboard');
@@ -8,11 +9,15 @@ const dashboard = require('./src/dashboard');
 // load the configuration
 require('./config');
 
-// load the API
-app.use(api);
+// Modules
+require('./src/modules/metrics');
+require('./src/modules/session');
+require('./src/modules/rules');
 
-// load the Dashboard
+// mount API, Dashboard and Websocket
+app.use(api);
 app.use(dashboard);
+app.use(websocket);
 
 // start the application
 function start() {

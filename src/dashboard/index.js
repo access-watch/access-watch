@@ -1,14 +1,9 @@
-const config = require('../constants');
-
-/* Dashboard and Assets */
-
 const path = require('path');
 const express = require('express');
-const expressWs = require('express-ws');
+
+const config = require('../constants');
 
 const app = express();
-
-expressWs(app);
 
 app.set('view engine', 'ejs');
 
@@ -42,33 +37,5 @@ app.get('/dashboard', (req, res) => {
     ),
   });
 });
-
-/* Websocket */
-
-const uuid = require('uuid/v4');
-
-const { stream } = require('./pipeline');
-
-function websocket(endpoint, stream) {
-  let clients = {};
-
-  app.ws(endpoint, (client, req) => {
-    const clientId = uuid();
-    clients[clientId] = client;
-    client.on('close', () => {
-      delete clients[clientId];
-    });
-  });
-
-  stream.map(log => {
-    Object.values(clients).forEach(client => {
-      if (client.readyState === 1 /* === WebSocket.OPEN */) {
-        client.send(JSON.stringify(log));
-      }
-    });
-  });
-}
-
-websocket('/logs', stream);
 
 module.exports = app;
