@@ -289,13 +289,6 @@ class Database {
   encodeSeries(m) {
     return encode(seriesFor(m));
   }
-
-  stats() {
-    return {
-      seriesCount: this.series.length,
-      indices: this.indices.map(vals => vals.size),
-    };
-  }
 }
 
 function connect({ name, protocol } = {}) {

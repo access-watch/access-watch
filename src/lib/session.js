@@ -164,12 +164,6 @@ class Database {
     }
     return sessions;
   }
-
-  stats() {
-    return {
-      sessions: this.sessions.map(vals => vals.size),
-    };
-  }
 }
 
 function connect({ name, protocol } = {}) {
