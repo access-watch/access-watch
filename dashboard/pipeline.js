@@ -4,8 +4,8 @@ const { Map, fromJS } = require('immutable');
 const pipeline = require('../lib/pipeline');
 
 const reducers = require('../lib/reducers');
-const session = require('../lib/session').connect('aw:file://sessions');
-const rules = require('../lib/rules').connect('aw:file://rules');
+const session = require('../lib/session').connect();
+const rules = require('../lib/rules').connect();
 const { FixedWindow } = require('../lib/window');
 
 const hub = require('../plugins/hub');
@@ -139,19 +139,6 @@ stream = stream
   .map(log => {
     if (log.getIn(['identity', 'type']) === 'unknown') {
       log = log.setIn(['identity', 'type'], null);
-    }
-    return log;
-  })
-  // Set identity name
-  .map(log => {
-    if (
-      !log.hasIn(['identity', 'name']) &&
-      log.hasIn(['identity', 'robot', 'name'])
-    ) {
-      log = log.setIn(
-        ['identity', 'name'],
-        log.getIn(['identity', 'robot', 'name'])
-      );
     }
     return log;
   })

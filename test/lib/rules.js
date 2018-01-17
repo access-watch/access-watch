@@ -10,7 +10,7 @@ describe('Rules', function() {
   let db;
 
   before(function() {
-    db = rules.connect('aw:mem://rules');
+    db = rules.connect({ protocol: 'memory' });
   });
 
   after(function() {
@@ -51,7 +51,9 @@ describe('Rules', function() {
     db.add(rule2);
 
     const log = fromJS({
-      time: iso(now()),
+      request: {
+        time: iso(now()),
+      },
       response: {
         status: 200,
       },

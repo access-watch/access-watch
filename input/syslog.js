@@ -11,11 +11,15 @@ function create({
   protocol,
   port = 514,
   parse = defaultParse,
+  sample = 1,
 }) {
   return {
     name: name,
     start: pipeline => {
       const handler = message => {
+        if (sample !== 1 && Math.random() > sample) {
+          return;
+        }
         try {
           const result = syslogParse(message);
           pipeline.success(parse(result.message));

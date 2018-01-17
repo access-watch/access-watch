@@ -1,7 +1,7 @@
 {
   "name": "access-watch",
-  "version": "0.5.0",
-  "description": "Open Source Web Traffic Processor",
+  "version": "0.7.0",
+  "description": "Open Source Web Traffic Manager",
   "repository": {
     "type": "git",
     "url": "https://github.com/access-watch/access-watch.git"
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "access-watch-sdk": "^0.1.4",
-    "access-watch-ui": "^1.3.0",
+    "access-watch-ui": "^1.3.3",
     "ajv": "^5.5.2",
     "axios": "^0.17.0",
     "body-parser": "^1.18.2",
@@ -42,7 +42,7 @@
     "md5": "^2.2.1",
     "micro-strptime": "^0.2.2",
     "proxy-addr": "^2.0.2",
-    "rc": "^1.2.2",
+    "rc": "^1.2.3",
     "syslog-parse": "^1.3.1",
     "tail": "^1.2.3",
     "url": "^0.11.0",
@@ -53,9 +53,9 @@
     "eslint": "^4.15.0",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-node": "^5.2.1",
-    "eslint-plugin-prettier": "^2.4.0",
+    "eslint-plugin-prettier": "^2.5.0",
     "mocha": "^4.1.0",
-    "prettier": "^1.10.1"
+    "prettier": "^1.10.2"
   },
   "engines": {
     "node": ">=7.0.0"

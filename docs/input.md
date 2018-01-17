@@ -23,6 +23,7 @@ The input accepts the following options.
 | ---       | ---     | ---       | ---                                                         |
 | port      | integer | yes       | The port to listen to.                                      |
 | parse     | Parser  | no        | A function to parse the syslog message. (See [Formats](#other-formats) below) |
+| sample    | float   | no        | A sample rate, a float between 0 and 1. Will only send data this percentage of the time. |
 
 ### Socket
 
@@ -35,6 +36,7 @@ The input accepts the following options.
 | port      | integer | yes       | The port to listen to.
 | protocol  | string  | no        | 'udp' or 'tcp'.  If not provided, listen to both.
 | parse     | Parser  | no        | A function to parse the message. (See [Formats](#other-formats) below) |
+| sample    | float   | no        | A sample rate, a float between 0 and 1. Will only send data this percentage of the time. |
 
 ### File
 
@@ -74,6 +76,7 @@ The input accepts the following options.
 | address   | string | yes (if type is 'client') | The WebSocket address to connect to (e.g. 'wss://localhost:3000')   |
 | path      | string | yes (if type is 'server') | The path where to listen for logs                                   |
 | parse     | Parser | no                        | A function to parse the messages from the queue (See Formats below) |
+| sample    | float  | no                        | A sample rate, a float between 0 and 1. Will only send data this percentage of the time. |
 
 ### Elasticsearch
 
