@@ -1,5 +1,4 @@
 const elasticsearch = require('elasticsearch');
-const { isImmutable } = require('immutable');
 const accessLogsIndexConfig = require('./access-logs_index.json');
 const config = require('../../config/constants');
 
@@ -22,7 +21,7 @@ const indexAccessLog = client => log =>
     body: log.toJS(),
   });
 
-const indexesGc = client => _ => {
+const indexesGc = client => () => {
   client.indices.get({ index: '*' }).then(indices => {
     Object.keys(indices)
       .filter(i => i.indexOf(accessLogsIndex) !== -1)
