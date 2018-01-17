@@ -25,7 +25,7 @@ const socketToPipeline = (
 const setupClientWebSocket = ({ pipeline, address, listenSocket }) => {
   let socket = new WebSocket(address);
   pipeline.status(null, 'Waiting for connection to ' + address);
-  socket.on('open', _ => {
+  socket.on('open', () => {
     pipeline.status(null, 'Listening to ' + address);
   });
   socket.on('error', err => {

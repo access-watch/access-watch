@@ -9,7 +9,7 @@ const config = require('../config/constants');
 
 /* Dashboard and Assets */
 
-app.get('/', (req, res) => res.redirect('/dashboard'));
+app.get('/', (_, res) => res.redirect('/dashboard'));
 
 app.use(
   '/dashboard',
@@ -43,7 +43,7 @@ app.get('/dashboard', (req, res) => {
 function websocket(endpoint, stream) {
   let clients = Map();
 
-  app.ws(endpoint, (ws, req) => {
+  app.ws(endpoint, ws => {
     const clientId = uuid();
     clients = clients.set(clientId, ws);
     ws.on('close', () => {

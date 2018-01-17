@@ -4,5 +4,8 @@
     "es6": true
   },
   "plugins": ["node", "prettier"],
-  "extends": ["plugin:node/recommended", "plugin:prettier/recommended", "eslint:recommended"]
+  "extends": ["plugin:node/recommended", "plugin:prettier/recommended", "eslint:recommended"],
+  "rules": {
+    "no-console": "off"
+  }
 }

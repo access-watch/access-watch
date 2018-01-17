@@ -11,7 +11,7 @@ function create({ name = 'File', path, parse = defaultParse }) {
       try {
         tail = new Tail(path, {
           logger: {
-            info: msg => {},
+            info: () => {},
             error: err => pipeline.status(err, err.message),
           },
         });

@@ -5,7 +5,7 @@ const { fromJS } = require('immutable');
 
 const defaultParse = s => fromJS(JSON.parse(s));
 
-function createTcpServer({ pipeline, name, port, handler }) {
+function createTcpServer({ pipeline, port, handler }) {
   return net
     .createServer(socket => {
       socket.on('data', data => {
@@ -28,7 +28,7 @@ function createTcpServer({ pipeline, name, port, handler }) {
     });
 }
 
-function createUdpServer({ pipeline, name, port, handler }) {
+function createUdpServer({ pipeline, port, handler }) {
   return dgram
     .createSocket('udp4')
     .on('message', message => {
