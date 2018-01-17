@@ -5,7 +5,12 @@ const constants = require('./constants');
 module.exports = (config = {}) => {
   merge(constants, config);
 
-  // Database instances
+  // Modules
+  require('./modules/metrics');
+  require('./modules/session');
+  require('./modules/rules');
+
+  // Databases
   const databases = {
     metrics: require('./lib/metrics').connect(),
     session: require('./lib/session').connect(),

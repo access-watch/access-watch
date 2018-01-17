@@ -12,11 +12,6 @@ if (process.argv[2]) {
   require(path.resolve(__dirname, './default'));
 }
 
-// Modules
-require('./src/modules/metrics');
-require('./src/modules/session');
-require('./src/modules/rules');
-
 // mount Apps (API, Dashboard and Websocket) on main App
 const { api, websocket, dashboard } = apps;
 app.use(api);
