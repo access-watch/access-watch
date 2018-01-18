@@ -1,6 +1,6 @@
 const { fromJS, Map } = require('immutable');
 
-const metrics = require('../lib/metrics').connect();
+const { metrics } = require('../databases');
 
 const reducers = require('../lib/reducers');
 const { FixedWindow } = require('../lib/window');

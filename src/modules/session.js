@@ -1,6 +1,8 @@
 const { Map } = require('immutable');
 
-const session = require('../lib/session').connect();
+const { session } = require('../databases');
+
+// Pipeline
 
 const { stream } = require('../pipeline/augmented');
 

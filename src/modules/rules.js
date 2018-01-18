@@ -1,8 +1,10 @@
 const { fromJS } = require('immutable');
 
-const { stream } = require('../pipeline/augmented');
+const { rules } = require('../databases');
 
-const rules = require('../lib/rules').connect();
+// Pipeline
+
+const { stream } = require('../pipeline/augmented');
 
 stream.map(log => rules.match(log));
 
