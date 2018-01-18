@@ -5,7 +5,7 @@ const uuid = require('uuid/v4');
 const app = express();
 expressWs(app);
 
-function websocket(endpoint, stream) {
+app.streamToWebsocket = (endpoint, stream) => {
   const clients = {};
 
   app.ws(endpoint, client => {
@@ -23,10 +23,6 @@ function websocket(endpoint, stream) {
       }
     });
   });
-}
-
-const { stream } = require('../pipeline/websocket');
-
-websocket('logs', stream);
+};
 
 module.exports = app;

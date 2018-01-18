@@ -9,6 +9,7 @@ module.exports = (config = {}) => {
   require('./modules/metrics');
   require('./modules/session');
   require('./modules/rules');
+  require('./modules/logs');
 
   const lib = require('./lib');
 

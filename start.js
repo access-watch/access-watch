@@ -19,9 +19,11 @@ const accessWatch = require('.')();
 const app = express();
 expressWs(app);
 
-app.use(accessWatch.apps.api);
-app.use(accessWatch.apps.websocket);
-app.use(accessWatch.apps.dashboard);
+app.use(
+  accessWatch.apps.api,
+  accessWatch.apps.dashboard,
+  accessWatch.apps.websocket
+);
 
 app.set('port', process.env.PORT || accessWatch.constants.port);
 
