@@ -31,10 +31,9 @@ All communications between your Node/Express application and Access Watch will b
 Now, you can create your own configuration in `./config/config.js`:
 
 ```javascript
-const pipeline = require('../lib/pipeline')
+const accessWatch = require('..')();
 
-const input = require('../input')
-const format = require('../format')
+const { pipeline, input } = accessWatch;
 
 const webSocketServerInput = input.websocket.create({
   name: 'WebSocket server (JSON standard format)',
