@@ -2,8 +2,6 @@ const path = require('path');
 const express = require('express');
 const expressWs = require('express-ws');
 
-const accessWatch = require('.')();
-
 // Load configuration
 
 if (process.argv[2]) {
@@ -11,6 +9,10 @@ if (process.argv[2]) {
 } else {
   require(path.resolve(__dirname, './config/default'));
 }
+
+// Load Core
+
+const accessWatch = require('.')();
 
 // Load Express
 

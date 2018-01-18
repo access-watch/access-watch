@@ -10,17 +10,13 @@ module.exports = (config = {}) => {
   require('./modules/session');
   require('./modules/rules');
 
-  // Lib
   const lib = require('./lib');
 
-  // Apps
   const apps = require('./apps');
-
-  // Databases
   const databases = require('./databases');
-
-  // Plugins
   const plugins = require('./plugins');
+  const format = require('./format');
+  const input = require('./input');
 
   return Object.assign(
     {
@@ -28,6 +24,8 @@ module.exports = (config = {}) => {
       apps,
       databases,
       plugins,
+      format,
+      input,
     },
     lib
   );
