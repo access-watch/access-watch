@@ -33,10 +33,9 @@ To get more familiar, you can inspect default and example configurations in `./c
 Now, you can create your own configuration in `./config/apache.js`:
 
 ```javascript
-const pipeline = require('../lib/pipeline')
+const accessWatch = require('..')();
 
-const input = require('../input')
-const format = require('../format')
+const { pipeline, input, format } = accessWatch;
 
 const syslogApacheAccessWatchCombinedInput = input.syslog.create({
   port: 1518,

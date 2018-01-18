@@ -28,9 +28,13 @@ npm install
 
 We will configure a new input, polling data from Elasticsearch.
 
-Edit <strong>config/input.js</strong> and start with the following.
+Create your own configuration in `./config/config.js`:
 
 ```
+const accessWatch = require('..')();
+
+const { pipeline, input } = accessWatch;
+
 const elasticsearchInput = input.elasticsearch.create({
   config: {
     host: '__HOST__:__PORT__'
@@ -78,6 +82,8 @@ To know more about [Access Watch's internal log format](https://github.com/acces
 When writing your own parser, you can start from this template and fill the blanks:
 
 ```javascript
+const { fromJS } = require('immutable')
+
 function parser (source) {
   const request = {
     time: __TIME__,
@@ -157,6 +163,10 @@ function myCustomParser (source) {
 Now, everything together, the final input configuration:
 
 ```
+const accessWatch = require('..')();
+
+const { pipeline, input } = accessWatch;
+
 const elasticsearchInput = input.elasticsearch.create({
   config: {
     host: '10.200.0.52:9200'
@@ -179,7 +189,7 @@ pipeline.registerInput(elasticsearchInput)
 Ok, now go back to where Access Watch is installed and start it:
 
 ```
-npm start
+npm start config/config.js
 ```
 
 ### Browse the interface

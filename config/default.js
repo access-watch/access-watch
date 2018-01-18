@@ -1,10 +1,9 @@
-const pipeline = require('../lib/pipeline');
+const accessWatch = require('..')();
+
+const { pipeline, input, format } = accessWatch;
 
 /* Input configuration
 ====================== */
-
-const input = require('../input');
-const format = require('../format');
 
 /* Syslog inputs
 ---------------- */

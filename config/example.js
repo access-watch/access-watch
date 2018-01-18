@@ -1,10 +1,9 @@
-const pipeline = require('../lib/pipeline');
+const accessWatch = require('..')();
+
+const { pipeline, input, format, plugins } = accessWatch;
 
 /* Input configuration
 ====================== */
-
-const input = require('../input');
-const format = require('../format');
 
 /* Syslog inputs
 ---------------- */
@@ -141,8 +140,7 @@ Pipeline configuration
 ======================
 */
 
-const proxy = require('../plugins/proxy');
-const hub = require('../plugins/hub');
+const { proxy, hub } = plugins;
 
 let stream = pipeline
 
