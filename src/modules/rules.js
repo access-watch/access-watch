@@ -10,7 +10,7 @@ stream.map(log => rules.match(log));
 
 // API endpoints
 
-const app = require('../lib/api');
+const app = require('../apps/api');
 
 app.get('/rules', (req, res) => {
   res.send(rules.list());

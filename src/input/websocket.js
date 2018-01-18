@@ -1,7 +1,7 @@
 const WebSocket = require('ws');
 const { fromJS } = require('immutable');
 
-const app = require('../lib/websocket');
+const app = require('../apps/websocket');
 
 const defaultParse = s => fromJS(JSON.parse(s));
 

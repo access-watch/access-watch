@@ -8,7 +8,7 @@ expressWs(app);
 function websocket(endpoint, stream) {
   const clients = {};
 
-  app.ws('/logs', client => {
+  app.ws(endpoint, client => {
     const clientId = uuid();
     clients[clientId] = client;
     client.on('close', () => {

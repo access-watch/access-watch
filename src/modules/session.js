@@ -96,7 +96,7 @@ ipRequests
 
 // API endpoints
 
-const app = require('../lib/api');
+const app = require('../apps/api');
 
 function parseFilter(query, name) {
   const filter = query[name];

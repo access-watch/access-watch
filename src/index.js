@@ -10,17 +10,11 @@ module.exports = (config = {}) => {
   require('./modules/session');
   require('./modules/rules');
 
-  // Apps (not mounted)
-  const apps = {
-    api: require('./lib/api'),
-    websocket: require('./lib/websocket'),
-    dashboard: require('./dashboard'),
-  };
+  // Lib
+  const lib = require('./lib');
 
-  // Libraries
-  const pipeline = require('./lib/pipeline');
-  const database = require('./lib/database');
-  const util = require('./lib/util');
+  // Apps
+  const apps = require('./apps');
 
   // Databases
   const databases = require('./databases');
@@ -28,13 +22,13 @@ module.exports = (config = {}) => {
   // Plugins
   const plugins = require('./plugins');
 
-  return {
-    constants,
-    pipeline,
-    database,
-    util,
-    apps,
-    databases,
-    plugins,
-  };
+  return Object.assign(
+    {
+      constants,
+      apps,
+      databases,
+      plugins,
+    },
+    lib
+  );
 };

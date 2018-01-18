@@ -38,7 +38,7 @@ stream
 
 // API endpoints
 
-const app = require('../lib/api');
+const app = require('../apps/api');
 
 function parseTimestamp(query, name) {
   const ts = parseInt(query[name]);
