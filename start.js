@@ -9,7 +9,7 @@ const accessWatch = require('.')();
 if (process.argv[2]) {
   require(path.resolve(process.cwd(), process.argv[2]));
 } else {
-  require(path.resolve(__dirname, './default'));
+  require(path.resolve(__dirname, './config/default'));
 }
 
 // Load Express
