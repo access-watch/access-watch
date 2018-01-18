@@ -11,7 +11,7 @@
 
 const { fromJS, Set, Map, isKeyed } = require('immutable');
 const database = require('./database');
-const config = require('../config/constants');
+const config = require('../constants');
 
 // A time series is identified by a name and a set of named tags.
 function seriesFor(metric) {
@@ -288,13 +288,6 @@ class Database {
 
   encodeSeries(m) {
     return encode(seriesFor(m));
-  }
-
-  stats() {
-    return {
-      seriesCount: this.series.length,
-      indices: this.indices.map(vals => vals.size),
-    };
   }
 }
 

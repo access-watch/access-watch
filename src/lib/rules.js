@@ -7,7 +7,7 @@ const { fromJS, Map } = require('immutable');
 const { now } = require('./util');
 const { Speed } = require('./speed');
 const database = require('./database');
-const config = require('../config/constants');
+const config = require('../constants');
 
 const ajv = new Ajv();
 
@@ -31,7 +31,8 @@ const matchCondition = (condition, log) =>
 
 const matchers = Map({
   address: (condition, log) =>
-    log.getIn(['address', 'value']) === condition.getIn(['address', 'value']),
+    log.getIn(['address', 'value'], log.getIn(['request', 'address'])) ===
+    condition.getIn(['address', 'value']),
 });
 
 function matchRule(rule, log) {
@@ -220,6 +221,12 @@ class Database {
   // Match the log against all rules and update them
   match(log) {
     this.rules = this.rules.map(rule => matchRule(rule, log));
+  }
+
+  matchLog(log) {
+    return this.rules.some(
+      rule => !isExpired(rule) && matchCondition(rule.get('condition'), log)
+    );
   }
 
   // Export database as Nginx configuration file

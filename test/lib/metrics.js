@@ -2,8 +2,9 @@
 
 const assert = require('assert');
 const { fromJS } = require('immutable');
-const metrics = require('../../lib/metrics.js');
-const database = require('../../lib/database.js');
+
+const metrics = require('../../src/lib/metrics.js');
+const database = require('../../src/lib/database.js');
 
 describe('Metrics', function() {
   let db;

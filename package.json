@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/access-watch/access-watch.git"
   },
-  "main": "index.js",
+  "main": "src/index.js",
   "license": "Apache-2.0",
   "author": {
     "name": "Access Watch Technologies GmbH",
@@ -18,7 +18,7 @@
     "Jean Duthon <jean@access.watch>"
   ],
   "scripts": {
-    "start": "node index",
+    "start": "node start",
     "lint": "eslint '**/*.js'",
     "lint:fix": "eslint '**/*.js' --fix",
     "test": "npm run lint && mocha --recursive"
@@ -31,13 +31,13 @@
     "access-watch-ui": "^1.3.3",
     "ajv": "^5.5.2",
     "axios": "^0.17.0",
-    "body-parser": "^1.18.2",
     "date-format-lite": "^17.7.0",
     "ejs": "^2.5.7",
     "elasticsearch": "^13.3.1",
     "express": "^4.16.2",
     "express-ws": "^3.0.0",
     "immutable": "^4.0.0-rc.9",
+    "lodash.merge": "^4.6.0",
     "lru-cache": "^4.1.1",
     "md5": "^2.2.1",
     "micro-strptime": "^0.2.2",

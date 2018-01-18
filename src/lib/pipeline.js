@@ -14,9 +14,7 @@ const { Map, List } = require('immutable');
 const { now, complement, iso } = require('./util');
 const { Speed } = require('./speed');
 
-const config = require('../config/constants');
-const session = require('./session').connect();
-const metrics = require('./metrics').connect();
+const config = require('../constants');
 
 const schema = require('../format/log-schema.json');
 const validator = new Ajv();
@@ -239,38 +237,6 @@ function window({
 }
 
 /**
- * Add a metric to the store.
- */
-function store() {
-  return () => {
-    return event => {
-      metrics.add(event.get('data').set('time', event.get('time')));
-      return event;
-    };
-  };
-}
-
-/**
- * Assign a session to the log event, create it if necessary.
- */
-function sessionHandler({ type, gap, id }) {
-  return stream => {
-    return event => {
-      const sessId = id(event.get('data'));
-      if (sessId !== undefined) {
-        const sess = session.assign({
-          type: type,
-          id: sessId,
-          time: event.get('time'),
-          gap: gap,
-        });
-        stream(event.setIn(['data', 'session'], sess));
-      }
-    };
-  };
-}
-
-/**
  * Pipeline builder
  */
 class Builder {
@@ -301,18 +267,6 @@ class Builder {
 
   by(f) {
     return this.add(by(f));
-  }
-
-  metrics(f) {
-    return this.map(f).by(metrics.encodeSeries);
-  }
-
-  store() {
-    return this.add(store());
-  }
-
-  session(opts) {
-    return this.add(sessionHandler(opts));
   }
 
   window(opts) {
