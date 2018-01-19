@@ -1,6 +1,7 @@
 const elasticsearch = require('elasticsearch');
 const accessLogsIndexConfig = require('./access-logs_index.json');
 const config = require('../../constants');
+const logsSearchArguments = require('../../apps/logs_search_arguments_mapping');
 
 const accessLogsIndex = 'access-watch-access-logs';
 
@@ -36,15 +37,6 @@ const indexesGc = client => () => {
         }
       });
   });
-};
-
-const logsSearchArguments = {
-  address: value => ({ address: { value } }),
-  identity_type: type => ({ identity: { type } }),
-  request_method: method => ({ request: { method } }),
-  reputation_status: status => ({ reputation: { status } }),
-  response_status: status => ({ response: { status } }),
-  robot: id => ({ robot: { id } }),
 };
 
 const flattenKeys = obj =>
