@@ -1,12 +1,12 @@
 const elasticsearch = require('elasticsearch');
-const accessLogsIndexConfig = require('./access-logs_index.json');
+const accessWatchLogsIndexConfig = require('./access-watch-logs-index-config.json');
 const config = require('../../constants');
 const logsSearchArguments = require('../../apps/logs_search_arguments_mapping');
 
-const accessLogsIndex = 'access-watch-access-logs';
+const accessLogsIndex = config.elasticsearch.logsIndexName;
 
 const getIndexSuffix = date =>
-  [date.getMonth() + 1, date.getDate(), date.getFullYear()].join('-');
+  [date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
 
 const generateIndex = date => `${accessLogsIndex}-${getIndexSuffix(date)}`;
 
@@ -121,13 +121,13 @@ const elasticSearchBuilder = config => {
   const esClient = new elasticsearch.Client(config);
   const index = generateCurrentIndex();
   const gc = indexesGc(esClient);
-  gc();
+  setImmediate(gc);
   setInterval(gc, 24 * 3600 * 1000);
   esClient.indices.exists({ index }).then(exists => {
     if (!exists) {
       esClient.indices.create({
         index,
-        body: accessLogsIndexConfig,
+        body: accessWatchLogsIndexConfig,
       });
     }
   });
