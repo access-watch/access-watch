@@ -19,8 +19,11 @@ const memoryIndexFactory = limit => ({
     }
   },
   push(time, log) {
-    while (this.total >= this.limit) {
+    while (this.total >= this.limit && this.total !== 0) {
       this.removeOldest();
+    }
+    if (this.limit === 0) {
+      return;
     }
     if (!this.collection[time]) {
       this.collection[time] = [];
