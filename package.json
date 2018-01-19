@@ -1,12 +1,12 @@
 {
   "name": "access-watch",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Open Source Web Traffic Manager",
   "repository": {
     "type": "git",
     "url": "https://github.com/access-watch/access-watch.git"
   },
-  "main": "src/index.js",
+  "main": "access-watch.js",
   "license": "Apache-2.0",
   "author": {
     "name": "Access Watch Technologies GmbH",

@@ -1,4 +1,4 @@
-## Monitor traffic data from Elasticsearch
+## Monitor web traffic with input from Elasticsearch
 
 These days, one of the most common setups to analyze 'access logs' is to store them in Elasticsearch, typically using Filebeat and/or Logstash in the process.
 
@@ -28,10 +28,10 @@ npm install
 
 We will configure a new input, polling data from Elasticsearch.
 
-Create your own configuration in `./config/config.js`:
+You can start from this template and create your own configuration in `./config/elasticsearch.js`:
 
 ```
-const accessWatch = require('..')();
+const accessWatch = require('../access-watch')();
 
 const { pipeline, input } = accessWatch;
 
@@ -67,7 +67,7 @@ You will set the following configuration:
   }
 ```
 
-Now, we need to transform the logs from their current format in Elasticsearch to the internal format used for the Access Watch inputs.
+Finally, we need to transform the logs from their current format in Elasticsearch to the internal format used for the Access Watch inputs.
 
 Maybe you're lucky and you can reuse an existing format, such as a [default Logstash format](https://github.com/access-watch/access-watch/blob/master/format/logstash.js). In that case:
 
@@ -162,8 +162,8 @@ function myCustomParser (source) {
 
 Now, everything together, the final input configuration:
 
-```
-const accessWatch = require('..')();
+```javascript
+const accessWatch = require('../access-watch')();
 
 const { pipeline, input } = accessWatch;
 
@@ -173,10 +173,7 @@ const elasticsearchInput = input.elasticsearch.create({
   },
   query: {
     index: 'logstash-2017.11.20',
-    type: 'access_log',
-    body: {
-      sort: [ { '@timestamp': { order: 'desc' } } ]
-    }
+    type: 'access_log'
   },
   parse: myCustomParser
 })
@@ -189,19 +186,10 @@ pipeline.registerInput(elasticsearchInput)
 Ok, now go back to where Access Watch is installed and start it:
 
 ```
-npm start config/config.js
+npm start config/elasticsearch
 ```
 
 ### Browse the interface
 
 Now, you can point your browser to the IP/port where Access Watch is running. If you see data flowing, congrats you made it!
 
-![Access Watch Metrics](https://access.watch/assets/2/img/dashboard-metrics.png)
-
-![Access Watch Robots](https://access.watch/assets/2/img/dashboard-robots.png)
-
-### More than 'watch'
-
-The interface is just the start for Access Watch, the real fun is on building your own web traffic monitoring pipeline!
-
-Check back soon, our advanced tutorial is coming.
