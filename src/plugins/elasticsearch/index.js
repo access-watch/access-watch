@@ -5,7 +5,7 @@ const config = require('../../constants');
 const accessLogsIndex = config.elasticsearch.logsIndexName;
 
 const getIndexSuffix = date =>
-  [date.getMonth() + 1, date.getDate(), date.getFullYear()].join('-');
+  [date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
 
 const generateIndex = date => `${accessLogsIndex}-${getIndexSuffix(date)}`;
 
