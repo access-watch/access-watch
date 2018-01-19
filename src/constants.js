@@ -53,6 +53,9 @@ const constants = {
   elasticsearch: {
     retention: 5,
   },
+  modules: {
+    elasticsearch: false,
+  },
 };
 
 module.exports = rc('access-watch', constants);

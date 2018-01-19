@@ -1,6 +1,6 @@
 const elasticsearch = require('elasticsearch');
 const accessLogsIndexConfig = require('./access-logs_index.json');
-const config = require('../../config/constants');
+const config = require('../../constants');
 
 const accessLogsIndex = 'access-watch-access-logs';
 
