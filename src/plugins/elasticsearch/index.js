@@ -2,7 +2,7 @@ const elasticsearch = require('elasticsearch');
 const accessLogsIndexConfig = require('./access-logs_index.json');
 const config = require('../../constants');
 
-const accessLogsIndex = 'access-watch-access-logs';
+const accessLogsIndex = config.elasticsearch.logsIndexName;
 
 const getIndexSuffix = date =>
   [date.getMonth() + 1, date.getDate(), date.getFullYear()].join('-');
