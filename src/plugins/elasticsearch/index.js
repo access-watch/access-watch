@@ -129,7 +129,7 @@ const elasticSearchBuilder = config => {
   const esClient = new elasticsearch.Client(config);
   const index = generateCurrentIndex();
   const gc = indexesGc(esClient);
-  gc();
+  setImmediate(gc);
   setInterval(gc, 24 * 3600 * 1000);
   esClient.indices.exists({ index }).then(exists => {
     if (!exists) {
