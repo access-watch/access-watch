@@ -1,5 +1,5 @@
 const elasticsearch = require('elasticsearch');
-const accessWatchLogsIndexConfig = require('./access-watch-logs-index-config.json');
+const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
 
 const accessLogsIndex = config.elasticsearch.logsIndexName;
@@ -135,7 +135,7 @@ const elasticSearchBuilder = config => {
     if (!exists) {
       esClient.indices.create({
         index,
-        body: accessWatchLogsIndexConfig,
+        body: logsIndexConfig,
       });
     }
   });
