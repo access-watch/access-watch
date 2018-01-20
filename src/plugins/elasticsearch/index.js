@@ -15,7 +15,7 @@ const getIndexDate = index =>
 const indexLog = client => log => {
   client.index({
     index: generateCurrentIndex(),
-    type: 'access-log',
+    type: 'log',
     routing: log.getIn(['address', 'value']),
     body: log.toJS(),
   });

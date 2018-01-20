@@ -1,6 +1,6 @@
 {
   "mappings": {
-    "access-log": {
+    "log": {
       "dynamic": "true",
       "_all": { "enabled": false, "norms": false },
       "_routing": { "required": true },
