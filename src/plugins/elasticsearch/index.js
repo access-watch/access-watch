@@ -12,7 +12,7 @@ const generateCurrentIndex = () => generateIndex(new Date());
 const getIndexDate = index =>
   index.slice(logsIndexName.length + 1).replace(/-/g, '/');
 
-const indexAccessLog = client => log =>
+const indexLog = client => log => {
   client.index({
     index: generateCurrentIndex(),
     type: 'access-log',
@@ -139,7 +139,7 @@ const elasticSearchBuilder = config => {
     }
   });
   return {
-    index: indexAccessLog(esClient),
+    index: indexLog(esClient),
     searchLogs: searchLogs(esClient),
     logsEndpoint: logsEndpoint(esClient),
   };
