@@ -2,7 +2,7 @@ const elasticsearch = require('elasticsearch');
 const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
 
-const accessLogsIndex = config.elasticsearch.logsIndexName;
+const logsIndexName = config.elasticsearch.logsIndexName;
 
 const getIndexSuffix = date =>
   [date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
@@ -11,7 +11,7 @@ const generateIndex = date => `${accessLogsIndex}-${getIndexSuffix(date)}`;
 
 const generateCurrentIndex = () => generateIndex(new Date());
 const getIndexDate = index =>
-  index.slice(accessLogsIndex.length + 1).replace(/-/g, '/');
+  index.slice(logsIndexName.length + 1).replace(/-/g, '/');
 
 const indexAccessLog = client => log =>
   client.index({
@@ -24,7 +24,7 @@ const indexAccessLog = client => log =>
 const indexesGc = client => () => {
   client.indices.get({ index: '*' }).then(indices => {
     Object.keys(indices)
-      .filter(i => i.indexOf(accessLogsIndex) !== -1)
+      .filter(i => i.indexOf(logsIndexName) !== -1)
       .forEach(index => {
         const indexDate = new Date(getIndexDate(index));
         const gcDate = new Date(
@@ -104,7 +104,7 @@ const searchLogs = client => (query = {}) => {
   }
   return client
     .search({
-      index: `${accessLogsIndex}-*`,
+      index: `${logsIndexName}-*`,
       type: 'access-log',
       body,
       size,
