@@ -1,13 +1,12 @@
+require('date-format-lite');
+
 const elasticsearch = require('elasticsearch');
 const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
 
 const logsIndexName = config.elasticsearch.logsIndexName;
 
-const getIndexSuffix = date =>
-  [date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
-
-const generateIndex = date => `${accessLogsIndex}-${getIndexSuffix(date)}`;
+const generateIndex = date => `${logsIndexName}-${date.format('YYYY-MM-DD')}`;
 
 const generateCurrentIndex = () => generateIndex(new Date());
 const getIndexDate = index =>
