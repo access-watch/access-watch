@@ -9,6 +9,7 @@ const logsIndexName = config.elasticsearch.logsIndexName;
 const generateIndex = date => `${logsIndexName}-${date.format('YYYY-MM-DD')}`;
 
 const generateCurrentIndex = () => generateIndex(new Date());
+
 const getIndexDate = index =>
   index.slice(logsIndexName.length + 1).replace(/-/g, '/');
 
@@ -19,6 +20,7 @@ const indexLog = client => log => {
     routing: log.getIn(['address', 'value']),
     body: log.toJS(),
   });
+};
 
 const indexesGc = client => () => {
   client.indices.get({ index: '*' }).then(indices => {
