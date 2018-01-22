@@ -7,7 +7,7 @@ const config = require('../../constants');
 const { logsIndexName, retention } = config.elasticsearch;
 
 const generateIndexName = date =>
-  `${logsIndexName}-${date.format('YYYY-MM-DD')}`;
+  `${logsIndexName}-${date.format('YYYY-MM-DD', 0)}`;
 
 const getIndexDate = index =>
   index.slice(logsIndexName.length + 1).replace(/-/g, '/');
