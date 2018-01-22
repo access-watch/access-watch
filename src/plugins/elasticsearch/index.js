@@ -4,22 +4,51 @@ const elasticsearch = require('elasticsearch');
 const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
 
-const logsIndexName = config.elasticsearch.logsIndexName;
+const { logsIndexName, retention } = config.elasticsearch;
 
-const generateIndex = date => `${logsIndexName}-${date.format('YYYY-MM-DD')}`;
-
-const generateCurrentIndex = () => generateIndex(new Date());
+const generateIndexName = date =>
+  `${logsIndexName}-${date.format('YYYY-MM-DD')}`;
 
 const getIndexDate = index =>
   index.slice(logsIndexName.length + 1).replace(/-/g, '/');
 
+const getGcDate = () =>
+  new Date(new Date().getTime() - retention * 24 * 3600 * 1000);
+
+const indexesDb = {};
+
+const createIndexIfNotExists = client => index => {
+  if (!indexesDb[index]) {
+    indexesDb[index] = client.indices.exists({ index }).then(exists => {
+      if (!exists) {
+        return client.indices.create({
+          index,
+          body: logsIndexConfig,
+        });
+      }
+    });
+  }
+  return indexesDb[index];
+};
+
 const indexLog = client => log => {
-  client.index({
-    index: generateCurrentIndex(),
-    type: 'log',
-    routing: log.getIn(['address', 'value']),
-    body: log.toJS(),
-  });
+  const logTime = new Date(log.getIn(['request', 'time']));
+  const gcDate = getGcDate();
+  if (logTime.getTime() > gcDate.getTime()) {
+    const index = generateIndexName(logTime);
+    createIndexIfNotExists(client)(index).then(() => {
+      client.index({
+        index,
+        type: 'log',
+        routing: log.getIn(['address', 'value']),
+        body: log.toJS(),
+      });
+    });
+  } else {
+    console.log(
+      `Not indexing old log (${logTime}), current retention: ${retention}`
+    );
+  }
 };
 
 const indexesGc = client => () => {
@@ -28,10 +57,7 @@ const indexesGc = client => () => {
       .filter(i => i.indexOf(logsIndexName) !== -1)
       .forEach(index => {
         const indexDate = new Date(getIndexDate(index));
-        const gcDate = new Date(
-          new Date().getTime() -
-            config.elasticsearch.retention * 24 * 3600 * 1000
-        );
+        const gcDate = getGcDate();
         if (indexDate.getTime() < gcDate.getTime()) {
           client.indices.delete({ index });
         }
@@ -106,7 +132,7 @@ const searchLogs = client => (query = {}) => {
   return client
     .search({
       index: `${logsIndexName}-*`,
-      type: 'access-log',
+      type: 'log',
       body,
       size,
     })
@@ -128,18 +154,9 @@ const logsEndpoint = client => {
 
 const elasticSearchBuilder = config => {
   const esClient = new elasticsearch.Client(config);
-  const index = generateCurrentIndex();
   const gc = indexesGc(esClient);
   setImmediate(gc);
   setInterval(gc, 24 * 3600 * 1000);
-  esClient.indices.exists({ index }).then(exists => {
-    if (!exists) {
-      esClient.indices.create({
-        index,
-        body: logsIndexConfig,
-      });
-    }
-  });
   return {
     index: indexLog(esClient),
     searchLogs: searchLogs(esClient),
