@@ -106,7 +106,7 @@ const searchLogs = client => (query = {}) => {
   return client
     .search({
       index: `${logsIndexName}-*`,
-      type: 'access-log',
+      type: 'log',
       body,
       size,
     })
