@@ -46,9 +46,6 @@ exports.createLog = (req, res) => {
   });
 };
 
-const arraysEquals = (a, b) =>
-  a.reduce((bool, v, i) => bool && v === b[i], true);
-
 const mapIncludesObject = (map, obj) =>
   Object.keys(obj).reduce((bool, key) => {
     if (!map.has(key)) {
@@ -57,11 +54,11 @@ const mapIncludesObject = (map, obj) =>
     const mapValue = map.get(key);
     const objectValue = obj[key];
     const areSameType = typeof mapValue !== typeof objectValue;
-    if (areSameType || Array.isArray(objectValue) !== Array.isArray(mapValue)) {
+    if (areSameType) {
       return false;
     }
     if (Array.isArray(objectValue)) {
-      return bool && arraysEquals(mapValue, objectValue);
+      return bool && fromJS(objectValue).equals(mapValue);
     }
     if (typeof objectValue === 'object') {
       return bool && mapIncludesObject(mapValue, objectValue);
@@ -69,5 +66,4 @@ const mapIncludesObject = (map, obj) =>
     return bool && mapValue === objectValue;
   }, true);
 
-exports.arraysEquals = arraysEquals;
 exports.mapIncludesObject = mapIncludesObject;
