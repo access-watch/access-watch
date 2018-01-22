@@ -1,6 +1,6 @@
 const config = require('../constants');
 const searchLogsArguments = require('../apps/logs_search_arguments_mapping');
-const { mapIncludesObject } = require('./util');
+const { mapIncludesObject } = require('../lib/util');
 
 const DEFAULT_LIMIT = 50;
 const memoryIndexFactory = limit => ({
@@ -43,15 +43,15 @@ const memoryIndexFactory = limit => ({
 
 const memoryIndex = memoryIndexFactory(config.logs.memory.retention);
 
-const index = log => {
+function index(log) {
   const time = Math.floor(
     new Date(log.getIn(['request', 'time'])).getTime() / 1000
   );
   memoryIndex.limit = config.logs.memory.retention;
   memoryIndex.push(time, log);
-};
+}
 
-const searchLogs = (args = {}) => {
+function searchLogs(args = {}) {
   const { start, end, limit = DEFAULT_LIMIT } = args;
   let searchTimes = memoryIndex.getAllIndexTimes();
   const filterKeys = Object.keys(args).filter(k =>
@@ -75,7 +75,7 @@ const searchLogs = (args = {}) => {
     return answer.length >= limit;
   });
   return Promise.resolve(answer.slice(0, limit).map(l => l.toJS()));
-};
+}
 
 module.exports = {
   index,

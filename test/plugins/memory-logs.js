@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 
-const memoryLogsProvider = require('../../src/lib/memory_logs');
+const memoryLogsProvider = require('../../src/plugins/memory-logs');
 const assert = require('assert');
 const { fromJS } = require('immutable');
 const { memoryIndexFactory } = memoryLogsProvider;
