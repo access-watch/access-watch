@@ -1,7 +1,7 @@
+const omit = require('lodash.omit');
 const elasticsearch = require('elasticsearch');
 const accessWatchLogsIndexConfig = require('./access-watch-logs-index-config.json');
 const config = require('../../constants');
-const logsSearchArguments = require('../../apps/logs_search_arguments_mapping');
 
 const accessLogsIndex = config.elasticsearch.logsIndexName;
 
@@ -39,35 +39,11 @@ const indexesGc = client => () => {
   });
 };
 
-const flattenKeys = obj =>
-  Object.keys(obj).reduce((flat, k) => {
-    if (typeof obj[k] !== 'object' || Array.isArray(obj[k])) {
-      return obj;
-    }
-    const recObj = flattenKeys(obj[k]);
-    const childKey = Object.keys(recObj)[0];
-    return Object.assign({ [`${k}.${childKey}`]: recObj[childKey] }, flat);
-  }, {});
-
-const logsSearchBodyBuilder = searchObj =>
-  Object.keys(logsSearchArguments).reduce((acc, k) => {
-    if (searchObj[k]) {
-      return Object.assign(
-        flattenKeys(logsSearchArguments[k](searchObj[k])),
-        acc
-      );
-    }
-    return acc;
-  }, {});
-
 const reservedSearchTerms = ['start', 'end', 'limit'];
 
 const searchLogs = client => (query = {}) => {
   const { start, end, limit: size } = query;
-  const qObj = Object.keys(query)
-    .filter(k => reservedSearchTerms.indexOf(k) === -1)
-    .reduce((acc, k) => Object.assign({ [k]: query[k] }, acc), {});
-  const queryMatch = logsSearchBodyBuilder(qObj);
+  const queryMatch = omit(query, reservedSearchTerms);
   let bool = {};
   const body = {
     sort: [
@@ -79,7 +55,9 @@ const searchLogs = client => (query = {}) => {
     ],
   };
   if (Object.keys(queryMatch).length) {
-    bool.must = { match: queryMatch };
+    bool.must = Object.keys(queryMatch).map(k => ({
+      match: { [k]: queryMatch[k] },
+    }));
   }
   if (start || end) {
     bool.filter = {

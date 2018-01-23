@@ -103,12 +103,14 @@ describe('memoryLogsProvider', () => {
     }));
 
   it('can handle special params', () => {
-    const search = memoryLogsProvider.searchLogs({ address: '1' }).then(res => {
-      assert(res.length === 2);
-      assert(res.every(log => log.address.value === '1'));
-    });
+    const search = memoryLogsProvider
+      .searchLogs({ 'address.value': '1' })
+      .then(res => {
+        assert(res.length === 2);
+        assert(res.every(log => log.address.value === '1'));
+      });
     const search2 = memoryLogsProvider
-      .searchLogs({ address: '2' })
+      .searchLogs({ 'address.value': '2' })
       .then(res2 => {
         assert(res2.length === 1);
         assert(res2.every(log => log.address.value === '2'));

@@ -38,6 +38,7 @@
     "express-ws": "^3.0.0",
     "immutable": "^4.0.0-rc.9",
     "lodash.merge": "^4.6.0",
+    "lodash.omit": "^4.5.0",
     "lru-cache": "^4.1.1",
     "md5": "^2.2.1",
     "micro-strptime": "^0.2.2",
