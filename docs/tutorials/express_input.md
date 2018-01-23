@@ -1,3 +1,5 @@
+## Monitor web traffic with Node/Express middleware integration
+
 In this tutorial, we'll start analysing the web traffic on a Node/Express application using Access Watch.
 
 We'll use the Websocket protocol that is one of the many protocol available with the Access Watch Express Logger middleware.
@@ -31,7 +33,7 @@ All communications between your Node/Express application and Access Watch will b
 Now, you can create your own configuration in `./config/config.js`:
 
 ```javascript
-const accessWatch = require('..')();
+const accessWatch = require('../access-watch')();
 
 const { pipeline, input } = accessWatch;
 
@@ -86,13 +88,3 @@ npm start config/config.js
 ### Browse the interface
 
 Now, you can point your browser to the IP/port where Access Watch is running. If you see data flowing, congrats you made it!
-
-![Access Watch Metrics](https://access.watch/assets/2/img/dashboard-metrics.png)
-
-![Access Watch Robots](https://access.watch/assets/2/img/dashboard-robots.png)
-
-### More than 'watch'
-
-The interface is just the start for Access Watch, the real fun is on building your own web traffic monitoring pipeline!
-
-Check back soon, our advanced tutorials are coming.

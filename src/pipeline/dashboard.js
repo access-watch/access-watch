@@ -1,6 +1,6 @@
 const { stream } = require('../pipeline/augmented');
 
-const websocket = stream
+const dashboard = stream
 
   // Filter logs without identity
   .filter(log => log.hasIn(['identity', 'id']))
@@ -23,4 +23,4 @@ const websocket = stream
     return log;
   });
 
-module.exports = { stream: websocket };
+module.exports = { stream: dashboard };

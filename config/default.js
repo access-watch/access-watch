@@ -1,4 +1,4 @@
-const accessWatch = require('..')();
+const accessWatch = require('../access-watch')();
 
 const { pipeline, input, format } = accessWatch;
 

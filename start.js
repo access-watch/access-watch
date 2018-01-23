@@ -12,7 +12,7 @@ if (process.argv[2]) {
 
 // Load Core
 
-const accessWatch = require('.')();
+const accessWatch = require('./access-watch')();
 
 // Load Express
 

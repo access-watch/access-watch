@@ -1,5 +1,5 @@
 require('date-format-lite');
-
+const omit = require('lodash.omit');
 const elasticsearch = require('elasticsearch');
 const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
@@ -65,44 +65,11 @@ const indexesGc = client => () => {
   });
 };
 
-const logsSearchArguments = {
-  address: value => ({ address: { value } }),
-  identity_type: type => ({ identity: { type } }),
-  request_method: method => ({ request: { method } }),
-  reputation_status: status => ({ reputation: { status } }),
-  response_status: status => ({ response: { status } }),
-  robot: id => ({ robot: { id } }),
-};
-
-const flattenKeys = obj =>
-  Object.keys(obj).reduce((flat, k) => {
-    if (typeof obj[k] !== 'object' || Array.isArray(obj[k])) {
-      return obj;
-    }
-    const recObj = flattenKeys(obj[k]);
-    const childKey = Object.keys(recObj)[0];
-    return Object.assign({ [`${k}.${childKey}`]: recObj[childKey] }, flat);
-  }, {});
-
-const logsSearchBodyBuilder = searchObj =>
-  Object.keys(logsSearchArguments).reduce((acc, k) => {
-    if (searchObj[k]) {
-      return Object.assign(
-        flattenKeys(logsSearchArguments[k](searchObj[k])),
-        acc
-      );
-    }
-    return acc;
-  }, {});
-
 const reservedSearchTerms = ['start', 'end', 'limit'];
 
 const searchLogs = client => (query = {}) => {
   const { start, end, limit: size } = query;
-  const qObj = Object.keys(query)
-    .filter(k => reservedSearchTerms.indexOf(k) === -1)
-    .reduce((acc, k) => Object.assign({ [k]: query[k] }, acc), {});
-  const queryMatch = logsSearchBodyBuilder(qObj);
+  const queryMatch = omit(query, reservedSearchTerms);
   let bool = {};
   const body = {
     sort: [
@@ -114,7 +81,20 @@ const searchLogs = client => (query = {}) => {
     ],
   };
   if (Object.keys(queryMatch).length) {
-    bool.must = { match: queryMatch };
+    bool.must = Object.keys(queryMatch).map(k => {
+      const value = queryMatch[k];
+      const values = value.split(',');
+      if (values.length === 1) {
+        return {
+          match: { [k]: value },
+        };
+      }
+      return {
+        bool: {
+          should: values.map(val => ({ match: { [k]: val } })),
+        },
+      };
+    });
   }
   if (start || end) {
     bool.filter = {

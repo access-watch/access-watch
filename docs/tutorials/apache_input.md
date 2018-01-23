@@ -1,3 +1,5 @@
+## Monitor web traffic with syslog input from Apache
+
 In this tutorial, we'll start analysing the web traffic on one or many Apache web servers using Access Watch.
 
 We'll use the syslog protocol that is available to us through the powerful **[Piped Logs](https://httpd.apache.org/docs/2.4/logs.html#piped)** feature of Apache.
@@ -33,7 +35,7 @@ To get more familiar, you can inspect default and example configurations in `./c
 Now, you can create your own configuration in `./config/apache.js`:
 
 ```javascript
-const accessWatch = require('..')();
+const accessWatch = require('../access-watch')();
 
 const { pipeline, input, format } = accessWatch;
 
@@ -90,13 +92,3 @@ npm start config/apache.js
 ### Browse the interface
 
 Now, you can point your browser to the IP/port where Access Watch is running. If you see data flowing, congrats you made it!
-
-![Access Watch Metrics](https://access.watch/assets/2/img/dashboard-metrics.png)
-
-![Access Watch Robots](https://access.watch/assets/2/img/dashboard-robots.png)
-
-### More than 'watch'
-
-The interface is just the start for Access Watch, the real fun is on building your own web traffic monitoring pipeline!
-
-Check back soon, our advanced tutorials are coming.

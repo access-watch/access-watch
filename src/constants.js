@@ -58,6 +58,11 @@ const constants = {
   modules: {
     elasticsearch: false,
   },
+  logs: {
+    memory: {
+      retention: 1000,
+    },
+  },
 };
 
 module.exports = rc('access-watch', constants);
