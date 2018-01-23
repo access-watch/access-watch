@@ -56,6 +56,10 @@ const constants = {
     configuration: {},
   },
   modules: {
+    metrics: true,
+    session: true,
+    rules: true,
+    logs: true,
     elasticsearch: false,
   },
   logs: {
