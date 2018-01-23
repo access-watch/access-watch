@@ -45,3 +45,25 @@ exports.createLog = (req, res) => {
     },
   });
 };
+
+const mapIncludesObject = (map, obj) =>
+  Object.keys(obj).reduce((bool, key) => {
+    if (!map.has(key)) {
+      return false;
+    }
+    const mapValue = map.get(key);
+    const objectValue = obj[key];
+    const areSameType = typeof mapValue !== typeof objectValue;
+    if (areSameType) {
+      return false;
+    }
+    if (Array.isArray(objectValue)) {
+      return bool && fromJS(objectValue).equals(mapValue);
+    }
+    if (typeof objectValue === 'object') {
+      return bool && mapIncludesObject(mapValue, objectValue);
+    }
+    return bool && mapValue === objectValue;
+  }, true);
+
+exports.mapIncludesObject = mapIncludesObject;

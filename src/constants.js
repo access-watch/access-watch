@@ -50,6 +50,19 @@ const constants = {
       sliderValues: ['auto', 30, 60, 60 * 6, 60 * 24],
     },
   },
+  elasticsearch: {
+    retention: 5,
+    logsIndexName: 'access-watch-logs',
+    configuration: {},
+  },
+  modules: {
+    elasticsearch: false,
+  },
+  logs: {
+    memory: {
+      retention: 1000,
+    },
+  },
 };
 
 module.exports = rc('access-watch', constants);
