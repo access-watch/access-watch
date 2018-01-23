@@ -4,8 +4,10 @@ const constants = require('./constants');
 
 module.exports = (config = {}) => {
   merge(constants, config);
-
   // Modules
+  if (constants.modules.elasticsearch) {
+    require('./modules/elasticsearch');
+  }
   require('./modules/metrics');
   require('./modules/session');
   require('./modules/rules');
