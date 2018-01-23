@@ -55,9 +55,20 @@ const searchLogs = client => (query = {}) => {
     ],
   };
   if (Object.keys(queryMatch).length) {
-    bool.must = Object.keys(queryMatch).map(k => ({
-      match: { [k]: queryMatch[k] },
-    }));
+    bool.must = Object.keys(queryMatch).map(k => {
+      const value = queryMatch[k];
+      const values = value.split(',');
+      if (values.length === 1) {
+        return {
+          match: { [k]: value },
+        };
+      }
+      return {
+        bool: {
+          should: values.map(val => ({ match: { [k]: val } })),
+        },
+      };
+    });
   }
   if (start || end) {
     bool.filter = {

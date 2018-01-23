@@ -57,6 +57,14 @@ const fakeLogs = [
       value: '2',
     },
   },
+  {
+    request: {
+      time: '2018-01-19T13:50:03.000Z',
+    },
+    address: {
+      value: '3',
+    },
+  },
 ];
 
 const immutableFakeLogs = fakeLogs.map(log => fromJS(log));
@@ -66,7 +74,7 @@ describe('memoryLogsProvider', () => {
   it('can index and retrieve logs', () => {
     immutableFakeLogs.forEach(memoryLogsProvider.index);
     return memoryLogsProvider.searchLogs().then(search => {
-      assert(search.length === 3);
+      assert(search.length === 4);
       assert.deepEqual(reverseFakeLogs, search);
     });
   });
@@ -79,7 +87,7 @@ describe('memoryLogsProvider', () => {
         start,
       })
       .then(search => {
-        assert.deepEqual(reverseFakeLogs.slice(0, 2), search);
+        assert.deepEqual(reverseFakeLogs.slice(0, fakeLogs.length - 1), search);
       });
   });
   it('can search for logs in a specific time period', () => {
@@ -117,4 +125,12 @@ describe('memoryLogsProvider', () => {
       });
     return Promise.all([search, search2]);
   });
+
+  it('can handle special params with or', () =>
+    memoryLogsProvider.searchLogs({ 'address.value': '1,2' }).then(res => {
+      assert(res.length === 3);
+      assert(
+        res.every(log => log.address.value === '1' || log.address.value === '2')
+      );
+    }));
 });

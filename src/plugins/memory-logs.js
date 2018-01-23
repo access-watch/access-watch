@@ -1,20 +1,11 @@
 const omit = require('lodash.omit');
 const config = require('../constants');
-const { mapIncludesObject } = require('../lib/util');
 
-const createNestedObj = (keys, val) => {
-  if (keys.length === 0) {
-    return val;
-  }
-  return { [keys[0]]: createNestedObj(keys.slice(1), val) };
-};
-
-const argumentsMapping = args =>
-  Object.keys(args).reduce(
-    (map, key) =>
-      Object.assign(map, createNestedObj(key.split('.'), args[key])),
-    {}
-  );
+const logMatchesQuery = (log, query) =>
+  Object.keys(query).reduce((bool, key) => {
+    const queryValues = query[key].split(',');
+    return bool && queryValues.indexOf(log.getIn(key.split('.'))) !== -1;
+  }, true);
 
 const DEFAULT_LIMIT = 50;
 const memoryIndexFactory = limit => ({
@@ -68,7 +59,7 @@ function index(log) {
 function searchLogs(args = {}) {
   const { start, end, limit = DEFAULT_LIMIT } = args;
   let searchTimes = memoryIndex.getAllIndexTimes();
-  const filterValues = argumentsMapping(omit(args, ['start', 'end', 'limit']));
+  const filters = omit(args, ['start', 'end', 'limit']);
   let answer = [];
   if (start) {
     searchTimes = searchTimes.filter(t => t >= start);
@@ -79,7 +70,7 @@ function searchLogs(args = {}) {
   searchTimes.some(t => {
     const timeIndex = memoryIndex.get(t);
     answer = answer.concat(
-      timeIndex.filter(log => mapIncludesObject(log, filterValues))
+      timeIndex.filter(log => logMatchesQuery(log, filters))
     );
     return answer.length >= limit;
   });
