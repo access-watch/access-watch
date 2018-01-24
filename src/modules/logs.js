@@ -8,9 +8,10 @@ const { stream: augmentedStream } = require('../pipeline/augmented');
 
 app.streamToWebsocket('/logs/augmented', augmentedStream);
 
-const { stream: dashboardStream } = require('../pipeline/dashboard');
-
-app.streamToWebsocket('/logs', dashboardStream);
+app.streamToWebsocket(
+  '/logs',
+  augmentedStream.filter(log => log.hasIn(['identity', 'id']))
+);
 
 augmentedStream.map(memoryIndex.index);
 
