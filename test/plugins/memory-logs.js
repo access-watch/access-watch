@@ -40,6 +40,9 @@ const fakeLogs = [
     address: {
       value: '1',
     },
+    identity: {
+      id: '1',
+    },
   },
   {
     request: {
@@ -47,6 +50,9 @@ const fakeLogs = [
     },
     address: {
       value: '1',
+    },
+    identity: {
+      id: '1',
     },
   },
   {
@@ -56,6 +62,9 @@ const fakeLogs = [
     address: {
       value: '2',
     },
+    identity: {
+      id: '2',
+    },
   },
   {
     request: {
@@ -63,6 +72,9 @@ const fakeLogs = [
     },
     address: {
       value: '3',
+    },
+    identity: {
+      id: '3',
     },
   },
 ];
@@ -132,5 +144,14 @@ describe('memoryLogsProvider', () => {
       assert(
         res.every(log => log.address.value === '1' || log.address.value === '2')
       );
+    }));
+
+  it('does not index not augmented log', () =>
+    memoryLogsProvider.searchLogs().then(res => {
+      const originalLength = res.length;
+      memoryLogsProvider.index(immutableFakeLogs[0].delete('identity'));
+      return memoryLogsProvider.searchLogs().then(newRes => {
+        assert(newRes.length === originalLength);
+      });
     }));
 });
