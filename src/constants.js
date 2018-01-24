@@ -37,13 +37,13 @@ const constants = {
     },
     identity: {
       batchInterval: 333,
-      maxConcurrentRequests: 2,
+      maxConcurrentRequests: 3,
     },
     activity: {
       batchInterval: 333,
-      maxConcurrentRequests: 2,
+      maxConcurrentRequests: 3,
     },
-    timeout: 1000,
+    timeout: 2000,
   },
   ui: {
     time: {
@@ -56,6 +56,10 @@ const constants = {
     configuration: {},
   },
   modules: {
+    metrics: true,
+    session: true,
+    rules: true,
+    logs: true,
     elasticsearch: false,
   },
   logs: {

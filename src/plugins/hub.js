@@ -119,7 +119,7 @@ function batchIdentityFetch() {
       });
     })
     .catch(err => {
-      console.error('identities', err);
+      console.error('Identity request error:', err.message);
       // Releasing concurrent requests count
       delete identityRequests[requestId];
       // Resolving all the requests with an empty response
@@ -256,7 +256,7 @@ function batchActivityFeedback() {
       });
     })
     .catch(err => {
-      console.error('activity feedback', err);
+      console.error('Activity feedback error:', err.message);
       // Releasing concurrent requests count
       delete activityRequests[requestId];
     });
