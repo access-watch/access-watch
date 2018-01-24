@@ -1,6 +1,7 @@
 const app = require('../apps/websocket');
 const rawStream = require('../lib/pipeline');
 const memoryIndex = require('../plugins/memory-logs');
+const { logIsAugmented } = require('../lib/util');
 
 app.streamToWebsocket('/logs/raw', rawStream);
 
@@ -8,9 +9,7 @@ const { stream: augmentedStream } = require('../pipeline/augmented');
 
 app.streamToWebsocket('/logs/augmented', augmentedStream);
 
-const { stream: dashboardStream } = require('../pipeline/dashboard');
-
-app.streamToWebsocket('/logs', dashboardStream);
+app.streamToWebsocket('/logs', augmentedStream.filter(logIsAugmented));
 
 augmentedStream.map(memoryIndex.index);
 

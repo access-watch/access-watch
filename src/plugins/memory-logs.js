@@ -1,5 +1,6 @@
 const omit = require('lodash.omit');
 const config = require('../constants');
+const { logIsAugmented } = require('../lib/util');
 
 const logMatchesQuery = (log, query) =>
   Object.keys(query).reduce((bool, key) => {
@@ -49,11 +50,13 @@ const memoryIndexFactory = limit => ({
 const memoryIndex = memoryIndexFactory(config.logs.memory.retention);
 
 function index(log) {
-  const time = Math.floor(
-    new Date(log.getIn(['request', 'time'])).getTime() / 1000
-  );
-  memoryIndex.limit = config.logs.memory.retention;
-  memoryIndex.push(time, log);
+  if (logIsAugmented(log)) {
+    const time = Math.floor(
+      new Date(log.getIn(['request', 'time'])).getTime() / 1000
+    );
+    memoryIndex.limit = config.logs.memory.retention;
+    memoryIndex.push(time, log);
+  }
 }
 
 function searchLogs(args = {}) {
