@@ -9,7 +9,9 @@ const { stream: augmentedStream } = require('../pipeline/augmented');
 
 app.streamToWebsocket('/logs/augmented', augmentedStream);
 
-app.streamToWebsocket('/logs', augmentedStream.filter(logIsAugmented));
+app.streamToWebsocket('/logs', augmentedStream.filter(logIsAugmented), {
+  monitoring: false,
+});
 
 augmentedStream.map(memoryIndex.index);
 

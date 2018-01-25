@@ -1,13 +1,13 @@
 const express = require('express');
 
-const pipeline = require('../lib/pipeline');
+const monitoring = require('../lib/monitoring');
 
 const app = express();
 
 app.use(express.json());
 
 app.get('/monitoring', (req, res) => {
-  res.send(pipeline.monitoring());
+  res.send(monitoring.getAllComputed());
 });
 
 module.exports = app;
