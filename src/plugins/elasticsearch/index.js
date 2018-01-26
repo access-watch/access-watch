@@ -3,6 +3,9 @@ const omit = require('lodash.omit');
 const elasticsearch = require('elasticsearch');
 const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
+const monitoring = require('../../lib/monitoring');
+
+const monitor = monitoring.registerOutput({ name: 'Elasticsearch' });
 
 const { logsIndexName, retention } = config.elasticsearch;
 
@@ -37,12 +40,16 @@ const indexLog = client => log => {
   if (logTime.getTime() > gcDate.getTime()) {
     const index = generateIndexName(logTime);
     createIndexIfNotExists(client)(index).then(() => {
-      client.index({
-        index,
-        type: 'log',
-        routing: log.getIn(['address', 'value']),
-        body: log.toJS(),
-      });
+      client
+        .index({
+          index,
+          type: 'log',
+          routing: log.getIn(['address', 'value']),
+          body: log.toJS(),
+        })
+        .then(() => {
+          monitor.hit();
+        });
     });
   } else {
     console.log(
@@ -137,6 +144,7 @@ const logsEndpoint = client => {
 const elasticSearchBuilder = config => {
   const esClient = new elasticsearch.Client(config);
   const gc = indexesGc(esClient);
+  monitor.status = 'Open';
   setImmediate(gc);
   setInterval(gc, 24 * 3600 * 1000);
   return {
