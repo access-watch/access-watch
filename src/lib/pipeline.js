@@ -12,7 +12,7 @@
 const Ajv = require('ajv');
 const { Map, List } = require('immutable');
 const { now, complement, iso } = require('./util');
-const { Speed } = require('./speed');
+const monitoring = require('./monitoring');
 
 const config = require('../constants');
 
@@ -301,23 +301,20 @@ class Pipeline extends Builder {
 
   registerInput(input) {
     this.inputs.push(input);
-    this.monitors.push({
-      accepted: {
-        per_minute: new Speed(60, 15),
-        per_hour: new Speed(3600, 24),
-      },
-      rejected: {
-        per_minute: new Speed(60, 15),
-        per_hour: new Speed(3600, 24),
-      },
-      status: 'Not started',
-    });
+    this.monitors.push(
+      monitoring.register({
+        speeds: ['accepted', 'rejected'],
+        name: input.name,
+        type: 'input',
+      })
+    );
   }
 
   start() {
     this.stream = super.create()(() => {});
     var pipeline = this;
     this.inputs.map(function(input, idx) {
+      const monitor = pipeline.monitors[idx];
       input.start({
         success: function(log) {
           const valid = validate(log.toJS());
@@ -328,12 +325,10 @@ class Pipeline extends Builder {
               ),
               data: log,
             });
-            pipeline.monitors[idx].accepted.per_minute.hit(event.get('time'));
-            pipeline.monitors[idx].accepted.per_hour.hit(event.get('time'));
+            monitor.hit('accepted', event.get('time'));
             pipeline.handleEvent(event);
           } else {
-            pipeline.monitors[idx].rejected.per_minute.hit(now());
-            pipeline.monitors[idx].rejected.per_hour.hit(now());
+            monitor.hit('rejected');
             pipeline.handleError(
               new Error(
                 `Invalid message: ${validator.errorsText(validate.errors)}`
@@ -342,8 +337,7 @@ class Pipeline extends Builder {
           }
         },
         error: function(error) {
-          pipeline.monitors[idx].rejected.per_minute.hit(now());
-          pipeline.monitors[idx].rejected.per_hour.hit(now());
+          monitor.hit('rejected');
           pipeline.handleError(error);
         },
         status: function(err, msg) {
@@ -351,7 +345,7 @@ class Pipeline extends Builder {
             console.error(err);
           }
           console.log(input.name + ': ' + msg);
-          pipeline.monitors[idx].status = msg;
+          monitor.status = msg;
         },
       });
     });
@@ -363,17 +357,6 @@ class Pipeline extends Builder {
 
   handleError(err) {
     error(err);
-  }
-
-  monitoring() {
-    return this.monitors.map((monitor, idx) => {
-      return Map(monitor)
-        .set('name', this.inputs[idx].name)
-        .updateIn(['accepted', 'per_minute'], s => s.compute())
-        .updateIn(['accepted', 'per_hour'], s => s.compute())
-        .updateIn(['rejected', 'per_minute'], s => s.compute())
-        .updateIn(['rejected', 'per_hour'], s => s.compute());
-    });
   }
 }
 
