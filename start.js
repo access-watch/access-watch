@@ -40,11 +40,15 @@ accessWatch.pipeline.start();
 
 // Handle Shutdown
 
+let shutdown;
+
 process.on('SIGINT', () => {
-  accessWatch.database
-    .close()
+  if (!shutdown) {
+    shutdown = accessWatch.database.close();
+  }
+  shutdown
     .then(() => {
-      setImmediate(process.exit);
+      process.exit();
     })
     .catch(console.error);
 });
