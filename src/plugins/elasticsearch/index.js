@@ -71,11 +71,13 @@ const searchLogs = client => (query = {}) => {
   const { start, end, limit: size } = query;
   const queryMatch = omit(query, reservedSearchTerms);
   let bool = {
-    filter: {
-      exists: {
-        field: 'identity.id',
+    filter: [
+      {
+        exists: {
+          field: 'identity.id',
+        },
       },
-    },
+    ],
   };
   const body = {
     sort: [
@@ -103,12 +105,14 @@ const searchLogs = client => (query = {}) => {
     });
   }
   if (start || end) {
-    bool.filter.range = {
-      'request.time': Object.assign(
-        start ? { gte: start } : {},
-        end ? { lte: end } : {}
-      ),
-    };
+    bool.filter.push({
+      range: {
+        'request.time': Object.assign(
+          start ? { gte: start } : {},
+          end ? { lte: end } : {}
+        ),
+      },
+    });
   }
   body.query = { bool };
   return client
