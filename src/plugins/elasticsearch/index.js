@@ -20,16 +20,26 @@ const getGcDate = () =>
 
 const indexesDb = {};
 
+const reportOnError = promise =>
+  promise.catch(e => {
+    // Remove the eventual Error: that might come from the error from ES
+    const errString = e.message.replace('Error :', '');
+    monitor.status = `Error: ${errString}`;
+    console.error(`Elasticsearch error: ${errString}`);
+  });
+
 const createIndexIfNotExists = client => index => {
   if (!indexesDb[index]) {
-    indexesDb[index] = client.indices.exists({ index }).then(exists => {
-      if (!exists) {
-        return client.indices.create({
-          index,
-          body: logsIndexConfig,
-        });
-      }
-    });
+    indexesDb[index] = reportOnError(
+      client.indices.exists({ index }).then(exists => {
+        if (!exists) {
+          return client.indices.create({
+            index,
+            body: logsIndexConfig,
+          });
+        }
+      })
+    );
   }
   return indexesDb[index];
 };
@@ -40,16 +50,19 @@ const indexLog = client => log => {
   if (logTime.getTime() > gcDate.getTime()) {
     const index = generateIndexName(logTime);
     createIndexIfNotExists(client)(index).then(() => {
-      client
-        .index({
-          index,
-          type: 'log',
-          routing: log.getIn(['address', 'value']),
-          body: log.toJS(),
-        })
-        .then(() => {
-          monitor.hit();
-        });
+      reportOnError(
+        client
+          .index({
+            index,
+            type: 'log',
+            routing: log.getIn(['address', 'value']),
+            body: log.toJS(),
+          })
+          .then(() => {
+            monitor.status = 'Connected and indexing';
+            monitor.hit();
+          })
+      );
     });
   } else {
     console.log(
@@ -59,17 +72,19 @@ const indexLog = client => log => {
 };
 
 const indexesGc = client => () => {
-  client.indices.get({ index: '*' }).then(indices => {
-    Object.keys(indices)
-      .filter(i => i.indexOf(logsIndexName) !== -1)
-      .forEach(index => {
-        const indexDate = new Date(getIndexDate(index));
-        const gcDate = getGcDate();
-        if (indexDate.getTime() < gcDate.getTime()) {
-          client.indices.delete({ index });
-        }
-      });
-  });
+  reportOnError(
+    client.indices.get({ index: '*' }).then(indices => {
+      Object.keys(indices)
+        .filter(i => i.indexOf(logsIndexName) !== -1)
+        .forEach(index => {
+          const indexDate = new Date(getIndexDate(index));
+          const gcDate = getGcDate();
+          if (indexDate.getTime() < gcDate.getTime()) {
+            reportOnError(client.indices.delete({ index }));
+          }
+        });
+    })
+  );
 };
 
 const reservedSearchTerms = ['start', 'end', 'limit'];
@@ -118,19 +133,21 @@ const searchLogs = client => (query = {}) => {
     };
   }
   body.query = { bool };
-  return client
-    .search({
-      index: `${logsIndexName}-*`,
-      type: 'log',
-      body,
-      size,
-    })
-    .then(({ hits }) => {
-      if (hits) {
-        return hits.hits.map(({ _source }) => _source);
-      }
-      return [];
-    });
+  return reportOnError(
+    client
+      .search({
+        index: `${logsIndexName}-*`,
+        type: 'log',
+        body,
+        size,
+      })
+      .then(({ hits }) => {
+        if (hits) {
+          return hits.hits.map(({ _source }) => _source);
+        }
+        return [];
+      })
+  );
 };
 
 const logsEndpoint = client => {
@@ -144,7 +161,7 @@ const logsEndpoint = client => {
 const elasticSearchBuilder = config => {
   const esClient = new elasticsearch.Client(config);
   const gc = indexesGc(esClient);
-  monitor.status = 'Open';
+  monitor.status = 'Started';
   setImmediate(gc);
   setInterval(gc, 24 * 3600 * 1000);
   return {
