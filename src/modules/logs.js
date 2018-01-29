@@ -1,17 +1,29 @@
 const app = require('../apps/websocket');
-const rawStream = require('../lib/pipeline');
+const pipeline = require('../lib/pipeline');
 const memoryIndex = require('../plugins/memory-logs');
 const { logIsAugmented } = require('../lib/util');
 
-app.streamToWebsocket('/logs/raw', rawStream);
+// Expose raw logs
+
+app.streamToWebsocket('/logs/raw', pipeline, {
+  name: 'WebSocket: raw logs',
+  monitoringEnabled: true,
+});
 
 const { stream: augmentedStream } = require('../pipeline/augmented');
 
-app.streamToWebsocket('/logs/augmented', augmentedStream);
+// Expose augmented logs
 
-app.streamToWebsocket('/logs', augmentedStream.filter(logIsAugmented), {
-  monitoring: false,
+app.streamToWebsocket('/logs/augmented', augmentedStream, {
+  name: 'WebSocket: augmented logs',
+  monitoringEnabled: true,
 });
+
+// Expose augmented logs for dashboard
+
+app.streamToWebsocket('/logs', augmentedStream.filter(logIsAugmented));
+
+// Keep logs in memory and expose as API endpoint
 
 augmentedStream.map(memoryIndex.index);
 

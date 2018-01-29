@@ -9,7 +9,7 @@ expressWs(app);
 app.streamToWebsocket = (
   endpoint,
   stream,
-  { name = `WebSocket: ${endpoint}`, monitoring: monitoringEnabled = true } = {}
+  { name = `WebSocket: ${endpoint}`, monitoringEnabled = false } = {}
 ) => {
   const clients = {};
   let monitor;
