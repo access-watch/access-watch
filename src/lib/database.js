@@ -2,7 +2,7 @@
  * Functions to manage the lifecycle of the databases.
  */
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs-extra');
 
 const config = require('../constants');
 
@@ -18,6 +18,7 @@ class Connection {
   }
   close() {
     clearInterval(this.gc);
+    return Promise.resolve();
   }
 }
 
@@ -47,13 +48,6 @@ function readJSONFile(path) {
 }
 
 /**
- * Write the Javascript value as a JSON file at `path`.
- */
-function writeJSONFile(path, value) {
-  fs.writeFileSync(path, JSON.stringify(value, null, 2));
-}
-
-/**
  * Connection to a database stored on a file in the `data` directory.
  */
 class FileConnection extends Connection {
@@ -61,11 +55,19 @@ class FileConnection extends Connection {
     const filePath = path.resolve(config.data.directory, name + '.json');
     super(Klass.deserialize(readJSONFile(filePath)), gcInterval);
     this.filePath = filePath;
+    this.saveInterval = setInterval(() => {
+      this.save().catch(console.error);
+    }, config.data.saveInterval);
+  }
+
+  save() {
+    const data = this.db.serialize();
+    return fs.writeJson(this.filePath, data);
   }
 
   close() {
-    super.close();
-    writeJSONFile(this.filePath, this.db.serialize());
+    clearInterval(this.saveInterval);
+    return Promise.all([super.close(), this.save()]);
   }
 }
 
@@ -102,10 +104,12 @@ function connect({ name, protocol, Klass, gcInterval }) {
  * Must be called when the process exits.
  */
 function close() {
+  const promises = [];
   for (var name in connections) {
-    connections[name].close();
+    promises.push(connections[name].close());
     delete connections[name];
   }
+  return Promise.all(promises);
 }
 
 module.exports = {

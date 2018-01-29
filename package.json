@@ -36,6 +36,7 @@
     "elasticsearch": "^13.3.1",
     "express": "^4.16.2",
     "express-ws": "^3.0.0",
+    "fs-extra": "^5.0.0",
     "immutable": "^4.0.0-rc.9",
     "lodash.merge": "^4.6.0",
     "lodash.omit": "^4.5.0",
