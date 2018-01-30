@@ -4,6 +4,7 @@ const elasticsearch = require('elasticsearch');
 const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
 const monitoring = require('../../lib/monitoring');
+const { iso } = require('../../lib/util');
 
 const monitor = monitoring.registerOutput({ name: 'Elasticsearch' });
 
@@ -130,8 +131,8 @@ const searchLogs = client => (query = {}) => {
     bool.filter.push({
       range: {
         'request.time': Object.assign(
-          start ? { gte: start } : {},
-          end ? { lte: end } : {}
+          start ? { gte: iso(start) } : {},
+          end ? { lte: iso(end) } : {}
         ),
       },
     });
