@@ -10,6 +10,7 @@ const constants = {
   data: {
     protocol: 'file',
     directory: path.resolve(__dirname, '../data'),
+    saveInterval: 60 * 60 * 1000,
   },
   metrics: {
     gc: {

@@ -40,8 +40,15 @@ accessWatch.pipeline.start();
 
 // Handle Shutdown
 
+let shutdown;
+
 process.on('SIGINT', () => {
-  accessWatch.database.close();
-  // eslint-disable-next-line no-process-exit
-  process.exit();
+  if (!shutdown) {
+    shutdown = accessWatch.database.close();
+  }
+  shutdown
+    .then(() => {
+      process.exit();
+    })
+    .catch(console.error);
 });
