@@ -51,21 +51,3 @@ pipeline.registerInput(httpInput);
 
 // Output to the console as JS object
 // pipeline.map(log => console.log(log.toJS()))
-
-const websocketInput = input.websocket.create({
-  address: 'ws://access.watch:3000/logs',
-});
-
-pipeline.registerInput(websocketInput);
-
-/*const websocketClientInput = input.websocket.create({
-  address: 'ws://52.58.145.13:3000/raw_logs',
-});
-
-pipeline.registerInput(websocketClientInput);*/
-
-/* const websocketClientInput = input.websocket.create({
-  address: "ws://localhost:4000"
-})
-
-pipeline.registerInput(websocketClientInput) */

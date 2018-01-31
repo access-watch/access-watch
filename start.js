@@ -19,13 +19,6 @@ const accessWatch = require('./access-watch')();
 const app = express();
 expressWs(app);
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, DELETE');
-  res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-  next();
-});
-
 app.use(
   accessWatch.apps.api,
   accessWatch.apps.dashboard,

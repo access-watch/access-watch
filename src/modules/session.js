@@ -106,13 +106,11 @@ function parseFilter(query, name) {
   return item => keyValues.indexOf(item.getIn(keyPath)) !== -1;
 }
 
-console.log('will try to register session');
 app.get('/sessions/:type', (req, res, next) => {
   // If some plugin provide the start/end parameters and they are in this search
   if (true && req.query.start && req.query.end) {
     next();
   } else {
-    console.log('will return from session');
     res.send(
       session.list({
         type: req.params.type,
