@@ -1,6 +1,7 @@
 require('date-format-lite');
 const omit = require('lodash.omit');
 const elasticsearch = require('elasticsearch');
+const { database } = require('access-watch-sdk');
 const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
 const monitoring = require('../../lib/monitoring');
@@ -9,6 +10,7 @@ const { iso } = require('../../lib/util');
 const monitor = monitoring.registerOutput({ name: 'Elasticsearch' });
 
 const { logsIndexName, retention } = config.elasticsearch;
+const accessWatchSdkDatabase = database();
 
 const generateIndexName = date =>
   `${logsIndexName}-${date.format('YYYY-MM-DD', 0)}`;
@@ -88,10 +90,10 @@ const indexesGc = client => () => {
   );
 };
 
-const reservedSearchTerms = ['start', 'end', 'limit'];
+const reservedSearchTerms = ['start', 'end', 'limit', 'aggs'];
 
-const searchLogs = client => (query = {}) => {
-  const { start, end, limit: size } = query;
+const search = client => (query = {}) => {
+  const { start, end, limit: size, aggs } = query;
   const queryMatch = omit(query, reservedSearchTerms);
   let bool = {
     filter: [
@@ -137,23 +139,65 @@ const searchLogs = client => (query = {}) => {
       },
     });
   }
+  if (aggs) {
+    body.aggs = aggs;
+  }
   body.query = { bool };
   return reportOnError(
-    client
-      .search({
-        index: `${logsIndexName}-*`,
-        type: 'log',
-        body,
-        size,
-      })
-      .then(({ hits }) => {
-        if (hits) {
-          return hits.hits.map(({ _source }) => _source);
-        }
-        return [];
-      })
+    client.search({
+      index: `${logsIndexName}-*`,
+      type: 'log',
+      body,
+      size,
+    })
   );
 };
+
+const searchLogs = client => (query = {}) =>
+  search(client)(query).then(({ hits }) => {
+    if (hits) {
+      return hits.hits.map(({ _source }) => _source);
+    }
+    return [];
+  });
+
+const searchRobots = client => (query = {}) =>
+  search(client)(
+    Object.assign(
+      {
+        'identity.type': 'robot',
+        aggs: {
+          robots: {
+            terms: {
+              field: 'robot.id',
+            },
+          },
+        },
+        limit: 0,
+      },
+      query
+    )
+  )
+    .then(({ aggregations: { robots: { buckets } } }) =>
+      buckets.map(({ key, doc_count }) => ({
+        id: key,
+        count: doc_count,
+      }))
+    )
+    .then(robots =>
+      Promise.all(
+        robots.map(({ id }) => accessWatchSdkDatabase.getRobot({ uuid: id }))
+      ).then(robotsData =>
+        robotsData.map((robotData, i) =>
+          Object.assign(
+            {
+              count: robots[i].count,
+            },
+            robotData
+          )
+        )
+      )
+    );
 
 const logsEndpoint = client => {
   const search = searchLogs(client);
@@ -172,6 +216,7 @@ const elasticSearchBuilder = config => {
   return {
     index: indexLog(esClient),
     searchLogs: searchLogs(esClient),
+    searchRobots: searchRobots(esClient),
     logsEndpoint: logsEndpoint(esClient),
   };
 };
