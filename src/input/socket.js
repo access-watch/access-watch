@@ -67,7 +67,7 @@ function create({
         try {
           pipeline.success(parse(message));
         } catch (err) {
-          pipeline.error(err);
+          pipeline.log(err, 'warn');
         }
       };
       if (!protocol || protocol === 'udp') {

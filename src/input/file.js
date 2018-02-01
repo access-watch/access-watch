@@ -22,11 +22,11 @@ function create({ name = 'File', path, parse = defaultParse }) {
         try {
           pipeline.success(parse(data));
         } catch (err) {
-          pipeline.error(err);
+          pipeline.log(err, 'warn');
         }
       });
       tail.on('error', err => {
-        pipeline.error(err);
+        pipeline.log(err, 'error');
       });
       tail.watch();
       pipeline.status(null, 'Watching ' + path);
