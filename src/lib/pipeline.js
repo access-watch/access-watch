@@ -319,7 +319,9 @@ class Pipeline extends Builder {
           }
         },
         log: function(log, severity) {
-          monitor.hit('rejected');
+          if (severity === 'warn' || severity === 'error') {
+            monitor.hit('rejected');
+          }
           pipeline.log(log, severity);
         },
         status: function(err, msg) {
