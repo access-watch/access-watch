@@ -22,7 +22,7 @@ function create({ name = 'File', path, parse = defaultParse }) {
         try {
           pipeline.success(parse(data));
         } catch (err) {
-          pipeline.log(err, 'warn');
+          pipeline.reject(err);
         }
       });
       tail.on('error', err => {

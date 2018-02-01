@@ -15,7 +15,7 @@ function create({ name = 'HTTP server', path, parse = fromJS }) {
           try {
             pipeline.success(parse(message));
           } catch (err) {
-            pipeline.log(err, 'warn');
+            pipeline.reject(err);
           }
         });
       });

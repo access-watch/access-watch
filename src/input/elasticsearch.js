@@ -49,7 +49,7 @@ function create({ name = 'Elasticsearch', config, query, parse = fromJS }) {
               try {
                 pipeline.success(parse(hit._source));
               } catch (err) {
-                pipeline.log(err, 'warn');
+                pipeline.reject(err);
               }
             });
             // Keep list short

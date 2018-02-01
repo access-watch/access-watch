@@ -17,7 +17,7 @@ const socketToPipeline = (
     try {
       pipeline.success(parse(message));
     } catch (err) {
-      pipeline.log(err, 'warn');
+      pipeline.reject(err);
     }
   });
 };
@@ -60,7 +60,7 @@ function create({
         setupServerWebSocket({ pipeline, path, listenSocket });
       } else {
         const errMsg = 'WebSocket type is either client or server';
-        pipeline.log(new Error(errMsg), 'err');
+        pipeline.log(new Error(errMsg), 'error');
       }
     },
   };

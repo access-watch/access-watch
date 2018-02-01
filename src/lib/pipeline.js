@@ -318,11 +318,9 @@ class Pipeline extends Builder {
             );
           }
         },
-        log: function(log, severity) {
-          if (severity === 'warn' || severity === 'error') {
-            monitor.hit('rejected');
-          }
-          pipeline.log(log, severity);
+        reject: function(reason) {
+          monitor.hit('rejected');
+          pipeline.log(reason, 'warn');
         },
         status: function(err, msg) {
           if (err) {
@@ -331,6 +329,7 @@ class Pipeline extends Builder {
           console.log(input.name + ': ' + msg);
           monitor.status = msg;
         },
+        log: pipeline.log,
       });
     });
   }
