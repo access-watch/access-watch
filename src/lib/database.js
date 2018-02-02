@@ -48,21 +48,53 @@ function readJSONFile(path) {
 }
 
 /**
+ * Write `data` in JSON in of the file at `path`
+ */
+function writeJSONFile(path, data) {
+  return fs
+    .writeJson(path + '.new', data)
+    .then(() =>
+      fs.pathExists(path).then(exists => {
+        if (exists) fs.rename(path, path + '.previous');
+      })
+    )
+    .then(() =>
+      fs.pathExists(path + '.new').then(exists => {
+        if (exists) fs.rename(path + '.new', path);
+      })
+    )
+    .then(() =>
+      fs.pathExists(path + '.previous').then(exists => {
+        if (exists) fs.unlink(path + '.previous');
+      })
+    );
+}
+
+/**
  * Connection to a database stored on a file in the `data` directory.
  */
 class FileConnection extends Connection {
   constructor(name, Klass, gcInterval) {
     const filePath = path.resolve(config.data.directory, name + '.json');
-    super(Klass.deserialize(readJSONFile(filePath)), gcInterval);
+    const start = process.hrtime();
+    const db = Klass.deserialize(readJSONFile(filePath));
+    const elapsed = Math.round(process.hrtime(start)[1] / 1000000) / 1000;
+    console.log(`Loaded ${filePath} in ${elapsed}s`);
+    super(db, gcInterval);
     this.filePath = filePath;
-    this.saveInterval = setInterval(() => {
-      this.save().catch(console.error);
-    }, config.data.saveInterval);
+    this.saveInterval = setInterval(
+      () => this.save().catch(console.error),
+      config.data.saveInterval
+    );
   }
 
   save() {
     const data = this.db.serialize();
-    return fs.writeJson(this.filePath, data);
+    const start = process.hrtime();
+    return writeJSONFile(this.filePath, data).then(() => {
+      const elapsed = Math.round(process.hrtime(start)[1] / 1000000) / 1000;
+      console.log(`Saved ${this.filePath} in ${elapsed}s`);
+    });
   }
 
   close() {
