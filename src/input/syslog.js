@@ -24,7 +24,7 @@ function create({
           const result = syslogParse(message);
           pipeline.success(parse(result.message));
         } catch (err) {
-          pipeline.error(err);
+          pipeline.reject(err);
         }
       };
       if (!protocol || protocol === 'udp') {
