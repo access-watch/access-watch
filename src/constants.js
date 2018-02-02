@@ -30,6 +30,7 @@ const constants = {
       expiration: 3600,
       interval: 60 * 1000,
     },
+    timerange: false,
   },
   hub: {
     cache: {
@@ -49,9 +50,6 @@ const constants = {
   ui: {
     time: {
       sliderValues: ['auto', 30, 60, 60 * 6, 60 * 24],
-    },
-    robots: {
-      timerange: false,
     },
   },
   elasticsearch: {

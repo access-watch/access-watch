@@ -31,6 +31,7 @@ app.get('/dashboard', (req, res) => {
           metrics: {
             expiration: config.metrics.gc.expiration,
           },
+          session: config.session,
         },
         config.ui
       )

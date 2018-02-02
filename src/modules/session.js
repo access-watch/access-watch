@@ -6,6 +6,8 @@ const { session } = require('../databases');
 
 const { stream } = require('../pipeline/augmented');
 
+const config = require('../constants');
+
 /**
  * Assign a session to the log event, create it if necessary.
  */
@@ -107,8 +109,7 @@ function parseFilter(query, name) {
 }
 
 app.get('/sessions/:type', (req, res, next) => {
-  // If some plugin provide the start/end parameters and they are in this search
-  if (true && req.query.start && req.query.end) {
+  if (config.session.timerange && req.query.start && req.query.end) {
     next();
   } else {
     res.send(
