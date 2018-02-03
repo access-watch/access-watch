@@ -18,7 +18,8 @@ const accessWatch = require('./access-watch')();
 // Load Express
 
 const app = express();
-expressWs(app);
+const httpServer = http.createServer(app);
+expressWs(app, httpServer);
 
 app.use(
   accessWatch.apps.api,
@@ -26,7 +27,6 @@ app.use(
   accessWatch.apps.websocket
 );
 
-const httpServer = http.createServer(app);
 const port = process.env.PORT || accessWatch.constants.port;
 
 httpServer.listen(port, () => {
