@@ -75,12 +75,14 @@ function writeJSONFile(path, data) {
  */
 class FileConnection extends Connection {
   constructor(name, Klass, gcInterval) {
-    const filePath = path.resolve(config.data.directory, name + '.json');
     const start = process.hrtime();
-    const db = Klass.deserialize(readJSONFile(filePath));
-    const elapsed = Math.round(process.hrtime(start)[1] / 1000000) / 1000;
-    console.log(`Loaded ${filePath} in ${elapsed}s`);
+    const filePath = path.resolve(config.data.directory, name + '.json');
+    const data = readJSONFile(filePath);
+    const db = Klass.deserialize(data);
     super(db, gcInterval);
+    const end = process.hrtime(start);
+    const elapsed = end[0] + Math.round(end[1] / 1000000) / 1000;
+    console.log(new Date().toISOString(), `Loaded ${filePath} in ${elapsed}s`);
     this.filePath = filePath;
     this.saveInterval = setInterval(
       () => this.save().catch(console.error),
@@ -89,10 +91,11 @@ class FileConnection extends Connection {
   }
 
   save() {
-    const data = this.db.serialize();
     const start = process.hrtime();
+    const data = this.db.serialize();
     return writeJSONFile(this.filePath, data).then(() => {
-      const elapsed = Math.round(process.hrtime(start)[1] / 1000000) / 1000;
+      const end = process.hrtime(start);
+      const elapsed = end[0] + Math.round(end[1] / 1000000) / 1000;
       console.log(`Saved ${this.filePath} in ${elapsed}s`);
     });
   }
