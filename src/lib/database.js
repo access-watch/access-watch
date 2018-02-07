@@ -82,7 +82,7 @@ class FileConnection extends Connection {
     super(db, gcInterval);
     const end = process.hrtime(start);
     const elapsed = end[0] + Math.round(end[1] / 1000000) / 1000;
-    console.log(new Date().toISOString(), `Loaded ${filePath} in ${elapsed}s`);
+    console.log(`Loaded ${filePath} in ${elapsed}s`);
     this.filePath = filePath;
     this.saveInterval = setInterval(
       () => this.save().catch(console.error),
