@@ -50,6 +50,9 @@ const constants = {
     time: {
       sliderValues: ['auto', 30, 60, 60 * 6, 60 * 24],
     },
+    robots: {
+      timerange: false,
+    },
   },
   elasticsearch: {
     retention: 5,
