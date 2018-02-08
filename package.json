@@ -1,6 +1,6 @@
 {
   "name": "access-watch",
-  "version": "0.8.6",
+  "version": "0.9.0",
   "description": "Open Source Web Traffic Manager",
   "repository": {
     "type": "git",
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "access-watch-sdk": "^0.1.4",
-    "access-watch-ui": "^1.5.5",
+    "access-watch-ui": "^1.6.0",
     "ajv": "^5.5.2",
     "axios": "^0.17.0",
     "date-format-lite": "^17.7.0",
@@ -38,7 +38,7 @@
     "express-ws": "^3.0.0",
     "fs-extra": "^5.0.0",
     "immutable": "^4.0.0-rc.9",
-    "lodash.merge": "^4.6.0",
+    "lodash.merge": "^4.6.1",
     "lodash.omit": "^4.5.0",
     "lru-cache": "^4.1.1",
     "md5": "^2.2.1",
@@ -52,10 +52,10 @@
     "ws": "^3.3.3"
   },
   "devDependencies": {
-    "eslint": "^4.16.0",
+    "eslint": "^4.17.0",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-node": "^5.2.1",
-    "eslint-plugin-prettier": "^2.5.0",
+    "eslint-plugin-prettier": "^2.6.0",
     "mocha": "^4.1.0",
     "prettier": "^1.10.2"
   },
