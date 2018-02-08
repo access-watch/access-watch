@@ -100,12 +100,17 @@ ipRequests
 
 const app = require('../apps/api');
 
-function parseFilter(query, name) {
-  const filter = query[name];
+function parseFilter(filter) {
   const [path, values] = filter.split(':');
   const keyPath = path.split('.');
   const keyValues = values.split(',');
   return item => keyValues.indexOf(item.getIn(keyPath)) !== -1;
+}
+
+function parseFilters(query, name) {
+  const filters = query[name].split(';');
+  const filtersFn = filters.map(parseFilter);
+  return item => filtersFn.reduce((bool, fn) => bool && fn(item), true);
 }
 
 app.get('/sessions/:type', (req, res, next) => {
@@ -116,7 +121,7 @@ app.get('/sessions/:type', (req, res, next) => {
       session.list({
         type: req.params.type,
         sort: req.query.sort || 'count',
-        filter: (req.query.filter && parseFilter(req.query, 'filter')) || null,
+        filter: (req.query.filter && parseFilters(req.query, 'filter')) || null,
         limit: (req.query.limit && parseInt(req.query.limit)) || 100,
       })
     );
