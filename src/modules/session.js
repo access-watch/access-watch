@@ -6,6 +6,8 @@ const { session } = require('../databases');
 
 const { stream } = require('../pipeline/augmented');
 
+const config = require('../constants');
+
 /**
  * Assign a session to the log event, create it if necessary.
  */
@@ -106,15 +108,19 @@ function parseFilter(query, name) {
   return item => keyValues.indexOf(item.getIn(keyPath)) !== -1;
 }
 
-app.get('/sessions/:type', (req, res) => {
-  res.send(
-    session.list({
-      type: req.params.type,
-      sort: req.query.sort || 'count',
-      filter: (req.query.filter && parseFilter(req.query, 'filter')) || null,
-      limit: (req.query.limit && parseInt(req.query.limit)) || 100,
-    })
-  );
+app.get('/sessions/:type', (req, res, next) => {
+  if (config.session.timerange && req.query.start && req.query.end) {
+    next();
+  } else {
+    res.send(
+      session.list({
+        type: req.params.type,
+        sort: req.query.sort || 'count',
+        filter: (req.query.filter && parseFilter(req.query, 'filter')) || null,
+        limit: (req.query.limit && parseInt(req.query.limit)) || 100,
+      })
+    );
+  }
 });
 
 app.get('/sessions/:type/:id', (req, res) => {

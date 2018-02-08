@@ -30,6 +30,7 @@ const constants = {
       expiration: 3600,
       interval: 60 * 1000,
     },
+    timerange: false,
   },
   hub: {
     cache: {
