@@ -66,7 +66,7 @@ function create({
       }
     },
     stop: () => {
-      client.close();
+      if (client) client.close();
     },
   };
 }
