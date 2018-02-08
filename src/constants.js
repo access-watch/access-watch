@@ -51,9 +51,12 @@ const constants = {
     time: {
       sliderValues: ['auto', 30, 60, 60 * 6, 60 * 24],
     },
+    robots: {
+      timerange: false,
+    },
   },
   elasticsearch: {
-    retention: 5,
+    retention: 7,
     logsIndexName: 'access-watch-logs',
     configuration: {},
   },

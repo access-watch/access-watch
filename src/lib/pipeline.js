@@ -334,6 +334,12 @@ class Pipeline extends Builder {
     });
   }
 
+  stop() {
+    return Promise.all(
+      this.inputs.filter(input => input.stop).map(input => input.stop())
+    );
+  }
+
   handleEvent(event) {
     forward(this.stream, event);
   }

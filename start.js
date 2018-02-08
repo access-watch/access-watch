@@ -1,3 +1,4 @@
+const http = require('http');
 const path = require('path');
 const express = require('express');
 const expressWs = require('express-ws');
@@ -17,7 +18,8 @@ const accessWatch = require('./access-watch')();
 // Load Express
 
 const app = express();
-expressWs(app);
+const httpServer = http.createServer(app);
+expressWs(app, httpServer);
 
 app.use(
   accessWatch.apps.api,
@@ -25,13 +27,10 @@ app.use(
   accessWatch.apps.websocket
 );
 
-app.set('port', process.env.PORT || accessWatch.constants.port);
+const port = process.env.PORT || accessWatch.constants.port;
 
-app.listen(app.get('port'), () => {
-  console.log(
-    'HTTP and Websocket Server listening on port %d',
-    app.get('port')
-  );
+httpServer.listen(port, () => {
+  console.log(`HTTP and Websocket Server listening on port ${port}`);
 });
 
 // Start Pipeline
@@ -40,15 +39,29 @@ accessWatch.pipeline.start();
 
 // Handle Shutdown
 
-let shutdown;
+let shutdownInProgress;
+
+function shutdown() {
+  if (!shutdownInProgress) {
+    shutdownInProgress = true;
+    Promise.all([
+      httpServer.close(),
+      accessWatch.pipeline.stop(),
+      accessWatch.database.close(),
+    ])
+      .then(() => {
+        process.exit();
+      })
+      .catch(console.error);
+  }
+}
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM');
+  shutdown();
+});
 
 process.on('SIGINT', () => {
-  if (!shutdown) {
-    shutdown = accessWatch.database.close();
-  }
-  shutdown
-    .then(() => {
-      process.exit();
-    })
-    .catch(console.error);
+  console.log('SIGINT');
+  shutdown();
 });
