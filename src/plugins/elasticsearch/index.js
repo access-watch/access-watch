@@ -161,43 +161,58 @@ const searchLogs = client => (query = {}) =>
     return [];
   });
 
-const searchRobots = client => (query = {}) =>
+const searchSessions = ({
+  fetchFn,
+  sessionId,
+  queryConstants = {},
+}) => client => (query = {}) =>
   search(client)(
     Object.assign(
       {
-        'identity.type': 'robot',
         aggs: {
-          robots: {
+          sessions: {
             terms: {
-              field: 'robot.id',
+              field: sessionId,
             },
           },
         },
         limit: 0,
       },
+      queryConstants,
       query
     )
   )
-    .then(({ aggregations: { robots: { buckets } } }) =>
+    .then(({ aggregations: { sessions: { buckets } } }) =>
       buckets.map(({ key, doc_count }) => ({
         id: key,
         count: doc_count,
       }))
     )
-    .then(robots =>
-      Promise.all(
-        robots.map(({ id }) => accessWatchSdkDatabase.getRobot({ uuid: id }))
-      ).then(robotsData =>
-        robotsData.map((robotData, i) =>
+    .then(sessions =>
+      Promise.all(sessions.map(({ id }) => fetchFn(id))).then(sessionsData =>
+        sessionsData.map((sessionData, i) =>
           Object.assign(
             {
-              count: robots[i].count,
+              count: sessions[i].count,
             },
-            robotData
+            sessionData
           )
         )
       )
     );
+
+const searchRobots = searchSessions({
+  queryConstants: {
+    'identity.type': 'robot',
+  },
+  fetchFn: id => accessWatchSdkDatabase.getRobot({ uuid: id }),
+  sessionId: 'robot.id',
+});
+
+const searchAddresses = searchSessions({
+  fetchFn: address => accessWatchSdkDatabase.getAddress(address),
+  sessionId: 'address.value',
+});
 
 const logsEndpoint = client => {
   const search = searchLogs(client);
@@ -217,6 +232,7 @@ const elasticSearchBuilder = config => {
     index: indexLog(esClient),
     searchLogs: searchLogs(esClient),
     searchRobots: searchRobots(esClient),
+    searchAddresses: searchAddresses(esClient),
     logsEndpoint: logsEndpoint(esClient),
   };
 };
