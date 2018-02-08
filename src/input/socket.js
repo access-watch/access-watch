@@ -57,6 +57,7 @@ function create({
   parse = defaultParse,
   sample = 1,
 }) {
+  let udpServer, tcpServer;
   return {
     name: name,
     start: pipeline => {
@@ -67,15 +68,25 @@ function create({
         try {
           pipeline.success(parse(message));
         } catch (err) {
-          pipeline.error(err);
+          pipeline.reject(err);
         }
       };
       if (!protocol || protocol === 'udp') {
-        createUdpServer({ pipeline, name, port, handler });
+        udpServer = createUdpServer({ pipeline, name, port, handler });
       }
       if (!protocol || protocol === 'tcp') {
-        createTcpServer({ pipeline, name, port, handler });
+        tcpServer = createTcpServer({ pipeline, name, port, handler });
       }
+    },
+    stop: () => {
+      const promises = [];
+      if (udpServer) {
+        promises.push(new Promise(resolve => udpServer.close(resolve)));
+      }
+      if (tcpServer) {
+        promises.push(new Promise(resolve => tcpServer.close(resolve)));
+      }
+      return Promise.all(promises);
     },
   };
 }
