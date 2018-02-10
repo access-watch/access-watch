@@ -5,7 +5,7 @@ const { fromJS } = require('immutable');
 
 const defaultParse = s => fromJS(JSON.parse(s));
 
-function createTcpServer({ pipeline, port, handler }) {
+function createTcpServer({ status, port, handler }) {
   return net
     .createServer(socket => {
       socket.on('data', data => {
@@ -21,14 +21,14 @@ function createTcpServer({ pipeline, port, handler }) {
     })
     .listen(port, err => {
       if (err) {
-        pipeline.status(err, 'Cannot start: ' + err.message);
+        status(err, 'Cannot start: ' + err.message);
       } else {
-        pipeline.status(null, `Listening on TCP port ${port}.`);
+        status(null, `Listening on TCP port ${port}.`);
       }
     });
 }
 
-function createUdpServer({ pipeline, port, handler }) {
+function createUdpServer({ status, port, handler }) {
   return dgram
     .createSocket('udp4')
     .on('message', message => {
@@ -42,10 +42,10 @@ function createUdpServer({ pipeline, port, handler }) {
         });
     })
     .on('error', err => {
-      pipeline.status(err, 'Cannot start: ' + err.message);
+      status(err, 'Cannot start: ' + err.message);
     })
     .on('listening', () => {
-      pipeline.status(null, `Listening on UDP port ${port}.`);
+      status(null, `Listening on UDP port ${port}.`);
     })
     .bind(port);
 }
@@ -60,22 +60,22 @@ function create({
   let udpServer, tcpServer;
   return {
     name: name,
-    start: pipeline => {
+    start: ({ success, reject, status }) => {
       const handler = message => {
         if (sample !== 1 && Math.random() > sample) {
           return;
         }
         try {
-          pipeline.success(parse(message));
+          success(parse(message));
         } catch (err) {
-          pipeline.reject(err);
+          reject(err);
         }
       };
       if (!protocol || protocol === 'udp') {
-        udpServer = createUdpServer({ pipeline, name, port, handler });
+        udpServer = createUdpServer({ status, name, port, handler });
       }
       if (!protocol || protocol === 'tcp') {
-        tcpServer = createTcpServer({ pipeline, name, port, handler });
+        tcpServer = createTcpServer({ status, name, port, handler });
       }
     },
     stop: () => {

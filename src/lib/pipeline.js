@@ -20,23 +20,11 @@ const schema = require('../format/log-schema.json');
 const validator = new Ajv();
 const validate = validator.compile(schema);
 
-function log(log, severity = 'warn') {
+function errorLog(log, severity = 'warn') {
   console[severity](log);
   if (severity === 'error') {
     console.trace(log);
   }
-}
-
-/**
- * Print `f(event)` to the console and return event.
- */
-function trace(f) {
-  return stream => {
-    return event => {
-      console.log(JSON.stringify(f(event), null, 2));
-      forward(stream, event);
-    };
-  };
 }
 
 /**
@@ -46,7 +34,7 @@ function forward(stream, event) {
   try {
     stream(event);
   } catch (reason) {
-    log(reason, 'warn');
+    errorLog(reason, 'warn');
   }
 }
 
@@ -69,7 +57,7 @@ function map(f) {
       if (res && res.then) {
         res
           .then(value => forward(stream, event.set('data', value)))
-          .catch(reason => log(reason, 'warn'));
+          .catch(reason => errorLog(reason, 'warn'));
       } else {
         forward(stream, event.set('data', res));
       }
@@ -261,10 +249,6 @@ class Builder {
     return this.add(window(opts));
   }
 
-  trace(f = e => e) {
-    return this.add(trace(f));
-  }
-
   create() {
     if (this.children.length === 0) {
       return this.xf;
@@ -279,7 +263,6 @@ class Pipeline extends Builder {
     this.inputs = [];
     this.monitors = [];
     this.stream = null;
-    this.log = log;
   }
 
   registerInput(input) {
@@ -296,10 +279,10 @@ class Pipeline extends Builder {
   start() {
     this.stream = super.create()(() => {});
     var pipeline = this;
-    this.inputs.map(function(input, idx) {
+    this.inputs.map((input, idx) => {
       const monitor = pipeline.monitors[idx];
       input.start({
-        success: function(log) {
+        success: log => {
           const valid = validate(log.toJS());
           if (valid) {
             const event = Map({
@@ -312,24 +295,26 @@ class Pipeline extends Builder {
             pipeline.handleEvent(event);
           } else {
             monitor.hit('rejected');
-            pipeline.log(
+            errorLog(
               `Invalid message: ${validator.errorsText(validate.errors)}`,
               'warn'
             );
           }
         },
-        reject: function(reason) {
+        reject: reason => {
           monitor.hit('rejected');
-          pipeline.log(reason, 'warn');
+          errorLog(reason, 'warn');
         },
-        status: function(err, msg) {
+        status: (err, msg) => {
           if (err) {
             console.error(err);
           }
           console.log(input.name + ': ' + msg);
           monitor.status = msg;
         },
-        log: pipeline.log,
+        log: (err, severity) => {
+          errorLog(err, severity);
+        },
       });
     });
   }
