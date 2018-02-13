@@ -1,12 +1,7 @@
-const omit = require('lodash.omit');
+const { filters } = require('access-watch-sdk');
 const config = require('../constants');
 const { logIsAugmented } = require('../lib/util');
-
-const logMatchesQuery = (log, query) =>
-  Object.keys(query).reduce((bool, key) => {
-    const queryValues = query[key].split(',');
-    return bool && queryValues.indexOf(log.getIn(key.split('.'))) !== -1;
-  }, true);
+const { getFilterItem } = require('../lib/filter');
 
 const DEFAULT_LIMIT = 50;
 const memoryIndexFactory = limit => ({
@@ -60,9 +55,8 @@ function index(log) {
 }
 
 function searchLogs(args = {}) {
-  const { start, end, limit = DEFAULT_LIMIT } = args;
+  const { start, end, limit = DEFAULT_LIMIT, filter } = args;
   let searchTimes = memoryIndex.getAllIndexTimes();
-  const filters = omit(args, ['start', 'end', 'limit']);
   let answer = [];
   if (start) {
     searchTimes = searchTimes.filter(t => t >= start);
@@ -73,7 +67,7 @@ function searchLogs(args = {}) {
   searchTimes.some(t => {
     const timeIndex = memoryIndex.get(t);
     answer = answer.concat(
-      timeIndex.filter(log => logMatchesQuery(log, filters))
+      timeIndex.filter(getFilterItem(filter, filters.log))
     );
     return answer.length >= limit;
   });

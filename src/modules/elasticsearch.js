@@ -2,6 +2,7 @@ const config = require('../constants');
 const elasticSearchBuilder = require('../plugins/elasticsearch');
 const { stream } = require('../pipeline/augmented');
 const app = require('../apps/api');
+const { parseFilterQuery } = require('../lib/filter');
 const elasticsearch = elasticSearchBuilder(config.elasticsearch.configuration);
 
 // As we are using elasticsearch, we don't need to use the memory to hold logs
@@ -12,7 +13,9 @@ stream.map(elasticsearch.index);
 
 app.get('/logs', (req, res) => {
   const { query } = req;
-  elasticsearch.searchLogs(query).then(logs => res.send(logs));
+  elasticsearch
+    .searchLogs(parseFilterQuery(query))
+    .then(logs => res.send(logs));
 });
 
 const transformSession = sessionName => session => ({
@@ -29,16 +32,11 @@ const searchFns = {
 
 app.get('/sessions/:type', (req, res) => {
   const { params, query } = req;
-  const { start, end, filter } = query;
+  const { start, end } = query;
   const { type } = params;
   if (start && end) {
-    const esQuery = { start, end };
-    if (filter) {
-      const [key, value] = filter.split(':');
-      esQuery[key] = value;
-    }
     if (searchFns[type]) {
-      searchFns[type](esQuery).then(sessions =>
+      searchFns[type](parseFilterQuery(query)).then(sessions =>
         res.send(sessions.map(transformSession(type)))
       );
     }

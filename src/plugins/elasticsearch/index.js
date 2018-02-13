@@ -1,5 +1,4 @@
 require('date-format-lite');
-const omit = require('lodash.omit');
 const elasticsearch = require('elasticsearch');
 const { database } = require('access-watch-sdk');
 const logsIndexConfig = require('./logs-index-config.json');
@@ -90,11 +89,8 @@ const indexesGc = client => () => {
   );
 };
 
-const reservedSearchTerms = ['start', 'end', 'limit', 'aggs'];
-
 const search = client => (query = {}) => {
-  const { start, end, limit: size, aggs } = query;
-  const queryMatch = omit(query, reservedSearchTerms);
+  const { start, end, limit: size, aggs, filter } = query;
   let bool = {
     filter: [
       {
@@ -113,13 +109,12 @@ const search = client => (query = {}) => {
       },
     ],
   };
-  if (Object.keys(queryMatch).length) {
-    bool.must = Object.keys(queryMatch).map(k => {
-      const value = queryMatch[k];
-      const values = value.split(',');
+  if (Object.keys(filter).length) {
+    bool.must = Object.keys(filter).map(k => {
+      const values = filter[k];
       if (values.length === 1) {
         return {
-          match: { [k]: value },
+          match: { [k]: values[0] },
         };
       }
       return {
