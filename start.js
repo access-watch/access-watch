@@ -27,6 +27,10 @@ app.use(
   accessWatch.apps.websocket
 );
 
+Object.keys(accessWatch.constants.app).forEach(key => {
+  app.set(key, accessWatch.constants.app[key]);
+});
+
 const port = process.env.PORT || accessWatch.constants.port;
 
 httpServer.listen(port, () => {
