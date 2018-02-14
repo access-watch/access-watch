@@ -1,7 +1,7 @@
 const { filters } = require('access-watch-sdk');
 const config = require('../constants');
 const { logIsAugmented } = require('../lib/util');
-const { getFilterItem } = require('../lib/filter');
+const { getFiltersFn } = require('../lib/filter');
 
 const DEFAULT_LIMIT = 50;
 const memoryIndexFactory = limit => ({
@@ -66,9 +66,7 @@ function searchLogs(args = {}) {
   }
   searchTimes.some(t => {
     const timeIndex = memoryIndex.get(t);
-    answer = answer.concat(
-      timeIndex.filter(getFilterItem(filter, filters.log))
-    );
+    answer = answer.concat(timeIndex.filter(getFiltersFn(filter, filters.log)));
     return answer.length >= limit;
   });
   return Promise.resolve(answer.slice(0, limit).map(l => l.toJS()));

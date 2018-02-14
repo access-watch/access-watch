@@ -9,12 +9,17 @@ function parseFilter(filter) {
 }
 
 function parseFilters(filters) {
-  return filters
-    .split(';')
-    .map(parseFilter)
-    .reduce((filtersObj, { key, values }) =>
-      Object.assign({ [key]: values }, filtersObj)
-    );
+  return (
+    filters &&
+    filters
+      .split(';')
+      .map(parseFilter)
+      .reduce(
+        (filtersObj, { key, values }) =>
+          Object.assign({ [key]: values }, filtersObj),
+        {}
+      )
+  );
 }
 
 function parseFilterQuery(query) {
@@ -24,13 +29,13 @@ function parseFilterQuery(query) {
 }
 
 function getFilterFn(filtersDef, prefix) {
-  return filter => {
-    const { key, values } = parseFilter(filter);
+  return ({ key, values }) => {
     const filterKey = prefix ? key.replace(`${prefix}.`, '') : key;
     const filterDef = filtersDef.find(({ id }) => id === filterKey);
+    const keyPath = key.split('.');
     return item => {
-      const itemValue = item.getIn(key);
-      if (!item.hasIn(key) || !itemValue) {
+      const itemValue = item.getIn(keyPath);
+      if (!item.hasIn(keyPath) || !itemValue) {
         return false;
       }
       if (filterDef.fullText) {
@@ -44,10 +49,14 @@ function getFilterFn(filtersDef, prefix) {
   };
 }
 
-function getFilterItem(queryFilter, filtersDef, prefix) {
-  const filters = queryFilter.split(';');
-  const filtersFn = filters.map(getFilterFn(filtersDef, prefix));
+function getFiltersFn(filters, filtersDef, prefix) {
+  if (!filters) {
+    return () => true;
+  }
+  const filtersFn = Object.keys(filters).map(key =>
+    getFilterFn(filtersDef, prefix)({ key, values: filters[key] })
+  );
   return item => filtersFn.reduce((bool, fn) => bool && fn(item), true);
 }
 
-module.exports = { parseFilterQuery, getFilterItem };
+module.exports = { parseFilterQuery, getFiltersFn };
