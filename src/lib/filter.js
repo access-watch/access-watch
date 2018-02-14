@@ -54,7 +54,13 @@ function getFiltersFn(filters, filtersDef, prefix) {
     return () => true;
   }
   const filtersFn = Object.keys(filters).map(key =>
-    getFilterFn(filtersDef, prefix)({ key, values: filters[key] })
+    getFilterFn(filtersDef, prefix)({
+      key,
+      values: filters[key].map(v => {
+        const { transform = a => a } = filtersDef.find(f => f.id === key);
+        return transform(v);
+      }),
+    })
   );
   return item => filtersFn.reduce((bool, fn) => bool && fn(item), true);
 }
