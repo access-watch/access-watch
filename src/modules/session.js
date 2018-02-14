@@ -100,10 +100,10 @@ ipRequests
 
 const app = require('../apps/api');
 const { filters } = require('access-watch-sdk');
-const { getItemFilter } = require('../lib/filter');
+const { getFiltersFnFromString } = require('../lib/filter');
 
 function getSessionItemFilter(queryFilter, type) {
-  return getItemFilter(queryFilter, filters[type], type);
+  return getFiltersFnFromString(queryFilter, filters[type], type);
 }
 
 app.get('/sessions/:type', (req, res, next) => {

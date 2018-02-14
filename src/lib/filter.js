@@ -59,4 +59,8 @@ function getFiltersFn(filters, filtersDef, prefix) {
   return item => filtersFn.reduce((bool, fn) => bool && fn(item), true);
 }
 
-module.exports = { parseFilterQuery, getFiltersFn };
+function getFiltersFnFromString(filters, filtersDef, prefix) {
+  return getFiltersFn(parseFilters(filters), filtersDef, prefix);
+}
+
+module.exports = { parseFilterQuery, getFiltersFn, getFiltersFnFromString };
