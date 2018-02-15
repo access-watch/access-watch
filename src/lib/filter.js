@@ -57,7 +57,8 @@ function getFiltersFn(filters, filtersDef, prefix) {
     getFilterFn(filtersDef, prefix)({
       key,
       values: filters[key].map(v => {
-        const { transform = a => a } = filtersDef.find(f => f.id === key);
+        const filterKey = prefix ? key.replace(`${prefix}.`, '') : key;
+        const { transform = a => a } = filtersDef.find(f => f.id === filterKey);
         return transform(v);
       }),
     })
