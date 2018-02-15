@@ -93,7 +93,7 @@ const indexesGc = client => () => {
 const reservedSearchTerms = ['start', 'end', 'limit', 'aggs'];
 
 const search = client => (query = {}) => {
-  const { start, end, limit: size, aggs } = query;
+  const { start, end, limit: size = 50, aggs } = query;
   const queryMatch = omit(query, reservedSearchTerms);
   let bool = {
     filter: [
@@ -173,6 +173,7 @@ const searchSessions = ({
           sessions: {
             terms: {
               field: sessionId,
+              size: query.limit || 50,
             },
           },
         },
