@@ -42,3 +42,26 @@ app.get('/sessions/:type', (req, res) => {
     }
   }
 });
+
+app.get('/sessions/:type', (req, res) => {
+  const { params, query } = req;
+  const { start, end, filter } = query;
+  const { type } = params;
+  if (start && end && type === 'robot') {
+    const esQuery = { start, end };
+    if (filter) {
+      const [key, value] = filter.split(':');
+      esQuery[key] = value;
+    }
+    elasticsearch.searchRobots(esQuery).then(robots =>
+      res.send(
+        robots.map(robot => ({
+          count: robot.count,
+          reputation: robot.reputation,
+          id: robot.id,
+          robot,
+        }))
+      )
+    );
+  }
+});

@@ -20,29 +20,11 @@ const schema = require('../format/log-schema.json');
 const validator = new Ajv();
 const validate = validator.compile(schema);
 
-// Basic "error stream", we might want to do something more sophisticated here
-const onError = error => {
-  console.log(error);
-  if (error.has('reason')) {
-    console.trace(error.get('reason'));
+function log(log, severity = 'warn') {
+  console[severity](log);
+  if (severity === 'error') {
+    console.trace(log);
   }
-};
-
-/**
- * Build an error event and send it to the error stream.
- *
- * Optionally takes the `event` that caused the error.
- */
-function error(reason, event) {
-  let errorEvent = Map({
-    name: 'error',
-    time: now(),
-    reason: reason,
-  });
-  if (event) {
-    errorEvent = errorEvent.set('event', event);
-  }
-  onError(errorEvent);
 }
 
 /**
@@ -64,7 +46,7 @@ function forward(stream, event) {
   try {
     stream(event);
   } catch (reason) {
-    error(reason, event);
+    log(reason, 'warn');
   }
 }
 
@@ -87,7 +69,7 @@ function map(f) {
       if (res && res.then) {
         res
           .then(value => forward(stream, event.set('data', value)))
-          .catch(reason => error(reason, event));
+          .catch(reason => log(reason, 'warn'));
       } else {
         forward(stream, event.set('data', res));
       }
@@ -297,6 +279,7 @@ class Pipeline extends Builder {
     this.inputs = [];
     this.monitors = [];
     this.stream = null;
+    this.log = log;
   }
 
   registerInput(input) {
@@ -329,16 +312,15 @@ class Pipeline extends Builder {
             pipeline.handleEvent(event);
           } else {
             monitor.hit('rejected');
-            pipeline.handleError(
-              new Error(
-                `Invalid message: ${validator.errorsText(validate.errors)}`
-              )
+            pipeline.log(
+              `Invalid message: ${validator.errorsText(validate.errors)}`,
+              'warn'
             );
           }
         },
-        error: function(error) {
+        reject: function(reason) {
           monitor.hit('rejected');
-          pipeline.handleError(error);
+          pipeline.log(reason, 'warn');
         },
         status: function(err, msg) {
           if (err) {
@@ -347,16 +329,19 @@ class Pipeline extends Builder {
           console.log(input.name + ': ' + msg);
           monitor.status = msg;
         },
+        log: pipeline.log,
       });
     });
   }
 
-  handleEvent(event) {
-    forward(this.stream, event);
+  stop() {
+    return Promise.all(
+      this.inputs.filter(input => input.stop).map(input => input.stop())
+    );
   }
 
-  handleError(err) {
-    error(err);
+  handleEvent(event) {
+    forward(this.stream, event);
   }
 }
 

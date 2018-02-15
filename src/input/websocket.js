@@ -17,7 +17,7 @@ const socketToPipeline = (
     try {
       pipeline.success(parse(message));
     } catch (err) {
-      pipeline.error(err);
+      pipeline.reject(err);
     }
   });
 };
@@ -35,6 +35,7 @@ const setupClientWebSocket = ({ pipeline, address, listenSocket }) => {
     pipeline.status(event, event.reason || 'Websocket has been closed');
   });
   listenSocket(socket);
+  return socket;
 };
 
 const setupServerWebSocket = ({ pipeline, path, listenSocket }) => {
@@ -50,18 +51,22 @@ function create({
   parse,
   sample = 1,
 }) {
+  let client;
   return {
     name: `${name} ${type}`,
     start: pipeline => {
       const listenSocket = socketToPipeline(pipeline, parse, sample);
       if (type === 'client') {
-        setupClientWebSocket({ pipeline, address, listenSocket });
+        client = setupClientWebSocket({ pipeline, address, listenSocket });
       } else if (type === 'server') {
         setupServerWebSocket({ pipeline, path, listenSocket });
       } else {
         const errMsg = 'WebSocket type is either client or server';
-        pipeline.error(new Error(errMsg), errMsg);
+        pipeline.log(new Error(errMsg), 'error');
       }
+    },
+    stop: () => {
+      if (client) client.close();
     },
   };
 }
