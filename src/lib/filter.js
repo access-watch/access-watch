@@ -31,7 +31,7 @@ function parseFilterQuery(query) {
 function getFilterFn(filtersDef, prefix) {
   return ({ key, values }) => {
     const filterKey = prefix ? key.replace(`${prefix}.`, '') : key;
-    const filterDef = filtersDef.find(({ id }) => id === filterKey);
+    const filterDef = filtersDef.find(({ id }) => id === filterKey) || {};
     const keyPath = key.split('.');
     return item => {
       const itemValue = item.getIn(keyPath);
@@ -58,7 +58,8 @@ function getFiltersFn(filters, filtersDef, prefix) {
       key,
       values: filters[key].map(v => {
         const filterKey = prefix ? key.replace(`${prefix}.`, '') : key;
-        const { transform = a => a } = filtersDef.find(f => f.id === filterKey);
+        const { transform = a => a } =
+          filtersDef.find(f => f.id === filterKey) || {};
         return transform(v);
       }),
     })
