@@ -23,8 +23,8 @@ const socketToPipeline = (
   });
 };
 
-const setupClientWebSocket = ({ status, address, listenSocket }) => {
-  let socket = new WebSocket(address);
+const setupClientWebSocket = ({ status, address, options, listenSocket }) => {
+  let socket = new WebSocket(address, [], options);
   status(null, 'Waiting for connection to ' + address);
   socket.on('open', () => {
     status(null, 'Listening to ' + address);
@@ -48,6 +48,7 @@ function create({
   name = 'WebSocket',
   address,
   path,
+  options,
   type = 'client',
   parse,
   sample = 1,
@@ -58,7 +59,12 @@ function create({
     start: ({ success, reject, status, log }) => {
       const listenSocket = socketToPipeline(success, reject, parse, sample);
       if (type === 'client') {
-        client = setupClientWebSocket({ status, address, listenSocket });
+        client = setupClientWebSocket({
+          status,
+          address,
+          options,
+          listenSocket,
+        });
       } else if (type === 'server') {
         setupServerWebSocket({ status, path, listenSocket });
       } else {
