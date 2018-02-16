@@ -109,7 +109,7 @@ const search = client => (query = {}) => {
       },
     ],
   };
-  if (Object.keys(filter).length) {
+  if (filter) {
     bool.must = Object.keys(filter).map(k => {
       const values = filter[k];
       if (values.length === 1) {
