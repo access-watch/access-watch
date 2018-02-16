@@ -1,6 +1,6 @@
 {
   "name": "access-watch",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Open Source Web Traffic Manager",
   "repository": {
     "type": "git",
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "access-watch-sdk": "^0.1.4",
-    "access-watch-ui": "^1.6.1",
+    "access-watch-ui": "^1.7.0",
     "ajv": "^5.5.2",
     "axios": "^0.17.0",
     "date-format-lite": "^17.7.0",
