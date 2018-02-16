@@ -3,6 +3,7 @@ const path = require('path');
 
 const constants = {
   port: 3000,
+  app: {},
   pipeline: {
     allowedLateness: 60,
     watermarkDelay: 5,
