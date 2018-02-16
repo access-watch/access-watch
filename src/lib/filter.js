@@ -23,7 +23,7 @@ function parseFilters(filters) {
 }
 
 function parseFilterQuery(query) {
-  return Object.assign(query, {
+  return Object.assign({}, query, {
     filter: parseFilters(query.filter),
   });
 }
