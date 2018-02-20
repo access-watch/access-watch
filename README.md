@@ -19,6 +19,8 @@ Access Watch is currently in open beta. For more details, go to: https://access.
 
 ## Install
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/access-watch/access-watch.svg)](https://greenkeeper.io/)
+
 Make sure you have Node.js version >= 7. We recommend using [nvm](https://github.com/creationix/nvm).
 
 ```bash
