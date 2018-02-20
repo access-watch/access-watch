@@ -1,6 +1,7 @@
 ![](https://access.watch/assets/img/access-watch-banner-3.png)
 
 [![Build Status](https://travis-ci.org/access-watch/access-watch.svg?branch=master)](https://travis-ci.org/access-watch/access-watch)
+[![Greenkeeper badge](https://badges.greenkeeper.io/access-watch/access-watch.svg)](https://greenkeeper.io/)
 [![Slack Channel](http://slack.access.watch/badge.svg)](http://slack.access.watch/)
 
 Access Watch is a flexible access log processor that helps operators analyze the web traffic reaching their infrastructure.
