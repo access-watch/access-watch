@@ -168,6 +168,7 @@ const searchSessions = ({
           sessions: {
             terms: {
               field: sessionId,
+              size: query.limit || 50,
             },
           },
         },

@@ -3,6 +3,7 @@ const path = require('path');
 
 const constants = {
   port: 3000,
+  app: {},
   pipeline: {
     allowedLateness: 60,
     watermarkDelay: 5,
@@ -56,7 +57,7 @@ const constants = {
     },
   },
   elasticsearch: {
-    retention: 5,
+    retention: 7,
     logsIndexName: 'access-watch-logs',
     configuration: {},
   },
