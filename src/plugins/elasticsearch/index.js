@@ -91,7 +91,7 @@ const indexesGc = client => () => {
 
 const getESValue = ({ id, value }, type) => {
   const filter = filters[type].find(f => f.id === id);
-  if (filter.fullText) {
+  if (filter && filter.fullText) {
     return {
       wildcard: {
         [id]: `*${value}*`,
