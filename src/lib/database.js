@@ -52,7 +52,7 @@ function readJSONFile(path) {
  */
 function writeJSONFile(path, data) {
   return fs
-    .writeJson(path + '.new', data)
+    .writeJson(path + '.new', data, { spaces: '  ' })
     .then(() =>
       fs.pathExists(path).then(exists => {
         if (exists) fs.rename(path, path + '.previous');
