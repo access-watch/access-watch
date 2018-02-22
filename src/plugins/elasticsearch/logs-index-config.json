@@ -16,7 +16,14 @@
             "id": { "type": "keyword" },
             "label": { "type": "keyword" },
             "network_name": { "type": "keyword" },
-            "value": { "type": "ip" }
+            "value": {
+              "type": "keyword",
+              "fields": {
+                "ip": {
+                  "type": "ip"
+                }
+              }
+            }
           }
         },
         "context": { "type": "object", "enabled": false },

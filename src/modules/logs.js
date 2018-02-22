@@ -2,6 +2,7 @@ const app = require('../apps/websocket');
 const pipeline = require('../lib/pipeline');
 const memoryIndex = require('../plugins/memory-logs');
 const { logIsAugmented } = require('../lib/util');
+const { parseFilterQuery } = require('../lib/filter');
 
 // Expose raw logs
 
@@ -29,5 +30,5 @@ augmentedStream.map(memoryIndex.index);
 
 app.get('/logs', (req, res) => {
   const { query } = req;
-  memoryIndex.searchLogs(query).then(logs => res.send(logs));
+  memoryIndex.searchLogs(parseFilterQuery(query)).then(logs => res.send(logs));
 });
