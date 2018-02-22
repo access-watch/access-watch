@@ -17,7 +17,7 @@
             "label": { "type": "keyword" },
             "network_name": { "type": "keyword" },
             "value": {
-              "type": "text",
+              "type": "keyword",
               "fields": {
                 "ip": {
                   "type": "ip"
