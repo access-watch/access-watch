@@ -1,7 +1,6 @@
 require('date-format-lite');
-const omit = require('lodash.omit');
 const elasticsearch = require('elasticsearch');
-const { database } = require('access-watch-sdk');
+const { database, filters } = require('access-watch-sdk');
 const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
 const monitoring = require('../../lib/monitoring');
@@ -90,11 +89,20 @@ const indexesGc = client => () => {
   );
 };
 
-const reservedSearchTerms = ['start', 'end', 'limit', 'aggs'];
+const getESValue = ({ id, value }, type) => {
+  const filter = filters[type].find(f => f.id === id);
+  if (filter && filter.fullText) {
+    return {
+      wildcard: {
+        [id]: `*${value}*`,
+      },
+    };
+  }
+  return { match: { [id]: value } };
+};
 
-const search = client => (query = {}) => {
-  const { start, end, limit: size = 50, aggs } = query;
-  const queryMatch = omit(query, reservedSearchTerms);
+const search = client => (query = {}, type) => {
+  const { start, end, limit: size, aggs, filter } = query;
   let bool = {
     filter: [
       {
@@ -113,18 +121,15 @@ const search = client => (query = {}) => {
       },
     ],
   };
-  if (Object.keys(queryMatch).length) {
-    bool.must = Object.keys(queryMatch).map(k => {
-      const value = queryMatch[k];
-      const values = value.split(',');
+  if (filter) {
+    bool.must = Object.keys(filter).map(id => {
+      const values = filter[id];
       if (values.length === 1) {
-        return {
-          match: { [k]: value },
-        };
+        return getESValue({ id, value: values[0] }, type);
       }
       return {
         bool: {
-          should: values.map(val => ({ match: { [k]: val } })),
+          should: values.map(value => getESValue({ id, value }, type)),
         },
       };
     });
@@ -154,7 +159,7 @@ const search = client => (query = {}) => {
 };
 
 const searchLogs = client => (query = {}) =>
-  search(client)(query).then(({ hits }) => {
+  search(client)(query, 'log').then(({ hits }) => {
     if (hits) {
       return hits.hits.map(({ _source }) => _source);
     }
@@ -165,6 +170,7 @@ const searchSessions = ({
   fetchFn,
   sessionId,
   queryConstants = {},
+  type,
 }) => client => (query = {}) =>
   search(client)(
     Object.assign(
@@ -181,7 +187,8 @@ const searchSessions = ({
       },
       queryConstants,
       query
-    )
+    ),
+    type
   )
     .then(({ aggregations: { sessions: { buckets } } }) =>
       buckets.map(({ key, doc_count }) => ({
@@ -208,11 +215,13 @@ const searchRobots = searchSessions({
   },
   fetchFn: id => accessWatchSdkDatabase.getRobot({ uuid: id }),
   sessionId: 'robot.id',
+  type: 'robot',
 });
 
 const searchAddresses = searchSessions({
   fetchFn: address => accessWatchSdkDatabase.getAddress(address),
   sessionId: 'address.value',
+  type: 'address',
 });
 
 const logsEndpoint = client => {

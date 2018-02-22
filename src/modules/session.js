@@ -99,24 +99,25 @@ ipRequests
 // API endpoints
 
 const app = require('../apps/api');
+const { filters } = require('access-watch-sdk');
+const { getFiltersFnFromString } = require('../lib/filter');
 
-function parseFilter(query, name) {
-  const filter = query[name];
-  const [path, values] = filter.split(':');
-  const keyPath = path.split('.');
-  const keyValues = values.split(',');
-  return item => keyValues.indexOf(item.getIn(keyPath)) !== -1;
+function getSessionItemFilter(queryFilter, type) {
+  return getFiltersFnFromString(queryFilter, filters[type], type);
 }
 
 app.get('/sessions/:type', (req, res, next) => {
   if (config.session.timerange && req.query.start && req.query.end) {
     next();
   } else {
+    const { type } = req.params;
     res.send(
       session.list({
-        type: req.params.type,
+        type,
         sort: req.query.sort || 'count',
-        filter: (req.query.filter && parseFilter(req.query, 'filter')) || null,
+        filter:
+          (req.query.filter && getSessionItemFilter(req.query.filter, type)) ||
+          null,
         limit: (req.query.limit && parseInt(req.query.limit)) || 100,
       })
     );

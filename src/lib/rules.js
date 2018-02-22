@@ -8,6 +8,7 @@ const { now } = require('./util');
 const { Speed } = require('./speed');
 const database = require('./database');
 const config = require('../constants');
+const session = require('./session').connect();
 
 const ajv = new Ajv();
 
@@ -33,6 +34,9 @@ const matchers = Map({
   address: (condition, log) =>
     log.getIn(['address', 'value'], log.getIn(['request', 'address'])) ===
     condition.getIn(['address', 'value']),
+  robot: (condition, log) =>
+    log.getIn(['robot', 'id'], log.getIn(['request', 'robot'])) ===
+    condition.getIn(['robot', 'id']),
 });
 
 function matchRule(rule, log) {
@@ -77,6 +81,23 @@ const validators = Map({
       },
     })
   ),
+  robot: conditionValidator(
+    ajv.compile({
+      type: 'object',
+      required: ['robot'],
+      properties: {
+        robot: {
+          type: 'object',
+          required: ['id'],
+          properties: {
+            id: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    })
+  ),
 });
 
 function validateRule(rule) {
@@ -104,11 +125,33 @@ const validateRuleObject = ajv.compile({
   },
 });
 
+const getAddressesFromRobot = condition =>
+  session.list({
+    type: 'address',
+    filter: address =>
+      address.has('robots') &&
+      address.get('robots').has(condition.getIn(['robot', 'id'])),
+    sort: 'count',
+  });
+
+const getRobotComment = condition =>
+  `# Blocked Robot: ${condition.getIn(['robot', 'name'])}\n`;
+
+const getRobotCondition = addressTranslator => condition =>
+  getRobotComment(condition) +
+  getAddressesFromRobot(condition)
+    .map(addressTranslator)
+    .join('\n');
+
 const conditionToNginx = condition =>
   dispatchCondition(condition, nginxTranslators);
 
+const addressNginxTranslator = condition =>
+  `deny ${condition.getIn(['address', 'value'])};`;
+
 const nginxTranslators = Map({
-  address: condition => `deny ${condition.getIn(['address', 'value'])};`,
+  address: addressNginxTranslator,
+  robot: getRobotCondition(addressNginxTranslator),
 });
 
 function ruleToNginx(rule) {
@@ -118,9 +161,12 @@ function ruleToNginx(rule) {
 const conditionToApache = condition =>
   dispatchCondition(condition, ApacheTranslators);
 
+const addressApacheTranslator = condition =>
+  `Require not ip ${condition.getIn(['address', 'value'])}`;
+
 const ApacheTranslators = Map({
-  address: condition =>
-    `Require not ip ${condition.getIn(['address', 'value'])}`,
+  address: addressApacheTranslator,
+  robot: getRobotCondition(addressApacheTranslator),
 });
 
 function ruleToApache(rule) {
@@ -231,9 +277,11 @@ class Database {
 
   // Export database as Nginx configuration file
   toNginx() {
-    return this.list()
+    const rules = this.list()
       .map(ruleToNginx)
       .join('\n');
+    return `# Blocked IPs
+${rules}`;
   }
 
   // Export database as Apache configuration file
@@ -242,8 +290,9 @@ class Database {
       .map(ruleToApache)
       .join('\n');
     return `<RequireAll>
-  Require all granted
-  ${rules}
+Require all granted
+# Blocked IPs
+${rules}
 </RequireAll>`;
   }
 }
