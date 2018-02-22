@@ -135,14 +135,13 @@ const getAddressesFromRobot = condition =>
   });
 
 const getRobotComment = condition =>
-  `# Robot ${condition.getIn(['robot', 'name'])}\n`;
+  `# Blocked Robot: ${condition.getIn(['robot', 'name'])}\n`;
 
 const getRobotCondition = addressTranslator => condition =>
   getRobotComment(condition) +
   getAddressesFromRobot(condition)
     .map(addressTranslator)
-    .join('\n') +
-  '\n';
+    .join('\n');
 
 const conditionToNginx = condition =>
   dispatchCondition(condition, nginxTranslators);
@@ -278,9 +277,11 @@ class Database {
 
   // Export database as Nginx configuration file
   toNginx() {
-    return this.list()
+    const rules = this.list()
       .map(ruleToNginx)
       .join('\n');
+    return `# Blocked IPs
+${rules}`;
   }
 
   // Export database as Apache configuration file
@@ -289,8 +290,9 @@ class Database {
       .map(ruleToApache)
       .join('\n');
     return `<RequireAll>
-  Require all granted
-  ${rules}
+Require all granted
+# Blocked IPs
+${rules}
 </RequireAll>`;
   }
 }
