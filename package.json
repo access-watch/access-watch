@@ -27,8 +27,8 @@
     "access-watch": "./bin/access-watch"
   },
   "dependencies": {
-    "access-watch-sdk": "^0.1.5",
-    "access-watch-ui": "^1.7.1",
+    "access-watch-sdk": "^0.1.6",
+    "access-watch-ui": "^1.8.5",
     "ajv": "^6.1.1",
     "axios": "^0.18.0",
     "date-format-lite": "^17.7.0",
@@ -49,10 +49,10 @@
     "tail": "^1.2.3",
     "url": "^0.11.0",
     "uuid": "^3.2.1",
-    "ws": "^4.0.0"
+    "ws": "^4.1.0"
   },
   "devDependencies": {
-    "eslint": "^4.18.0",
+    "eslint": "^4.18.1",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-node": "^6.0.0",
     "eslint-plugin-prettier": "^2.6.0",
