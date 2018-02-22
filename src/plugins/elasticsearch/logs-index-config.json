@@ -73,11 +73,7 @@
                 "from": { "type": "keyword" },
                 "host": { "type": "keyword" },
                 "referer": { "type": "keyword" },
-                "user-agent": {
-                  "type": "text",
-                  "norms": false,
-                  "analyzer": "whitespace"
-                },
+                "user-agent": { "type": "keyword" },
                 "via": { "type": "keyword" },
                 "x-connection": { "type": "keyword" },
                 "x-forward-via": { "type": "keyword" },
@@ -91,7 +87,7 @@
             "scheme": { "type": "keyword" },
             "session": { "type": "keyword" },
             "time": { "type": "date" },
-            "url": { "type": "text", "norms": false, "analyzer": "standard" }
+            "url": { "type": "keyword" }
           }
         },
         "response": {
