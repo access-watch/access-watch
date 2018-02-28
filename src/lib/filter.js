@@ -1,10 +1,10 @@
 const { List } = require('immutable');
 
 function parseFilter(filter) {
-  const [key, stringValues] = filter.split(':');
+  const [key] = filter.split(':');
   return {
     key,
-    values: stringValues.split(','),
+    values: filter.slice(key.length + 1).split(','),
   };
 }
 
