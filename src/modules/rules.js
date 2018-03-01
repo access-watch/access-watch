@@ -26,6 +26,11 @@ app.get('/rules/export/apache', (req, res) => {
   res.send(rules.toApache());
 });
 
+app.get('/rules/export/txt', (req, res) => {
+  res.header('Content-Type', 'text/plain');
+  res.send(rules.toTxt());
+});
+
 app.post('/rules', (req, res) => {
   rules.add(fromJS(req.body));
   res.send('ok');
