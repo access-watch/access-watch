@@ -173,6 +173,23 @@ function ruleToApache(rule) {
   return conditionToApache(rule.get('condition'));
 }
 
+const conditionToTxt = condition =>
+  dispatchCondition(condition, TxtTranslators);
+
+const addressTxtTranslator = condition => condition.getIn(['address', 'value']);
+
+const TxtTranslators = Map({
+  address: addressTxtTranslator,
+  robot: condition =>
+    getAddressesFromRobot(condition)
+      .map(addressTxtTranslator)
+      .join('\n'),
+});
+
+function ruleToTxt(rule) {
+  return conditionToTxt(rule.get('condition'));
+}
+
 function withSpeed(rule) {
   return rule
     .updateIn(['blocked', 'per_minute'], speed => speed.compute())
@@ -294,6 +311,12 @@ Require all granted
 # Blocked IPs
 ${rules}
 </RequireAll>`;
+  }
+
+  toTxt() {
+    return this.list()
+      .map(ruleToTxt)
+      .join('\n');
   }
 }
 
