@@ -12,12 +12,16 @@ const connections = {};
 class Connection {
   constructor(db, gcInterval) {
     this.db = db;
-    this.gc = setInterval(() => {
-      this.db.gc();
-    }, gcInterval);
+    if (gcInterval) {
+      this.gc = setInterval(() => {
+        this.db.gc();
+      }, gcInterval);
+    }
   }
   close() {
-    clearInterval(this.gc);
+    if (this.gc) {
+      clearInterval(this.gc);
+    }
     return Promise.resolve();
   }
 }
