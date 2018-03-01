@@ -64,7 +64,7 @@ const constants = {
     rules: true,
     logs: true,
     elasticsearch: false,
-    'searches': true,
+    searches: true,
   },
   logs: {
     memory: {
