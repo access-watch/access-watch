@@ -28,23 +28,34 @@ function parseFilterQuery(query) {
   });
 }
 
+function toLowerCaseIfString(value) {
+  return typeof value === 'string' ? value.toLowerCase() : value;
+}
+
 function getFilterFn(filtersDef, prefix) {
   return ({ key, values }) => {
     const filterKey = prefix ? key.replace(`${prefix}.`, '') : key;
     const filterDef = filtersDef.find(({ id }) => id === filterKey) || {};
     const keyPath = key.split('.');
+    const loweredCaseValues = values.map(toLowerCaseIfString);
     return item => {
-      const itemValue = item.getIn(keyPath);
+      const itemValue = toLowerCaseIfString(item.getIn(keyPath));
       if (!item.hasIn(keyPath) || !itemValue) {
         return false;
       }
       if (filterDef.fullText) {
-        return values.findIndex(val => itemValue.includes(val)) !== -1;
+        return (
+          loweredCaseValues.findIndex(val => itemValue.includes(val)) !== -1
+        );
       }
       if (List.isList(itemValue)) {
-        return values.reduce((bool, v) => bool || itemValue.includes(v), false);
+        const loweredCaseInputValue = itemValue.map(toLowerCaseIfString);
+        return loweredCaseValues.reduce(
+          (bool, v) => bool || loweredCaseInputValue.includes(v),
+          false
+        );
       }
-      return values.indexOf(itemValue) !== -1;
+      return loweredCaseValues.indexOf(itemValue) !== -1;
     };
   };
 }
