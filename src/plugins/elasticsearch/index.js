@@ -139,15 +139,20 @@ const search = client => (query = {}, type) => {
   };
   if (filter) {
     bool.must = Object.keys(filter).map(id => {
-      const { negative, values } = filter[id];
-      const cond =
-        values.length === 1
-          ? getESValue({ id, value: values[0] }, type)
-          : {
-              bool: {
-                should: values.map(value => getESValue({ id, value }, type)),
-              },
-            };
+      const { negative, values, exists } = filter[id];
+      let cond;
+      if (exists) {
+        cond = { exists: { field: id } };
+      } else {
+        cond =
+          values.length === 1
+            ? getESValue({ id, value: values[0] }, type)
+            : {
+                bool: {
+                  should: values.map(value => getESValue({ id, value }, type)),
+                },
+              };
+      }
       return negative ? { bool: { must_not: cond } } : cond;
     });
   }
