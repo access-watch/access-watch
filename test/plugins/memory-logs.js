@@ -124,13 +124,17 @@ describe('memoryLogsProvider', () => {
 
   it('can handle special params', () => {
     const search = memoryLogsProvider
-      .searchLogs({ filter: { 'address.value': ['1'] } })
+      .searchLogs({
+        filter: { 'address.value': { key: 'address.value', values: ['1'] } },
+      })
       .then(res => {
         assert(res.length === 2);
         assert(res.every(log => log.address.value === '1'));
       });
     const search2 = memoryLogsProvider
-      .searchLogs({ filter: { 'address.value': ['2'] } })
+      .searchLogs({
+        filter: { 'address.value': { key: 'address.value', values: ['2'] } },
+      })
       .then(res2 => {
         assert(res2.length === 1);
         assert(res2.every(log => log.address.value === '2'));
@@ -140,7 +144,11 @@ describe('memoryLogsProvider', () => {
 
   it('can handle special params with or', () =>
     memoryLogsProvider
-      .searchLogs({ filter: { 'address.value': ['1', '2'] } })
+      .searchLogs({
+        filter: {
+          'address.value': { key: 'address.value', values: ['1', '2'] },
+        },
+      })
       .then(res => {
         assert(res.length === 3);
         assert(

@@ -2,9 +2,11 @@ const { List } = require('immutable');
 
 function parseFilter(filter) {
   const [key] = filter.split(':');
+  const negative = key[0] === '-';
   return {
-    key,
+    key: negative ? key.slice(1) : key,
     values: filter.slice(key.length + 1).split(','),
+    negative,
   };
 }
 
@@ -15,8 +17,8 @@ function parseFilters(filters) {
       .split(';')
       .map(parseFilter)
       .reduce(
-        (filtersObj, { key, values }) =>
-          Object.assign({ [key]: values }, filtersObj),
+        (filtersObj, filter) =>
+          Object.assign({ [filter.key]: filter }, filtersObj),
         {}
       )
   );
@@ -33,12 +35,12 @@ function toLowerCaseIfString(value) {
 }
 
 function getFilterFn(filtersDef, prefix) {
-  return ({ key, values }) => {
+  return ({ key, values, negative }) => {
     const filterKey = prefix ? key.replace(`${prefix}.`, '') : key;
     const filterDef = filtersDef.find(({ id }) => id === filterKey) || {};
     const keyPath = key.split('.');
     const loweredCaseValues = values.map(toLowerCaseIfString);
-    return item => {
+    const filterFn = item => {
       const itemValue = toLowerCaseIfString(item.getIn(keyPath));
       if (!item.hasIn(keyPath) || !itemValue) {
         return false;
@@ -57,6 +59,7 @@ function getFilterFn(filtersDef, prefix) {
       }
       return loweredCaseValues.indexOf(itemValue) !== -1;
     };
+    return negative ? item => !filterFn(item) : filterFn;
   };
 }
 
@@ -65,15 +68,16 @@ function getFiltersFn(filters, filtersDef, prefix) {
     return () => true;
   }
   const filtersFn = Object.keys(filters).map(key =>
-    getFilterFn(filtersDef, prefix)({
-      key,
-      values: filters[key].map(v => {
-        const filterKey = prefix ? key.replace(`${prefix}.`, '') : key;
-        const { transform = a => a } =
-          filtersDef.find(f => f.id === filterKey) || {};
-        return transform(v);
-      }),
-    })
+    getFilterFn(filtersDef, prefix)(
+      Object.assign({}, filters[key], {
+        values: filters[key].values.map(v => {
+          const filterKey = prefix ? key.replace(`${prefix}.`, '') : key;
+          const { transform = a => a } =
+            filtersDef.find(f => f.id === filterKey) || {};
+          return transform(v);
+        }),
+      })
+    )
   );
   return item => filtersFn.reduce((bool, fn) => bool && fn(item), true);
 }
