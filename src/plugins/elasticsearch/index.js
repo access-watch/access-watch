@@ -139,15 +139,16 @@ const search = client => (query = {}, type) => {
   };
   if (filter) {
     bool.must = Object.keys(filter).map(id => {
-      const values = filter[id];
-      if (values.length === 1) {
-        return getESValue({ id, value: values[0] }, type);
-      }
-      return {
-        bool: {
-          should: values.map(value => getESValue({ id, value }, type)),
-        },
-      };
+      const { negative, values } = filter[id];
+      const cond =
+        values.length === 1
+          ? getESValue({ id, value: values[0] }, type)
+          : {
+              bool: {
+                should: values.map(value => getESValue({ id, value }, type)),
+              },
+            };
+      return negative ? { bool: { must_not: cond } } : cond;
     });
   }
   if (start || end) {
