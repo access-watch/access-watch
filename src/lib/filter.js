@@ -3,11 +3,16 @@ const { List } = require('immutable');
 function parseFilter(filter) {
   const [key] = filter.split(':');
   const negative = key[0] === '-';
-  return {
+  const values = filter.slice(key.length + 1);
+  const parsedFilter = {
     key: negative ? key.slice(1) : key,
-    values: filter.slice(key.length + 1).split(','),
     negative,
+    exists: values.length === 0,
   };
+  if (!parsedFilter.exists) {
+    parsedFilter.values = values.split(',');
+  }
+  return parsedFilter;
 }
 
 function parseFilters(filters) {
@@ -35,16 +40,19 @@ function toLowerCaseIfString(value) {
 }
 
 function getFilterFn(filtersDef, prefix) {
-  return ({ key, values, negative }) => {
+  return ({ key, values, negative, exists }) => {
     const filterKey = prefix ? key.replace(`${prefix}.`, '') : key;
     const filterDef = filtersDef.find(({ id }) => id === filterKey) || {};
     const keyPath = key.split('.');
-    const loweredCaseValues = values.map(toLowerCaseIfString);
     const filterFn = item => {
       const itemValue = toLowerCaseIfString(item.getIn(keyPath));
       if (!item.hasIn(keyPath) || !itemValue) {
         return false;
       }
+      if (exists) {
+        return true;
+      }
+      const loweredCaseValues = values.map(toLowerCaseIfString);
       if (filterDef.fullText) {
         return (
           loweredCaseValues.findIndex(val => itemValue.includes(val)) !== -1
@@ -69,14 +77,16 @@ function getFiltersFn(filters, filtersDef, prefix) {
   }
   const filtersFn = Object.keys(filters).map(key =>
     getFilterFn(filtersDef, prefix)(
-      Object.assign({}, filters[key], {
-        values: filters[key].values.map(v => {
-          const filterKey = prefix ? key.replace(`${prefix}.`, '') : key;
-          const { transform = a => a } =
-            filtersDef.find(f => f.id === filterKey) || {};
-          return transform(v);
-        }),
-      })
+      filters[key].values
+        ? Object.assign({}, filters[key], {
+            values: filters[key].values.map(v => {
+              const filterKey = prefix ? key.replace(`${prefix}.`, '') : key;
+              const { transform = a => a } =
+                filtersDef.find(f => f.id === filterKey) || {};
+              return transform(v);
+            }),
+          })
+        : filters[key]
     )
   );
   return item => filtersFn.reduce((bool, fn) => bool && fn(item), true);
