@@ -1,4 +1,5 @@
 const { Map } = require('immutable');
+const { database } = require('access-watch-sdk');
 
 const { session } = require('../databases');
 
@@ -124,11 +125,31 @@ app.get('/sessions/:type', (req, res, next) => {
   }
 });
 
-app.get('/sessions/:type/:id', (req, res) => {
-  const s = session.get(req.params.type, req.params.id);
+const accessWatchSdkDatabase = database();
+
+const getSession = (type, id) => {
+  const s = session.get(type, id);
   if (s) {
-    res.send(s);
-  } else {
-    res.status(404).send({ error: 'Unknown session.' });
+    return Promise.resolve(s);
   }
+  if (type === 'robot') {
+    return accessWatchSdkDatabase
+      .getRobot({ uuid: id })
+      .then(robot => ({ robot, id }));
+  } else {
+    return accessWatchSdkDatabase
+      .getAddress(id)
+      .then(address => ({ address, id }));
+  }
+};
+
+app.get('/sessions/:type/:id', (req, res) => {
+  const { type, id } = req.params;
+  getSession(type, id)
+    .then(s => {
+      res.send(s);
+    })
+    .catch(() => {
+      res.status(404).send({ error: 'Unknown session.' });
+    });
 });
