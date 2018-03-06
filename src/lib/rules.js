@@ -44,11 +44,16 @@ function matchRule(rule, log) {
     const time = new Date(log.getIn(['request', 'time'])).getTime() / 1000;
     const attr =
       log.getIn(['response', 'status']) === 403 ? 'blocked' : 'passed';
-    return rule.update(attr, speeds => {
-      return speeds
-        .update('per_minute', speed => speed.hit(time))
-        .update('per_hour', speed => speed.hit(time));
-    });
+    return rule
+      .update(
+        'last_hit',
+        previousHit => (previousHit ? Math.max(previousHit, time) : time)
+      )
+      .update(attr, speeds => {
+        return speeds
+          .update('per_minute', speed => speed.hit(time))
+          .update('per_hour', speed => speed.hit(time));
+      });
   }
   return rule;
 }
