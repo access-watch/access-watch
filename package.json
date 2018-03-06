@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "access-watch-sdk": "^0.1.6",
-    "access-watch-ui": "^1.9.4",
+    "access-watch-ui": "^2.0.1",
     "ajv": "^6.2.1",
     "axios": "^0.18.0",
     "date-format-lite": "^17.7.0",
