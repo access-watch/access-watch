@@ -14,6 +14,10 @@ function withSpeed(session) {
     .updateIn(['speed', 'per_hour'], speed => speed.compute());
 }
 
+function withRule(rules) {
+  return (session, type) => rules.getSessionWithRule({ type, session });
+}
+
 function aggregateSpeed(session, type) {
   return session.getIn(['speed', type]).reduce((p, c) => p + c, 0);
 }
@@ -22,6 +26,12 @@ class Database {
   constructor() {
     this.sessions = Map();
     this.indexes = Map();
+    this.withRule = s => s;
+  }
+
+  setRulesProvider(rules) {
+    this.rules = rules;
+    this.withRule = withRule(rules);
   }
 
   gc() {
@@ -139,7 +149,7 @@ class Database {
   get(type, id) {
     const session = this.sessions.getIn([type, id]);
     if (session) {
-      return withSpeed(session);
+      return this.withRule(withSpeed(session), type);
     }
   }
 
