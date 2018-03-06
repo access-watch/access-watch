@@ -1,7 +1,7 @@
 const { Map } = require('immutable');
 const { database } = require('access-watch-sdk');
 
-const { session } = require('../databases');
+const { session, rules } = require('../databases');
 
 // Pipeline
 
@@ -113,14 +113,17 @@ app.get('/sessions/:type', (req, res, next) => {
   } else {
     const { type } = req.params;
     res.send(
-      session.list({
-        type,
-        sort: req.query.sort || 'count',
-        filter:
-          (req.query.filter && getSessionItemFilter(req.query.filter, type)) ||
-          null,
-        limit: (req.query.limit && parseInt(req.query.limit)) || 100,
-      })
+      session
+        .list({
+          type,
+          sort: req.query.sort || 'count',
+          filter:
+            (req.query.filter &&
+              getSessionItemFilter(req.query.filter, type)) ||
+            null,
+          limit: (req.query.limit && parseInt(req.query.limit)) || 100,
+        })
+        .map(session => rules.getSessionWithRule({ type, session }))
     );
   }
 });
@@ -146,6 +149,7 @@ const getSession = (type, id) => {
 app.get('/sessions/:type/:id', (req, res) => {
   const { type, id } = req.params;
   getSession(type, id)
+    .then(session => rules.getSessionWithRule({ type, session }))
     .then(s => {
       res.send(s);
     })

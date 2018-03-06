@@ -30,13 +30,18 @@ function isExpired(rule) {
 const matchCondition = (condition, log) =>
   dispatchCondition(condition, matchers, log);
 
+const getters = {
+  address: ['address', 'value'],
+  robot: ['robot', 'id'],
+};
+
 const matchers = Map({
   address: (condition, log) =>
-    log.getIn(['address', 'value'], log.getIn(['request', 'address'])) ===
-    condition.getIn(['address', 'value']),
+    log.getIn(getters.address, log.getIn(['request', 'address'])) ===
+    condition.getIn(getters.address),
   robot: (condition, log) =>
-    log.getIn(['robot', 'id'], log.getIn(['request', 'robot'])) ===
-    condition.getIn(['robot', 'id']),
+    log.getIn(getters.robot, log.getIn(['request', 'robot'])) ===
+    condition.getIn(getters.robot),
 });
 
 function matchRule(rule, log) {
@@ -116,7 +121,7 @@ function validateRule(rule) {
 
 const validateRuleObject = ajv.compile({
   type: 'object',
-  required: ['condition'],
+  required: ['condition', 'type'],
   properties: {
     condition: {
       type: 'object',
@@ -125,6 +130,9 @@ const validateRuleObject = ajv.compile({
       type: 'number',
     },
     note: {
+      type: 'string',
+    },
+    type: {
       type: 'string',
     },
   },
@@ -230,19 +238,23 @@ class Database {
     const db = new Database();
     if (data) {
       db.rules = fromJS(data.rules).map(rule => {
-        return rule
-          .updateIn(['blocked', 'per_minute'], speed =>
-            Speed.deserialize(speed.toJS())
-          )
-          .updateIn(['blocked', 'per_hour'], speed =>
-            Speed.deserialize(speed.toJS())
-          )
-          .updateIn(['passed', 'per_minute'], speed =>
-            Speed.deserialize(speed.toJS())
-          )
-          .updateIn(['passed', 'per_hour'], speed =>
-            Speed.deserialize(speed.toJS())
-          );
+        return (
+          rule
+            .updateIn(['blocked', 'per_minute'], speed =>
+              Speed.deserialize(speed.toJS())
+            )
+            .updateIn(['blocked', 'per_hour'], speed =>
+              Speed.deserialize(speed.toJS())
+            )
+            .updateIn(['passed', 'per_minute'], speed =>
+              Speed.deserialize(speed.toJS())
+            )
+            .updateIn(['passed', 'per_hour'], speed =>
+              Speed.deserialize(speed.toJS())
+            )
+            // FIXME eventually remove this when we consider migration to rule type is conditionToApache
+            .update('type', type => type || 'blocked')
+        );
       });
     }
     return db;
@@ -282,7 +294,12 @@ class Database {
   }
 
   // All the rules in the database
-  list() {
+  list(type) {
+    if (type) {
+      return this.rules
+        .filter(rule => rule.get('type') === type)
+        .map(withSpeed);
+    }
     return this.rules.map(withSpeed);
   }
 
@@ -297,9 +314,24 @@ class Database {
     );
   }
 
+  getSessionWithRule({ type, session }) {
+    const getter = getters[type];
+    const rule = this.list()
+      .filter(
+        rule =>
+          rule.getIn(['condition', 'type']) === type &&
+          rule.get('condition').getIn(getter) === session.getIn(getter)
+      )
+      .first();
+    if (rule) {
+      return session.set('rule', rule);
+    }
+    return session;
+  }
+
   // Export database as Nginx configuration file
-  toNginx() {
-    const rules = this.list()
+  toNginx(type) {
+    const rules = this.list(type)
       .map(ruleToNginx)
       .join('\n');
     return `# Blocked IPs
@@ -307,8 +339,8 @@ ${rules}`;
   }
 
   // Export database as Apache configuration file
-  toApache() {
-    const rules = this.list()
+  toApache(type) {
+    const rules = this.list(type)
       .map(ruleToApache)
       .join('\n');
     return `<RequireAll>
@@ -318,8 +350,8 @@ ${rules}
 </RequireAll>`;
   }
 
-  toTxt() {
-    return this.list()
+  toTxt(type) {
+    return this.list(type)
       .map(ruleToTxt)
       .join('\n');
   }

@@ -13,22 +13,22 @@ stream.map(log => rules.match(log));
 const app = require('../apps/api');
 
 app.get('/rules', (req, res) => {
-  res.send(rules.list());
+  res.send(rules.list('blocked'));
 });
 
 app.get('/rules/export/nginx', (req, res) => {
   res.header('Content-Type', 'text/plain');
-  res.send(rules.toNginx());
+  res.send(rules.toNginx('blocked'));
 });
 
 app.get('/rules/export/apache', (req, res) => {
   res.header('Content-Type', 'text/plain');
-  res.send(rules.toApache());
+  res.send(rules.toApache('blocked'));
 });
 
 app.get('/rules/export/txt', (req, res) => {
   res.header('Content-Type', 'text/plain');
-  res.send(rules.toTxt());
+  res.send(rules.toTxt('blocked'));
 });
 
 app.post('/rules', (req, res) => {
