@@ -32,8 +32,7 @@ app.get('/rules/export/txt', (req, res) => {
 });
 
 app.post('/rules', (req, res) => {
-  rules.add(fromJS(req.body));
-  res.send('ok');
+  res.send(rules.add(fromJS(req.body)));
 });
 
 app.delete('/rules/:id', (req, res) => {

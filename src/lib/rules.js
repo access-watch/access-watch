@@ -281,6 +281,7 @@ class Database {
       .set('created', now());
     validateRule(rule);
     this.rules = this.rules.set(rule.get('id'), rule);
+    return rule;
   }
 
   // The rule with this identifier
