@@ -1,4 +1,4 @@
-const { Map } = require('immutable');
+const { Map, fromJS } = require('immutable');
 const { database } = require('access-watch-sdk');
 
 const { session, rules } = require('../databases');
@@ -135,11 +135,11 @@ const getSession = (type, id) => {
   if (type === 'robot') {
     return accessWatchSdkDatabase
       .getRobot({ uuid: id })
-      .then(robot => ({ robot, id }));
+      .then(robot => fromJS({ robot, id }));
   } else {
     return accessWatchSdkDatabase
       .getAddress(id)
-      .then(address => ({ address, id }));
+      .then(address => fromJS({ address, id }));
   }
 };
 
