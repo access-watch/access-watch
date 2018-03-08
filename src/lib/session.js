@@ -7,6 +7,7 @@ const { now } = require('./util');
 const { Speed } = require('./speed');
 const database = require('./database');
 const config = require('../constants');
+const instruments = require('./instruments');
 
 function withSpeed(session) {
   return session
@@ -22,6 +23,12 @@ class Database {
   constructor() {
     this.sessions = Map();
     this.indexes = Map();
+
+    setInterval(() => {
+      this.sessions.entrySeq().forEach(([key, value]) => {
+        instruments.gauge(`sessions.${key}.size`, value.size);
+      });
+    }, 1000);
   }
 
   gc() {
