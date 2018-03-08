@@ -23,12 +23,6 @@ class Database {
   constructor() {
     this.sessions = Map();
     this.indexes = Map();
-
-    setInterval(() => {
-      this.sessions.entrySeq().forEach(([key, value]) => {
-        instruments.gauge(`sessions.${key}.size`, value.size);
-      });
-    }, 1000);
   }
 
   gc() {
@@ -63,6 +57,12 @@ class Database {
           .slice(0, config.session.gc.indexSize);
       })
     );
+  }
+
+  instrument() {
+    this.sessions.entrySeq().forEach(([key, value]) => {
+      instruments.gauge(`sessions.${key}.size`, value.size);
+    });
   }
 
   serialize() {
