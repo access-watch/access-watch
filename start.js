@@ -69,3 +69,12 @@ process.on('SIGINT', () => {
   console.log('SIGINT');
   shutdown();
 });
+
+// Instrumentation
+
+setInterval(() => {
+  const memoryUsage = process.memoryUsage();
+  Object.keys(memoryUsage).forEach(key => {
+    accessWatch.instruments.gauge(`process.memory.${key}`, memoryUsage[key]);
+  });
+}, 1000);

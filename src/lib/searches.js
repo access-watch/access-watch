@@ -55,7 +55,6 @@ function connect({ name, protocol } = {}) {
     name: name || 'searches',
     protocol: protocol || config.data.protocol,
     Klass: FilterGroups,
-    gcInterval: 0,
   });
   return conn.db;
 }
