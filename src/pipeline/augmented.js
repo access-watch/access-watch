@@ -1,6 +1,8 @@
 const uuid = require('uuid/v4');
 
+const { now } = require('../lib/util');
 const pipeline = require('../lib/pipeline');
+const instruments = require('../lib/instruments');
 
 const hub = require('../plugins/hub');
 const proxy = require('../plugins/proxy');
@@ -27,6 +29,17 @@ const augmented = pipeline
   )
 
   // Augment with data from the Access Watch Hub
-  .map(log => hub.augment(log));
+  .map(log => hub.augment(log))
+
+  // Instruments (out)
+  .map(log => {
+    instruments.increment('pipeline.augmented.out');
+    instruments.gauge(
+      'pipeline.augmented.delta',
+      Math.floor(new Date(log.getIn(['request', 'time'])).getTime() / 1000) -
+        now()
+    );
+    return log;
+  });
 
 module.exports = { stream: augmented };
