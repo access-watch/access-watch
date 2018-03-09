@@ -59,12 +59,30 @@ const constants = {
     configuration: {},
   },
   modules: {
-    metrics: true,
-    session: true,
-    rules: true,
-    logs: true,
-    elasticsearch: false,
-    searches: true,
+    metrics: {
+      active: true,
+      priority: 0,
+    },
+    session: {
+      active: true,
+      priority: 0,
+    },
+    rules: {
+      active: true,
+      priority: 0,
+    },
+    logs: {
+      active: true,
+      priority: 0,
+    },
+    elasticsearch: {
+      active: false,
+      priority: 100,
+    },
+    searches: {
+      active: true,
+      priority: 0,
+    },
   },
   logs: {
     memory: {

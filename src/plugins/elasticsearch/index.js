@@ -4,7 +4,7 @@ const { database, filters } = require('access-watch-sdk');
 const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
 const monitoring = require('../../lib/monitoring');
-const { iso } = require('../../lib/util');
+const { iso, now } = require('../../lib/util');
 
 const monitor = monitoring.registerOutput({ name: 'Elasticsearch' });
 
@@ -203,6 +203,62 @@ const searchSessions = ({
               field: sessionId,
               size: query.limit || 50,
             },
+            aggs: Object.assign(
+              {
+                request_time_filter: {
+                  filter: {
+                    range: {
+                      'request.time': {
+                        gte: (now() - 14 * 60) * 1000,
+                      },
+                    },
+                  },
+                  aggs: {
+                    activity: {
+                      date_histogram: {
+                        field: 'request.time',
+                        interval: '1m',
+                        min_doc_count: 0,
+                        extended_bounds: {
+                          min: (now() - 14 * 60) * 1000,
+                          max: now() * 1000,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              query.sort === 'speed'
+                ? {
+                    activity_bucket_sort: {
+                      bucket_sort: {
+                        sort: {
+                          'request_time_filter>_count': {
+                            order: 'desc',
+                          },
+                        },
+                      },
+                    },
+                  }
+                : {},
+              !(query.start || query.end)
+                ? {
+                    latest_request: {
+                      top_hits: {
+                        sort: {
+                          'request.time': {
+                            order: 'desc',
+                          },
+                        },
+                        _source: {
+                          includes: ['request.time'],
+                        },
+                        size: 1,
+                      },
+                    },
+                  }
+                : {}
+            ),
           },
         },
         limit: 0,
@@ -213,21 +269,27 @@ const searchSessions = ({
     type
   )
     .then(({ aggregations: { sessions: { buckets } } }) =>
-      buckets.map(({ key, doc_count }) => ({
-        id: key,
-        count: doc_count,
-      }))
+      buckets.map(
+        ({ key, doc_count, request_time_filter, latest_request }) => ({
+          id: key,
+          count: doc_count,
+          speed: {
+            per_minute: request_time_filter.activity.buckets.map(
+              ({ doc_count }) => doc_count
+            ),
+          },
+          end: latest_request
+            ? latest_request.hits.hits[0]._source.request.time
+            : null,
+        })
+      )
     )
     .then(sessions =>
       Promise.all(sessions.map(({ id }) => fetchFn(id))).then(sessionsData =>
-        sessionsData.map((sessionData, i) =>
-          Object.assign(
-            {
-              count: sessions[i].count,
-            },
-            sessionData
-          )
-        )
+        sessionsData.map((sessionData, i) => ({
+          es: sessions[i],
+          hub: sessionData,
+        }))
       )
     );
 

@@ -8,6 +8,7 @@ const elasticsearch = elasticSearchBuilder(config.elasticsearch.configuration);
 // As we are using elasticsearch, we don't need to use the memory to hold logs
 config.logs.memory.retention = 0;
 config.session.timerange = true;
+config.modules.session.active = false;
 
 stream.map(elasticsearch.index);
 
@@ -18,12 +19,14 @@ app.get('/logs', (req, res) => {
     .then(logs => res.send(logs));
 });
 
-const transformSession = sessionName => session => ({
-  count: session.count,
-  reputation: session.reputation,
-  id: session.id,
-  [sessionName]: session,
-});
+const transformSession = sessionName => ({ es, hub }) =>
+  Object.assign(es, {
+    end: Math.floor(new Date(es.end).getTime() / 1000),
+    updated: Math.floor(new Date(es.end).getTime() / 1000),
+    reputation: hub.reputation,
+    type: sessionName,
+    [sessionName]: hub,
+  });
 
 const searchFns = {
   robot: elasticsearch.searchRobots,
@@ -32,13 +35,10 @@ const searchFns = {
 
 app.get('/sessions/:type', (req, res) => {
   const { params, query } = req;
-  const { start, end } = query;
   const { type } = params;
-  if (start && end) {
-    if (searchFns[type]) {
-      searchFns[type](parseFilterQuery(query)).then(sessions =>
-        res.send(sessions.map(transformSession(type)))
-      );
-    }
+  if (searchFns[type]) {
+    searchFns[type](parseFilterQuery(query)).then(sessions =>
+      res.send(sessions.map(transformSession(type)))
+    );
   }
 });
