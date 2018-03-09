@@ -193,8 +193,26 @@ const searchSessions = ({
   sessionId,
   queryConstants = {},
   type,
-}) => client => (query = {}) =>
-  search(client)(
+}) => client => (query = {}) => {
+  const { start, end } = query;
+  const activityRange =
+    start && end
+      ? {
+          gte: start * 1000,
+          lte: end * 1000,
+        }
+      : {
+          gte: (now() - 14 * 60) * 1000,
+        };
+  const activityBounds = {
+    min: activityRange.gte,
+    max: activityRange.lte || now() * 1000,
+  };
+  const activityInterval = Math.ceil(
+    Math.max(Math.floor((activityBounds.max - activityBounds.min) / 1000), 14) /
+      14
+  );
+  return search(client)(
     Object.assign(
       {
         aggs: {
@@ -208,21 +226,16 @@ const searchSessions = ({
                 request_time_filter: {
                   filter: {
                     range: {
-                      'request.time': {
-                        gte: (now() - 14 * 60) * 1000,
-                      },
+                      'request.time': activityRange,
                     },
                   },
                   aggs: {
                     activity: {
                       date_histogram: {
                         field: 'request.time',
-                        interval: '1m',
+                        interval: `${activityInterval}s`,
                         min_doc_count: 0,
-                        extended_bounds: {
-                          min: (now() - 14 * 60) * 1000,
-                          max: now() * 1000,
-                        },
+                        extended_bounds: activityBounds,
                       },
                     },
                   },
@@ -274,9 +287,9 @@ const searchSessions = ({
           id: key,
           count: doc_count,
           speed: {
-            per_minute: request_time_filter.activity.buckets.map(
-              ({ doc_count }) => doc_count
-            ),
+            per_minute: request_time_filter.activity.buckets
+              .map(({ doc_count }) => doc_count)
+              .reverse(),
           },
           end: latest_request
             ? latest_request.hits.hits[0]._source.request.time
@@ -292,6 +305,7 @@ const searchSessions = ({
         }))
       )
     );
+};
 
 const searchRobots = searchSessions({
   queryConstants: {
