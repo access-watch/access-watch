@@ -35,6 +35,7 @@ app.get('/dashboard', (req, res) => {
             expiration: config.session.gc.expiration,
             timerange: config.session.timerange,
           },
+          modules: config.modules,
         },
         config.ui
       )
