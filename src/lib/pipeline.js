@@ -152,7 +152,7 @@ function window({
       // Drop late events
       const t = event.get('time');
       const watermark = now() - watermarkDelay;
-      instruments.gauge('pipeline.window.delta', t - watermark);
+      instruments.gauge('pipeline.window.delta', t - now());
       if (t < watermark - allowedLateness) {
         console.log('WARNING', 'Dropping late event.');
         console.log(
