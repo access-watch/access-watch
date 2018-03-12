@@ -1,4 +1,4 @@
-const StatsD = require('node-statsd');
+const appMetricsStatsD = require('appmetrics-statsd');
 
 const config = require('../constants');
 
@@ -7,7 +7,7 @@ const instruments = {};
 let statsd;
 
 if (config.statsd) {
-  statsd = new StatsD(statsd);
+  statsd = appMetricsStatsD.StatsD(config.statsd);
 }
 
 instruments.increment = (...args) => {
