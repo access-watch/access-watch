@@ -1,4 +1,4 @@
-const StatsD = require('node-statsd');
+const appMetricsStatsD = require('appmetrics-statsd');
 
 const config = require('../constants');
 
@@ -7,7 +7,7 @@ const instruments = {};
 let statsd;
 
 if (config.statsd) {
-  statsd = new StatsD(statsd);
+  statsd = appMetricsStatsD.StatsD(config.statsd);
 }
 
 instruments.increment = (...args) => {
@@ -28,7 +28,7 @@ instruments.timing = (...args) => {
 
 instruments.hrtime = (key, start) => {
   const end = process.hrtime(start);
-  const elapsed = end[0] + Math.round(end[1] / 1000000);
+  const elapsed = end[0] * 1000 + Math.round(end[1] / 1000000);
   instruments.timing(key, elapsed);
 };
 
