@@ -76,7 +76,7 @@ class Database {
       return indexes;
     });
 
-    instruments.hrtime('session.gc.expired.time', gcStart);
+    instruments.hrtime('session.gc.time', gcStart);
 
     const gcEnd = process.hrtime(gcStart);
     const elapsed = gcEnd[0] + Math.round(gcEnd[1] / 1000000) / 1000;
