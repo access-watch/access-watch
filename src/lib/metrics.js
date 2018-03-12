@@ -12,6 +12,7 @@
 const { fromJS, Set, Map, isKeyed } = require('immutable');
 const database = require('./database');
 const config = require('../constants');
+const instruments = require('./instruments');
 
 // A time series is identified by a name and a set of named tags.
 function seriesFor(metric) {
@@ -151,6 +152,8 @@ function gcPoints(points, cutoff) {
 
 // Garbage collect old points
 function gc(data, deleteAfter) {
+  const gcStart = process.hrtime();
+
   // time horizon is biggest timestamp in database
   const timeSeries = Object.values(data);
   if (timeSeries.length > 0) {
@@ -161,6 +164,12 @@ function gc(data, deleteAfter) {
     const cutoff = now - deleteAfter;
     timeSeries.map(points => gcPoints(points, cutoff));
   }
+
+  instruments.hrtime('metrics.gc.expired.time', gcStart);
+
+  const gcEnd = process.hrtime(gcStart);
+  const elapsed = gcEnd[0] + Math.round(gcEnd[1] / 1000000) / 1000;
+  console.log(`Metrics Garbage Collection in ${elapsed}s`);
 }
 
 class Database {
