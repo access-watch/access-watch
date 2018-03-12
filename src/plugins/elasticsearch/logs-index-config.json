@@ -23,6 +23,13 @@
                   "type": "ip"
                 }
               }
+            },
+            "reputation": {
+              "dynamic": "true",
+              "properties": {
+                "status": { "type": "keyword" },
+                "threats": { "type": "keyword" }
+              }
             }
           }
         },
@@ -98,7 +105,14 @@
           "dynamic": "true",
           "properties": {
             "id": { "type": "keyword" },
-            "name": { "type": "keyword" }
+            "name": { "type": "keyword" },
+            "reputation": {
+              "dynamic": "true",
+              "properties": {
+                "status": { "type": "keyword" },
+                "threats": { "type": "keyword" }
+              }
+            }
           }
         },
         "session": {

@@ -3,12 +3,14 @@ const elasticSearchBuilder = require('../plugins/elasticsearch');
 const { stream } = require('../pipeline/augmented');
 const app = require('../apps/api');
 const { parseFilterQuery, createFilter } = require('../lib/filter');
+const { iso } = require('../lib/util');
 const elasticsearch = elasticSearchBuilder(config.elasticsearch.configuration);
 
 // As we are using elasticsearch, we don't need to use the memory to hold logs
 config.logs.memory.retention = 0;
 config.session.timerange = true;
 config.modules.session.active = false;
+config.modules.metrics.active = false;
 
 stream.map(elasticsearch.index);
 
@@ -68,4 +70,21 @@ app.get('/sessions/:type/:id', (req, res) => {
       filter: `${filter ? filter + ';' : ''}${sessionFilter}`,
     }),
   }).then(sessions => res.send(sessions[0]));
+});
+
+app.get('/metrics/:name', (req, res) => {
+  const { query = {} } = req;
+  const { name } = req.params;
+  if (name === 'request') {
+    elasticsearch.searchMetrics(parseFilterQuery(query)).then(metrics => {
+      if (query.dateFormat === 'iso8601') {
+        res.send(metrics.map(([t, v]) => [iso(t), v]));
+      }
+      res.send(metrics);
+    });
+  } else {
+    res.status(400).send({
+      error: `Metrics ${name} is not supported by Elasticsearch at the moment`,
+    });
+  }
 });

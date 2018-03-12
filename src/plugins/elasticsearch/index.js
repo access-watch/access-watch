@@ -188,6 +188,57 @@ const searchLogs = client => (query = {}) =>
     return [];
   });
 
+const metricsMapping = {
+  status: 'robot.reputation.status',
+  type: 'identity.type',
+  country: 'address.country_code',
+};
+
+const searchMetrics = client => (query = {}) => {
+  const { step, by, filter: origFilter = {} } = query;
+  const filter = Object.assign({}, origFilter);
+  Object.keys(metricsMapping).forEach(key => {
+    if (query[key]) {
+      filter[metricsMapping[key]] = {
+        id: metricsMapping[key],
+        values: [query[key]],
+      };
+    }
+  });
+  return search(client)(
+    Object.assign({}, query, {
+      aggs: {
+        metrics: {
+          terms: {
+            field: metricsMapping[by],
+          },
+          aggs: {
+            activity: {
+              date_histogram: {
+                field: 'request.time',
+                interval: `${step}s`,
+                min_doc_count: 0,
+              },
+            },
+          },
+        },
+      },
+      limit: 0,
+      filter,
+    }),
+    'log'
+  ).then(({ aggregations: { metrics: { buckets } } }) =>
+    buckets.reduce((metrics, { key: metricsKey, activity }) => {
+      return activity.buckets.map(({ key, doc_count }, i) => [
+        Math.ceil(key / 1000),
+        Object.assign(metrics[i] ? metrics[i][1] : {}, {
+          [metricsKey]: doc_count,
+        }),
+      ]);
+    }, [])
+  );
+};
+
 const searchSessions = ({
   fetchFn,
   sessionId,
@@ -339,6 +390,7 @@ const elasticSearchBuilder = config => {
   return {
     index: indexLog(esClient),
     searchLogs: searchLogs(esClient),
+    searchMetrics: searchMetrics(esClient),
     searchRobots: searchRobots(esClient),
     searchAddresses: searchAddresses(esClient),
     logsEndpoint: logsEndpoint(esClient),
