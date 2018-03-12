@@ -28,7 +28,7 @@ instruments.timing = (...args) => {
 
 instruments.hrtime = (key, start) => {
   const end = process.hrtime(start);
-  const elapsed = end[0] + Math.round(end[1] / 1000000);
+  const elapsed = (end[0] * 1000) + Math.round(end[1] / 1000000);
   instruments.timing(key, elapsed);
 };
 
