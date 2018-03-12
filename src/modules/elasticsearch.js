@@ -1,5 +1,7 @@
 const { fromJS } = require('immutable');
 
+const { getSession: getSessionFromHub } = require('../plugins/hub');
+
 const config = require('../constants');
 const { rules } = require('../databases');
 const elasticSearchBuilder = require('../plugins/elasticsearch');
@@ -71,7 +73,15 @@ app.get('/sessions/:type/:id', (req, res) => {
     query: Object.assign({}, query, {
       filter: `${filter ? filter + ';' : ''}${sessionFilter}`,
     }),
-  }).then(sessions => res.send(sessions[0]));
+  }).then(sessions => {
+    if (sessions[0]) {
+      res.send(sessions[0]);
+    } else {
+      getSessionFromHub({ type, id }).then(session =>
+        res.send(rules.getSessionWithRule({ type, session }))
+      );
+    }
+  });
 });
 
 app.get('/metrics/:name', (req, res) => {

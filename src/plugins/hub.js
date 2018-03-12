@@ -7,7 +7,7 @@ const axios = require('axios');
 const uuid = require('uuid/v4');
 const { Map, fromJS, is } = require('immutable');
 
-const { signature } = require('access-watch-sdk');
+const { signature, database } = require('access-watch-sdk');
 
 const { selectKeys } = require('../lib/util');
 const config = require('../constants');
@@ -277,6 +277,20 @@ function batchActivityFeedback() {
     });
 }
 
+const accessWatchSdkDatabase = database();
+
+const getSession = ({ type, id }) => {
+  if (type === 'robot') {
+    return accessWatchSdkDatabase
+      .getRobot({ uuid: id })
+      .then(robot => fromJS({ robot, id }));
+  } else {
+    return accessWatchSdkDatabase
+      .getAddress(id)
+      .then(address => fromJS({ address, id }));
+  }
+};
+
 setInterval(batchIdentityFetch, config.hub.identity.batchInterval);
 
 setInterval(batchActivityFeedback, config.hub.activity.batchInterval);
@@ -289,4 +303,5 @@ setInterval(() => {
 
 module.exports = {
   augment,
+  getSession,
 };

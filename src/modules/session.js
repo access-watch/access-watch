@@ -1,7 +1,7 @@
-const { Map, fromJS } = require('immutable');
-const { database } = require('access-watch-sdk');
+const { Map } = require('immutable');
 
 const { session, rules } = require('../databases');
+const { getSession: getSessionFromHub } = require('../plugins/hub');
 
 // Pipeline
 
@@ -125,22 +125,12 @@ app.get('/sessions/:type', (req, res, next) => {
   }
 });
 
-const accessWatchSdkDatabase = database();
-
 const getSession = (type, id) => {
   const s = session.get(type, id);
   if (s) {
     return Promise.resolve(s);
   }
-  if (type === 'robot') {
-    return accessWatchSdkDatabase
-      .getRobot({ uuid: id })
-      .then(robot => fromJS({ robot, id }));
-  } else {
-    return accessWatchSdkDatabase
-      .getAddress(id)
-      .then(address => fromJS({ address, id }));
-  }
+  return getSessionFromHub({ type, id });
 };
 
 app.get('/sessions/:type/:id', (req, res) => {
