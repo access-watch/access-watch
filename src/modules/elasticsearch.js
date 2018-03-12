@@ -29,13 +29,21 @@ app.get('/logs', (req, res) => {
 });
 
 const transformSession = sessionName => ({ es, hub }) =>
-  Object.assign(es, {
-    end: Math.floor(new Date(es.end).getTime() / 1000),
-    updated: Math.floor(new Date(es.end).getTime() / 1000),
-    reputation: hub.reputation,
-    type: sessionName,
-    [sessionName]: hub,
-  });
+  Object.assign(
+    es,
+    {
+      end: Math.floor(new Date(es.end).getTime() / 1000),
+      updated: Math.floor(new Date(es.end).getTime() / 1000),
+      reputation: hub.reputation,
+      type: sessionName,
+      [sessionName]: hub,
+    },
+    sessionName === 'address'
+      ? {
+          robots: hub.robots,
+        }
+      : {}
+  );
 
 const searchFns = {
   robot: elasticsearch.searchRobots,

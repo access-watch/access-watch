@@ -1,6 +1,8 @@
 require('date-format-lite');
+const omit = require('lodash.omit');
 const elasticsearch = require('elasticsearch');
-const { database, filters } = require('access-watch-sdk');
+const { filters } = require('access-watch-sdk');
+const { getSession } = require('../hub');
 const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
 const monitoring = require('../../lib/monitoring');
@@ -9,7 +11,6 @@ const { iso, now } = require('../../lib/util');
 const monitor = monitoring.registerOutput({ name: 'Elasticsearch' });
 
 const { logsIndexName, expiration } = config.elasticsearch;
-const accessWatchSdkDatabase = database();
 
 const generateIndexName = date =>
   `${logsIndexName}-${date.format('YYYY-MM-DD', 0)}`;
@@ -289,6 +290,19 @@ const searchSessions = ({
                     },
                   },
                 },
+                latest_request: {
+                  top_hits: {
+                    sort: {
+                      'request.time': {
+                        order: 'desc',
+                      },
+                    },
+                    _source: {
+                      includes: ['request.time', 'identity', 'user_agent'],
+                    },
+                    size: 1,
+                  },
+                },
               },
               query.sort === 'speed'
                 ? {
@@ -299,23 +313,6 @@ const searchSessions = ({
                             order: 'desc',
                           },
                         },
-                      },
-                    },
-                  }
-                : {},
-              !(query.start || query.end)
-                ? {
-                    latest_request: {
-                      top_hits: {
-                        sort: {
-                          'request.time': {
-                            order: 'desc',
-                          },
-                        },
-                        _source: {
-                          includes: ['request.time'],
-                        },
-                        size: 1,
                       },
                     },
                   }
@@ -331,8 +328,9 @@ const searchSessions = ({
     type
   )
     .then(({ aggregations: { sessions: { buckets } } }) =>
-      buckets.map(
-        ({ key, doc_count, request_time_filter, latest_request }) => ({
+      buckets.map(({ key, doc_count, request_time_filter, latest_request }) => {
+        const latestRequest = latest_request.hits.hits[0]._source;
+        return {
           id: key,
           count: doc_count,
           speed: {
@@ -340,11 +338,11 @@ const searchSessions = ({
               .map(({ doc_count }) => doc_count)
               .reverse(),
           },
-          end: latest_request
-            ? latest_request.hits.hits[0]._source.request.time
-            : null,
-        })
-      )
+          end: latestRequest.request.time,
+          identity: latestRequest.identity,
+          user_agents: [latestRequest.user_agent],
+        };
+      })
     )
     .then(sessions =>
       Promise.all(sessions.map(({ id }) => fetchFn(id))).then(sessionsData =>
@@ -360,13 +358,24 @@ const searchRobots = searchSessions({
   queryConstants: {
     'identity.type': 'robot',
   },
-  fetchFn: id => accessWatchSdkDatabase.getRobot({ uuid: id }),
+  fetchFn: id =>
+    getSession({ type: 'robot', id, immutable: false }).then(
+      ({ robot }) => robot
+    ),
   sessionId: 'robot.id',
   type: 'robot',
 });
 
 const searchAddresses = searchSessions({
-  fetchFn: address => accessWatchSdkDatabase.getAddress(address),
+  fetchFn: address =>
+    getSession({
+      type: 'address',
+      id: address,
+      immutable: false,
+      options: {
+        include_robots: 1,
+      },
+    }).then(({ address }) => address),
   sessionId: 'address.value',
   type: 'address',
 });

@@ -279,15 +279,15 @@ function batchActivityFeedback() {
 
 const accessWatchSdkDatabase = database();
 
-const getSession = ({ type, id }) => {
+const getSession = ({ type, id, immutable = true, options }) => {
   if (type === 'robot') {
     return accessWatchSdkDatabase
-      .getRobot({ uuid: id })
-      .then(robot => fromJS({ robot, id }));
+      .getRobot({ uuid: id }, options)
+      .then(robot => (immutable ? fromJS({ robot, id }) : { robot, id }));
   } else {
     return accessWatchSdkDatabase
-      .getAddress(id)
-      .then(address => fromJS({ address, id }));
+      .getAddress(id, options)
+      .then(address => (immutable ? fromJS({ address, id }) : { address, id }));
   }
 };
 
