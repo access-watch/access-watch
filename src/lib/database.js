@@ -12,15 +12,23 @@ const connections = {};
 class Connection {
   constructor(db, gcInterval) {
     this.db = db;
-    if (gcInterval) {
+    if (this.db.gc) {
       this.gc = setInterval(() => {
         this.db.gc();
       }, gcInterval);
+    }
+    if (this.db.instrument) {
+      this.instrument = setInterval(() => {
+        this.db.instrument();
+      }, 1000);
     }
   }
   close() {
     if (this.gc) {
       clearInterval(this.gc);
+    }
+    if (this.instrument) {
+      clearInterval(this.instrument);
     }
     return Promise.resolve();
   }
