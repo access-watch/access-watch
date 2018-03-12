@@ -20,11 +20,12 @@ app.get('/logs', (req, res) => {
     .then(logs => res.send(logs));
 });
 
-const transformSession = sessionName => session => ({
+const transformSession = type => session => ({
   count: session.count,
   reputation: session.reputation,
   id: session.id,
-  [sessionName]: session,
+  [type]: session,
+  type,
 });
 
 const searchFns = {
