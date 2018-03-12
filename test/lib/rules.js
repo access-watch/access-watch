@@ -35,6 +35,7 @@ describe('Rules', function() {
   it('block an IP address', function() {
     const rule1 = fromJS({
       id: '1',
+      type: 'blocked',
       condition: {
         type: 'address',
         address: { value: '127.0.0.1' },
@@ -44,6 +45,7 @@ describe('Rules', function() {
 
     const rule2 = fromJS({
       id: '2',
+      type: 'blocked',
       condition: {
         type: 'address',
         address: { value: '127.0.0.2' },

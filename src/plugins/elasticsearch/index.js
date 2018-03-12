@@ -101,10 +101,8 @@ const caseInsentivizeRegexpValue = value => {
     .join('');
 };
 
-const prefixIfNeeded = (id, type) => (type === 'log' ? id : `${type}.${id}`);
-
 const getESValue = ({ id, value }, type) => {
-  const filter = filters[type].find(f => prefixIfNeeded(f.id, type) === id);
+  const filter = filters[type].find(f => f.id === id);
   if (filter && filter.fullText) {
     // Performance-wise this is not the greatest, but it's the only working
     // way I found for wildcard + case-insensitive matching for ES
