@@ -8,7 +8,7 @@ const { iso, now } = require('../../lib/util');
 
 const monitor = monitoring.registerOutput({ name: 'Elasticsearch' });
 
-const { logsIndexName, retention } = config.elasticsearch;
+const { logsIndexName, expiration } = config.elasticsearch;
 const accessWatchSdkDatabase = database();
 
 const generateIndexName = date =>
@@ -18,7 +18,7 @@ const getIndexDate = index =>
   index.slice(logsIndexName.length + 1).replace(/-/g, '/');
 
 const getGcDate = () =>
-  new Date(new Date().getTime() - retention * 24 * 3600 * 1000);
+  new Date(new Date().getTime() - expiration * 24 * 3600 * 1000);
 
 const indexesDb = {};
 
@@ -68,7 +68,7 @@ const indexLog = client => log => {
     });
   } else {
     console.log(
-      `Not indexing old log (${logTime}), current retention: ${retention}`
+      `Not indexing old log (${logTime}), current expiration: ${expiration}`
     );
   }
 };

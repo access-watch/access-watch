@@ -54,7 +54,7 @@ const constants = {
     },
   },
   elasticsearch: {
-    retention: 7,
+    expiration: 7,
     logsIndexName: 'access-watch-logs',
     configuration: {},
   },
