@@ -39,10 +39,9 @@ function toLowerCaseIfString(value) {
   return typeof value === 'string' ? value.toLowerCase() : value;
 }
 
-function getFilterFn(filtersDef, prefix) {
+function getFilterFn(filtersDef) {
   return ({ key, values, negative, exists }) => {
-    const filterKey = prefix ? key.replace(`${prefix}.`, '') : key;
-    const filterDef = filtersDef.find(({ id }) => id === filterKey) || {};
+    const filterDef = filtersDef.find(({ id }) => id === key) || {};
     const keyPath = key.split('.');
     const filterFn = item => {
       const itemValue = toLowerCaseIfString(item.getIn(keyPath));
@@ -71,18 +70,17 @@ function getFilterFn(filtersDef, prefix) {
   };
 }
 
-function getFiltersFn(filters, filtersDef, prefix) {
+function getFiltersFn(filters, filtersDef) {
   if (!filters) {
     return () => true;
   }
   const filtersFn = Object.keys(filters).map(key =>
-    getFilterFn(filtersDef, prefix)(
+    getFilterFn(filtersDef)(
       filters[key].values
         ? Object.assign({}, filters[key], {
             values: filters[key].values.map(v => {
-              const filterKey = prefix ? key.replace(`${prefix}.`, '') : key;
               const { transform = a => a } =
-                filtersDef.find(f => f.id === filterKey) || {};
+                filtersDef.find(f => f.id === key) || {};
               return transform(v);
             }),
           })
@@ -92,8 +90,8 @@ function getFiltersFn(filters, filtersDef, prefix) {
   return item => filtersFn.reduce((bool, fn) => bool && fn(item), true);
 }
 
-function getFiltersFnFromString(filters, filtersDef, prefix) {
-  return getFiltersFn(parseFilters(filters), filtersDef, prefix);
+function getFiltersFnFromString(filters, filtersDef) {
+  return getFiltersFn(parseFilters(filters), filtersDef);
 }
 
 module.exports = { parseFilterQuery, getFiltersFn, getFiltersFnFromString };

@@ -1,4 +1,5 @@
 const config = require('../constants');
+const { rules } = require('../databases');
 const elasticSearchBuilder = require('../plugins/elasticsearch');
 const { stream } = require('../pipeline/augmented');
 const app = require('../apps/api');
@@ -36,9 +37,9 @@ app.get('/sessions/:type', (req, res) => {
   const { type } = params;
   if (start && end) {
     if (searchFns[type]) {
-      searchFns[type](parseFilterQuery(query)).then(sessions =>
-        res.send(sessions.map(transformSession(type)))
-      );
+      searchFns[type](parseFilterQuery(query))
+        .then(sessions => res.send(sessions.map(transformSession(type))))
+        .map(session => rules.getSessionWithRule({ type, session }));
     }
   }
 });
