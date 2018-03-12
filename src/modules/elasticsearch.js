@@ -1,3 +1,5 @@
+const { fromJS } = require('immutable');
+
 const config = require('../constants');
 const { rules } = require('../databases');
 const elasticSearchBuilder = require('../plugins/elasticsearch');
@@ -5,6 +7,8 @@ const { stream } = require('../pipeline/augmented');
 const app = require('../apps/api');
 const { parseFilterQuery, createFilter } = require('../lib/filter');
 const { iso } = require('../lib/util');
+const { rulesMatchers } = require('../lib/rules');
+
 const elasticsearch = elasticSearchBuilder(config.elasticsearch.configuration);
 
 // As we are using elasticsearch, we don't need to use the memory to hold logs
@@ -41,7 +45,9 @@ const searchSessions = ({ type, query }) => {
     return searchFns[type](parseFilterQuery(query)).then(sessions =>
       sessions
         .map(transformSession(type))
-        .map(session => rules.getSessionWithRule({ type, session }))
+        .map(session =>
+          rules.getSessionWithRule({ type, session: fromJS(session) })
+        )
     );
   }
 };
@@ -52,19 +58,12 @@ app.get('/sessions/:type', (req, res) => {
   searchSessions({ type, query }).then(sessions => res.send(sessions));
 });
 
-// TODO FIXME when merging branch advanced-addresses, this should be imported
-// from ../lib/rules
-const getters = {
-  address: ['address', 'value'],
-  robot: ['robot', 'id'],
-};
-
 app.get('/sessions/:type/:id', (req, res) => {
   const { params, query } = req;
   const { type, id } = params;
   const { filter } = query;
   const sessionFilter = createFilter({
-    id: getters[type].join('.'),
+    id: rulesMatchers[type].join('.'),
     values: [id],
   });
   searchSessions({
