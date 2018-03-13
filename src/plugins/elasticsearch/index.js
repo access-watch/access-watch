@@ -1,4 +1,6 @@
 require('date-format-lite');
+const omit = require('lodash.omit');
+const { Map } = require('immutable');
 const elasticsearch = require('elasticsearch');
 const { filters } = require('access-watch-sdk');
 const { getSession } = require('../hub');
@@ -6,6 +8,8 @@ const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
 const monitoring = require('../../lib/monitoring');
 const { iso, now } = require('../../lib/util');
+const { rules } = require('../../databases');
+const { rulesMatchers } = require('../../lib/rules');
 
 const monitor = monitoring.registerOutput({ name: 'Elasticsearch' });
 
@@ -115,8 +119,27 @@ const getESValue = ({ id, value }, type) => {
   return { match: { [id]: value } };
 };
 
+const getMustFromFilter = (filter, type) =>
+  Object.keys(filter).map(id => {
+    const { negative, values, exists } = filter[id];
+    let cond;
+    if (exists) {
+      cond = { exists: { field: id } };
+    } else {
+      cond =
+        values.length === 1
+          ? getESValue({ id, value: values[0] }, type)
+          : {
+              bool: {
+                should: values.map(value => getESValue({ id, value }, type)),
+              },
+            };
+    }
+    return negative ? { bool: { must_not: cond } } : cond;
+  });
+
 const search = client => (query = {}, type) => {
-  const { start, end, limit: size, aggs, filter } = query;
+  const { start, end, limit: size, aggs, filter, must } = query;
   let bool = {
     filter: [
       {
@@ -136,23 +159,10 @@ const search = client => (query = {}, type) => {
     ],
   };
   if (filter) {
-    bool.must = Object.keys(filter).map(id => {
-      const { negative, values, exists } = filter[id];
-      let cond;
-      if (exists) {
-        cond = { exists: { field: id } };
-      } else {
-        cond =
-          values.length === 1
-            ? getESValue({ id, value: values[0] }, type)
-            : {
-                bool: {
-                  should: values.map(value => getESValue({ id, value }, type)),
-                },
-              };
-      }
-      return negative ? { bool: { must_not: cond } } : cond;
-    });
+    bool.must = getMustFromFilter(filter, type);
+  }
+  if (must) {
+    bool.must = (bool.must || []).concat(must);
   }
   if (start || end) {
     bool.filter.push({
@@ -253,7 +263,7 @@ const searchSessions = ({
   queryConstants = {},
   type,
 }) => client => (query = {}) => {
-  const { start, end } = query;
+  const { start, end, filter } = query;
   const activityRange =
     start && end
       ? {
@@ -271,6 +281,31 @@ const searchSessions = ({
     Math.max(Math.floor((activityBounds.max - activityBounds.min) / 1000), 14) /
       14
   );
+  let must;
+  const ruleTypeFilter = filter['rule.type'];
+  if (ruleTypeFilter) {
+    let matchingRules;
+    if (ruleTypeFilter.exists) {
+      matchingRules = rules.list();
+    } else {
+      matchingRules = ruleTypeFilter.values.reduce(
+        (matches, value) => matches.merge(rules.list(value)),
+        new Map()
+      );
+    }
+    const ruleFilter = matchingRules
+      .filter(rule => rule.getIn(['condition', 'type']) === type)
+      .reduce((filter, rule) => {
+        const matcher = rulesMatchers[type];
+        const filterKey = matcher.join('.');
+        if (!filter[filterKey]) {
+          filter[filterKey] = { values: [], negative: ruleTypeFilter.negative };
+        }
+        filter[filterKey].values.push(rule.get('condition').getIn(matcher));
+        return filter;
+      }, {});
+    must = getMustFromFilter(ruleFilter, type);
+  }
   return search(client)(
     Object.assign(
       {
@@ -332,7 +367,13 @@ const searchSessions = ({
         limit: 0,
       },
       queryConstants,
-      query
+      query,
+      must
+        ? {
+            must,
+            filter: omit(query.filter, 'rule.type'),
+          }
+        : {}
     ),
     type
   )
