@@ -1,5 +1,4 @@
 require('date-format-lite');
-const omit = require('lodash.omit');
 const elasticsearch = require('elasticsearch');
 const { filters } = require('access-watch-sdk');
 const { getSession } = require('../hub');
