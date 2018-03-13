@@ -30,18 +30,18 @@ function isExpired(rule) {
 const matchCondition = (condition, log) =>
   dispatchCondition(condition, matchers, log);
 
-const getters = {
+const rulesMatchers = {
   address: ['address', 'value'],
   robot: ['robot', 'id'],
 };
 
 const matchers = Map({
   address: (condition, log) =>
-    log.getIn(getters.address, log.getIn(['request', 'address'])) ===
-    condition.getIn(getters.address),
+    log.getIn(rulesMatchers.address, log.getIn(['request', 'address'])) ===
+    condition.getIn(rulesMatchers.address),
   robot: (condition, log) =>
-    log.getIn(getters.robot, log.getIn(['request', 'robot'])) ===
-    condition.getIn(getters.robot),
+    log.getIn(rulesMatchers.robot, log.getIn(['request', 'robot'])) ===
+    condition.getIn(rulesMatchers.robot),
 });
 
 function matchRule(rule, log) {
@@ -316,7 +316,7 @@ class Database {
   }
 
   getSessionWithRule({ type, session }) {
-    const getter = getters[type];
+    const getter = rulesMatchers[type];
     const rule = this.list()
       .filter(
         rule =>
@@ -368,4 +368,4 @@ function connect({ name, protocol } = {}) {
   return conn.db;
 }
 
-module.exports = { connect };
+module.exports = { connect, rulesMatchers };

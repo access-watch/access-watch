@@ -1,5 +1,9 @@
 const { List } = require('immutable');
 
+function createFilter({ id, values }) {
+  return `${id}:${values.join(',')}`;
+}
+
 function parseFilter(filter) {
   const [key] = filter.split(':');
   const negative = key[0] === '-';
@@ -94,4 +98,9 @@ function getFiltersFnFromString(filters, filtersDef) {
   return getFiltersFn(parseFilters(filters), filtersDef);
 }
 
-module.exports = { parseFilterQuery, getFiltersFn, getFiltersFnFromString };
+module.exports = {
+  parseFilterQuery,
+  getFiltersFn,
+  getFiltersFnFromString,
+  createFilter,
+};
