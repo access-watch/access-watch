@@ -293,20 +293,17 @@ const searchSessions = ({
         new Map()
       );
     }
-    const matcher = rulesMatchers[type];
-    const filterKey = matcher.join('.');
     const ruleFilter = matchingRules
       .filter(rule => rule.getIn(['condition', 'type']) === type)
       .reduce((filter, rule) => {
+        const matcher = rulesMatchers[type];
+        const filterKey = matcher.join('.');
         if (!filter[filterKey]) {
           filter[filterKey] = { values: [], negative: ruleTypeFilter.negative };
         }
         filter[filterKey].values.push(rule.get('condition').getIn(matcher));
         return filter;
       }, {});
-    if (Object.keys(ruleFilter).length === 0 && !ruleTypeFilter.negative) {
-      return [];
-    }
     must = getMustFromFilter(ruleFilter, type);
   }
   return search(client)(
