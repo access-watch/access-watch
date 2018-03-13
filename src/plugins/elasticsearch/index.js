@@ -212,11 +212,21 @@ const searchMetrics = client => (query = {}) => {
           },
           aggs: {
             activity: {
-              date_histogram: {
-                field: 'request.time',
-                interval: `${step}s`,
-                min_doc_count: 0,
-              },
+              date_histogram: Object.assign(
+                {
+                  field: 'request.time',
+                  interval: `${step}s`,
+                  min_doc_count: 0,
+                },
+                query.start && query.end
+                  ? {
+                      extended_bounds: {
+                        min: query.start * 1000,
+                        max: query.end * 1000,
+                      },
+                    }
+                  : {}
+              ),
             },
           },
         },
