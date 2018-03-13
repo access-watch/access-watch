@@ -7,7 +7,7 @@ const { parseFilterQuery } = require('../lib/filter');
 // Expose raw logs
 
 app.streamToWebsocket('/logs/raw', pipeline, {
-  name: 'WebSocket: raw logs',
+  name: 'WebSocket (raw logs)',
   monitoringEnabled: true,
 });
 
@@ -16,7 +16,7 @@ const { stream: augmentedStream } = require('../pipeline/augmented');
 // Expose augmented logs
 
 app.streamToWebsocket('/logs/augmented', augmentedStream, {
-  name: 'WebSocket: augmented logs',
+  name: 'WebSocket (augmented logs)',
   monitoringEnabled: true,
 });
 
