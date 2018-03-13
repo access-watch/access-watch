@@ -1,4 +1,8 @@
-const appMetricsStatsD = require('appmetrics-statsd');
+const appmetrics = require('appmetrics');
+
+appmetrics.configure({ mqtt: 'off' });
+
+const appmetricsStatsD = require('appmetrics-statsd');
 
 const config = require('../constants');
 
@@ -7,7 +11,7 @@ const instruments = {};
 let statsd;
 
 if (config.statsd) {
-  statsd = appMetricsStatsD.StatsD(config.statsd);
+  statsd = appmetricsStatsD.StatsD(config.statsd);
 }
 
 instruments.increment = (...args) => {
