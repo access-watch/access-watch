@@ -36,15 +36,21 @@ class Database {
   }
 
   gc() {
+    const gcStart = process.hrtime();
+
     // Filtering old Sessions
     const cutoff = now() - config.session.gc.expiration;
-    this.sessions = this.sessions.map(sessions =>
-      sessions.filter(s => s.get('end') >= cutoff)
-    );
+    this.sessions = this.sessions.map((sessions, type) => {
+      const gcExpiredStart = process.hrtime();
+      sessions = sessions.filter(s => s.get('end') >= cutoff);
+      instruments.hrtime(`session.${type}.gc.expired.time`, gcExpiredStart);
+      return sessions;
+    });
 
     // Update and Slice Indexes
-    this.indexes = this.indexes.map((indexes, type) =>
-      indexes.map((index, key) => {
+    this.indexes = this.indexes.map((indexes, type) => {
+      const gcIndexesStart = process.hrtime();
+      indexes = indexes.map((index, key) => {
         if (key === '24h') {
           index = index.map((count, id) => {
             const session = this.get(type, id);
@@ -65,8 +71,16 @@ class Database {
           .sort()
           .reverse()
           .slice(0, config.session.gc.indexSize);
-      })
-    );
+      });
+      instruments.hrtime(`session.${type}.gc.indexes.time`, gcIndexesStart);
+      return indexes;
+    });
+
+    instruments.hrtime('session.gc.time', gcStart);
+
+    const gcEnd = process.hrtime(gcStart);
+    const elapsed = gcEnd[0] + Math.round(gcEnd[1] / 1000000) / 1000;
+    console.log(`Session Garbage Collection in ${elapsed}s`);
   }
 
   instrument() {
