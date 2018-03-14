@@ -305,7 +305,7 @@ const searchSessions = ({
         return filter;
       }, {});
     if (Object.keys(ruleFilter).length === 0 && !ruleTypeFilter.negative) {
-      return [];
+      return Promise.resolve([]);
     }
     must = getMustFromFilter(ruleFilter, type);
   }
