@@ -22,7 +22,7 @@ const getIndexDate = index =>
   index.slice(logsIndexName.length + 1).replace(/-/g, '/');
 
 const getGcDate = () =>
-  new Date(new Date().getTime() - expiration * 24 * 3600 * 1000);
+  new Date(new Date().getTime() - (expiration + 1) * 24 * 3600 * 1000);
 
 const indexesDb = {};
 
