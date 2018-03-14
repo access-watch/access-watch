@@ -186,7 +186,7 @@ const TxtTranslators = Map({
   address: addressTxtTranslator,
   robot: condition =>
     condition
-      .getIn(['robot', 'addresses'])
+      .get('addresses')
       .map(addressTxtTranslator)
       .join('\n'),
 });
