@@ -18,17 +18,17 @@ app.get('/rules', (req, res) => {
 
 app.get('/rules/export/nginx', (req, res) => {
   res.header('Content-Type', 'text/plain');
-  res.send(rules.toNginx('blocked'));
+  rules.toNginx('blocked').then(rules => res.send(rules));
 });
 
 app.get('/rules/export/apache', (req, res) => {
   res.header('Content-Type', 'text/plain');
-  res.send(rules.toApache('blocked'));
+  rules.toApache('blocked').then(rules => res.send(rules));
 });
 
 app.get('/rules/export/txt', (req, res) => {
   res.header('Content-Type', 'text/plain');
-  res.send(rules.toTxt('blocked'));
+  rules.toTxt('blocked').then(rules => res.send(rules));
 });
 
 app.post('/rules', (req, res) => {

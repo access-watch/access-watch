@@ -9,6 +9,26 @@ const { stream } = require('../pipeline/augmented');
 
 const config = require('../constants');
 
+rules.setTransformExports({
+  robot: robotsRules =>
+    Promise.resolve(
+      robotsRules.map(rule =>
+        rule.setIn(
+          ['condition', 'addresses'],
+          session.list({
+            type: 'address',
+            filter: address =>
+              address.has('robots') &&
+              address
+                .get('robots')
+                .has(rule.getIn(['condition', 'robot', 'id'])),
+            sort: 'count',
+          })
+        )
+      )
+    ),
+});
+
 /**
  * Assign a session to the log event, create it if necessary.
  */

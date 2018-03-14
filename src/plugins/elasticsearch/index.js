@@ -26,6 +26,11 @@ const getGcDate = () =>
 
 const indexesDb = {};
 
+const sessionsIds = {
+  address: 'address.value',
+  robot: 'robot.id',
+};
+
 const reportOnError = promise =>
   promise.catch(e => {
     // Remove the eventual Error: that might come from the error from ES
@@ -415,7 +420,7 @@ const searchRobots = searchSessions({
     getSession({ type: 'robot', id, immutable: false }).then(
       ({ robot }) => robot
     ),
-  sessionId: 'robot.id',
+  sessionId: sessionsIds.robot,
   type: 'robot',
 });
 
@@ -429,9 +434,46 @@ const searchAddresses = searchSessions({
         include_robots: 1,
       },
     }).then(({ address }) => address),
-  sessionId: 'address.value',
+  sessionId: sessionsIds.address,
   type: 'address',
 });
+
+const searchRobotsAddresses = client => robotIds =>
+  search(client)(
+    {
+      aggs: {
+        robots: {
+          terms: {
+            field: sessionsIds.robot,
+            size: robotIds.length,
+          },
+          aggs: {
+            addresses: {
+              terms: {
+                field: sessionsIds.address,
+                size: 10000,
+              },
+            },
+          },
+        },
+      },
+      filter: {
+        [sessionsIds.robot]: {
+          id: sessionsIds.robot,
+          values: robotIds,
+        },
+      },
+    },
+    'robot'
+  ).then(({ aggregations: { robots: { buckets } } }) =>
+    buckets.reduce(
+      (robotsAddresses, { key, addresses }) =>
+        Object.assign(robotsAddresses, {
+          [key]: addresses.buckets.map(({ key }) => key),
+        }),
+      {}
+    )
+  );
 
 const logsEndpoint = client => {
   const search = searchLogs(client);
@@ -454,6 +496,7 @@ const elasticSearchBuilder = config => {
     searchRobots: searchRobots(esClient),
     searchAddresses: searchAddresses(esClient),
     logsEndpoint: logsEndpoint(esClient),
+    searchRobotsAddresses: searchRobotsAddresses(esClient),
   };
 };
 
