@@ -1,4 +1,4 @@
-const { fromJS } = require('immutable');
+const { fromJS, Map } = require('immutable');
 
 const { getSession: getSessionFromHub } = require('../plugins/hub');
 
@@ -20,6 +20,29 @@ config.modules.session.active = false;
 config.modules.metrics.active = false;
 
 stream.map(elasticsearch.index);
+
+rules.setTransformExports({
+  robot: robotsRules =>
+    elasticsearch
+      .searchRobotsAddresses(
+        robotsRules
+          .valueSeq()
+          .map(rule => rule.getIn(['condition'].concat(rulesMatchers.robot)))
+          .toJS()
+      )
+      .then(robotsAddresses =>
+        robotsRules.map(rule =>
+          rule.setIn(
+            ['condition', 'addresses'],
+            (
+              robotsAddresses[
+                rule.getIn(['condition'].concat(rulesMatchers.robot))
+              ] || []
+            ).map(value => new Map({ address: { value } }))
+          )
+        )
+      ),
+});
 
 app.get('/logs', (req, res) => {
   const { query } = req;
