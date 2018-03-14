@@ -293,11 +293,11 @@ const searchSessions = ({
         new Map()
       );
     }
-    const matcher = rulesMatchers[type];
-    const filterKey = matcher.join('.');
     const ruleFilter = matchingRules
       .filter(rule => rule.getIn(['condition', 'type']) === type)
       .reduce((filter, rule) => {
+        const matcher = rulesMatchers[type];
+        const filterKey = matcher.join('.');
         if (!filter[filterKey]) {
           filter[filterKey] = { values: [], negative: ruleTypeFilter.negative };
         }

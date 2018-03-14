@@ -85,9 +85,9 @@ app.get('/sessions/:type/:id', (req, res) => {
     if (sessions[0]) {
       res.send(sessions[0]);
     } else {
-      getSessionFromHub({ type, id }).then(session =>
-        res.send(rules.getSessionWithRule({ type, session }))
-      );
+      getSessionFromHub({ type, id })
+        .then(session => res.send(rules.getSessionWithRule({ type, session })))
+        .catch(() => res.status(404).send({ error: 'Unknown session.' }));
     }
   });
 });
