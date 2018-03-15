@@ -3,6 +3,7 @@ const path = require('path');
 
 const constants = {
   port: 3000,
+  app: {},
   pipeline: {
     allowedLateness: 60,
     watermarkDelay: 5,
@@ -51,21 +52,37 @@ const constants = {
     time: {
       sliderValues: ['auto', 30, 60, 60 * 6, 60 * 24],
     },
-    robots: {
-      timerange: false,
-    },
   },
   elasticsearch: {
-    retention: 7,
+    expiration: 7,
     logsIndexName: 'access-watch-logs',
     configuration: {},
   },
   modules: {
-    metrics: true,
-    session: true,
-    rules: true,
-    logs: true,
-    elasticsearch: false,
+    metrics: {
+      active: true,
+      priority: 0,
+    },
+    session: {
+      active: true,
+      priority: 0,
+    },
+    rules: {
+      active: true,
+      priority: 0,
+    },
+    logs: {
+      active: true,
+      priority: 0,
+    },
+    elasticsearch: {
+      active: false,
+      priority: 100,
+    },
+    searches: {
+      active: true,
+      priority: 0,
+    },
   },
   logs: {
     memory: {

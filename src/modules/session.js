@@ -1,12 +1,33 @@
 const { Map } = require('immutable');
 
-const { session } = require('../databases');
+const { session, rules } = require('../databases');
+const { getSession: getSessionFromHub } = require('../plugins/hub');
 
 // Pipeline
 
 const { stream } = require('../pipeline/augmented');
 
 const config = require('../constants');
+
+rules.setTransformExports({
+  robot: robotsRules =>
+    Promise.resolve(
+      robotsRules.map(rule =>
+        rule.setIn(
+          ['condition', 'addresses'],
+          session.list({
+            type: 'address',
+            filter: address =>
+              address.has('robots') &&
+              address
+                .get('robots')
+                .has(rule.getIn(['condition', 'robot', 'id'])),
+            sort: 'count',
+          })
+        )
+      )
+    ),
+});
 
 /**
  * Assign a session to the log event, create it if necessary.
@@ -99,35 +120,47 @@ ipRequests
 // API endpoints
 
 const app = require('../apps/api');
+const { filters } = require('access-watch-sdk');
+const { getFiltersFnFromString } = require('../lib/filter');
 
-function parseFilter(query, name) {
-  const filter = query[name];
-  const [path, values] = filter.split(':');
-  const keyPath = path.split('.');
-  const keyValues = values.split(',');
-  return item => keyValues.indexOf(item.getIn(keyPath)) !== -1;
+function getSessionItemFilter(queryFilter, type) {
+  return getFiltersFnFromString(queryFilter, filters[type], type);
 }
 
 app.get('/sessions/:type', (req, res, next) => {
   if (config.session.timerange && req.query.start && req.query.end) {
     next();
   } else {
+    const { type } = req.params;
     res.send(
       session.list({
-        type: req.params.type,
+        type,
         sort: req.query.sort || 'count',
-        filter: (req.query.filter && parseFilter(req.query, 'filter')) || null,
+        filter:
+          (req.query.filter && getSessionItemFilter(req.query.filter, type)) ||
+          null,
         limit: (req.query.limit && parseInt(req.query.limit)) || 100,
       })
     );
   }
 });
 
-app.get('/sessions/:type/:id', (req, res) => {
-  const s = session.get(req.params.type, req.params.id);
+const getSession = (type, id) => {
+  const s = session.get(type, id);
   if (s) {
-    res.send(s);
-  } else {
-    res.status(404).send({ error: 'Unknown session.' });
+    return Promise.resolve(s);
   }
+  return getSessionFromHub({ type, id });
+};
+
+app.get('/sessions/:type/:id', (req, res) => {
+  const { type, id } = req.params;
+  getSession(type, id)
+    .then(session => rules.getSessionWithRule({ type, session }))
+    .then(s => {
+      res.send(s);
+    })
+    .catch(() => {
+      res.status(404).send({ error: 'Unknown session.' });
+    });
 });

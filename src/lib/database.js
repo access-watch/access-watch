@@ -12,12 +12,24 @@ const connections = {};
 class Connection {
   constructor(db, gcInterval) {
     this.db = db;
-    this.gc = setInterval(() => {
-      this.db.gc();
-    }, gcInterval);
+    if (this.db.gc) {
+      this.gc = setInterval(() => {
+        this.db.gc();
+      }, gcInterval);
+    }
+    if (this.db.instrument) {
+      this.instrument = setInterval(() => {
+        this.db.instrument();
+      }, 1000);
+    }
   }
   close() {
-    clearInterval(this.gc);
+    if (this.gc) {
+      clearInterval(this.gc);
+    }
+    if (this.instrument) {
+      clearInterval(this.instrument);
+    }
     return Promise.resolve();
   }
 }
@@ -52,22 +64,13 @@ function readJSONFile(path) {
  */
 function writeJSONFile(path, data) {
   return fs
-    .writeJson(path + '.new', data)
-    .then(() =>
-      fs.pathExists(path).then(exists => {
-        if (exists) fs.rename(path, path + '.previous');
-      })
-    )
-    .then(() =>
-      fs.pathExists(path + '.new').then(exists => {
-        if (exists) fs.rename(path + '.new', path);
-      })
-    )
-    .then(() =>
-      fs.pathExists(path + '.previous').then(exists => {
-        if (exists) fs.unlink(path + '.previous');
-      })
-    );
+    .writeJson(path + '.new', data, { spaces: '  ' })
+    .then(() => fs.pathExists(path))
+    .then(exists => exists && fs.rename(path, path + '.previous'))
+    .then(() => fs.pathExists(path + '.new'))
+    .then(exists => exists && fs.rename(path + '.new', path))
+    .then(() => fs.pathExists(path + '.previous'))
+    .then(exists => exists && fs.unlink(path + '.previous'));
 }
 
 /**

@@ -27,6 +27,10 @@ app.use(
   accessWatch.apps.websocket
 );
 
+Object.keys(accessWatch.constants.app).forEach(key => {
+  app.set(key, accessWatch.constants.app[key]);
+});
+
 const port = process.env.PORT || accessWatch.constants.port;
 
 httpServer.listen(port, () => {
@@ -65,3 +69,12 @@ process.on('SIGINT', () => {
   console.log('SIGINT');
   shutdown();
 });
+
+// Instrumentation
+
+setInterval(() => {
+  const memoryUsage = process.memoryUsage();
+  Object.keys(memoryUsage).forEach(key => {
+    accessWatch.instruments.gauge(`process.memory.${key}`, memoryUsage[key]);
+  });
+}, 1000);

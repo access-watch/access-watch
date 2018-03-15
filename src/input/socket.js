@@ -18,6 +18,9 @@ function createTcpServer({ status, port, handler }) {
             }
           });
       });
+      socket.on('error', err => {
+        pipeline.log(err, 'error');
+      });
     })
     .listen(port, err => {
       if (err) {

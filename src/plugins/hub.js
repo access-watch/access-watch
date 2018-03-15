@@ -7,10 +7,11 @@ const axios = require('axios');
 const uuid = require('uuid/v4');
 const { Map, fromJS, is } = require('immutable');
 
-const { signature } = require('access-watch-sdk');
+const { signature, database } = require('access-watch-sdk');
 
 const { selectKeys } = require('../lib/util');
 const config = require('../constants');
+const instruments = require('../lib/instruments');
 
 const client = axios.create({
   baseURL: 'https://api.access.watch/1.2/hub',
@@ -102,6 +103,7 @@ function batchIdentityFetch() {
   const requestIdentities = batch.map(batchEntry => batchEntry.identity);
 
   const requestId = uuid();
+  const start = process.hrtime();
 
   identityRequests[requestId] = getIdentities(requestIdentities)
     .then(responseIdentities => {
@@ -110,6 +112,9 @@ function batchIdentityFetch() {
       }
       // Releasing concurrent requests count
       delete identityRequests[requestId];
+      // Instrumentation
+      instruments.increment('hub.identities.response.success');
+      instruments.hrtime('hub.identities.response.success.time', start);
       batch.forEach((batchEntry, i) => {
         const identityMap = fromJS(responseIdentities[i]);
         cache.set(batchEntry.key, identityMap);
@@ -122,6 +127,9 @@ function batchIdentityFetch() {
       console.error('Identity request error:', err.message);
       // Releasing concurrent requests count
       delete identityRequests[requestId];
+      // Instrumentation
+      instruments.increment('hub.identities.response.exception');
+      instruments.hrtime('hub.identities.response.exception.time', start);
       // Resolving all the requests with an empty response
       batch.forEach(batchEntry => {
         batchEntry.promises.forEach(({ resolve }) => {
@@ -232,6 +240,7 @@ function batchActivityFeedback() {
   activityBuffer = activityBuffer.clear();
 
   const requestId = uuid();
+  const start = process.hrtime();
 
   activityRequests[requestId] = client
     .post('/activity', { activity })
@@ -247,6 +256,9 @@ function batchActivityFeedback() {
       }
       // Releasing concurrent requests count
       delete activityRequests[requestId];
+      // Instrumentation
+      instruments.increment('hub.activity.response.success');
+      instruments.hrtime('hub.activity.response.success.time', start);
       response.data.identities.forEach(identity => {
         const identityMap = fromJS(identity);
         const cachedMap = cache.get(identity.id);
@@ -257,15 +269,39 @@ function batchActivityFeedback() {
     })
     .catch(err => {
       console.error('Activity feedback error:', err.message);
+      // Instrumentation
+      instruments.increment('hub.activity.response.exception');
+      instruments.hrtime('hub.activity.response.exception.time', start);
       // Releasing concurrent requests count
       delete activityRequests[requestId];
     });
 }
 
+const accessWatchSdkDatabase = database();
+
+const getSession = ({ type, id, immutable = true, options }) => {
+  if (type === 'robot') {
+    return accessWatchSdkDatabase
+      .getRobot({ uuid: id }, options)
+      .then(robot => (immutable ? fromJS({ robot, id }) : { robot, id }));
+  } else {
+    return accessWatchSdkDatabase
+      .getAddress(id, options)
+      .then(address => (immutable ? fromJS({ address, id }) : { address, id }));
+  }
+};
+
 setInterval(batchIdentityFetch, config.hub.identity.batchInterval);
 
 setInterval(batchActivityFeedback, config.hub.activity.batchInterval);
 
+// Instrumentation
+
+setInterval(() => {
+  instruments.gauge(`hub.cache.count`, cache.itemCount);
+}, 1000);
+
 module.exports = {
   augment,
+  getSession,
 };

@@ -31,7 +31,14 @@ app.get('/dashboard', (req, res) => {
           metrics: {
             expiration: config.metrics.gc.expiration,
           },
-          session: config.session,
+          session: {
+            expiration: config.session.gc.expiration,
+            timerange: config.session.timerange,
+          },
+          elasticsearch: {
+            expiration: config.elasticsearch.expiration,
+          },
+          modules: config.modules,
         },
         config.ui
       )

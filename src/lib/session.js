@@ -7,11 +7,16 @@ const { now } = require('./util');
 const { Speed } = require('./speed');
 const database = require('./database');
 const config = require('../constants');
+const instruments = require('./instruments');
 
 function withSpeed(session) {
   return session
     .updateIn(['speed', 'per_minute'], speed => speed.compute())
     .updateIn(['speed', 'per_hour'], speed => speed.compute());
+}
+
+function withRule(rules) {
+  return (session, type) => rules.getSessionWithRule({ type, session });
 }
 
 function aggregateSpeed(session, type) {
@@ -22,18 +27,30 @@ class Database {
   constructor() {
     this.sessions = Map();
     this.indexes = Map();
+    this.withRule = s => s;
+  }
+
+  setRulesProvider(rules) {
+    this.rules = rules;
+    this.withRule = withRule(rules);
   }
 
   gc() {
+    const gcStart = process.hrtime();
+
     // Filtering old Sessions
     const cutoff = now() - config.session.gc.expiration;
-    this.sessions = this.sessions.map(sessions =>
-      sessions.filter(s => s.get('end') >= cutoff)
-    );
+    this.sessions = this.sessions.map((sessions, type) => {
+      const gcExpiredStart = process.hrtime();
+      sessions = sessions.filter(s => s.get('end') >= cutoff);
+      instruments.hrtime(`session.${type}.gc.expired.time`, gcExpiredStart);
+      return sessions;
+    });
 
     // Update and Slice Indexes
-    this.indexes = this.indexes.map((indexes, type) =>
-      indexes.map((index, key) => {
+    this.indexes = this.indexes.map((indexes, type) => {
+      const gcIndexesStart = process.hrtime();
+      indexes = indexes.map((index, key) => {
         if (key === '24h') {
           index = index.map((count, id) => {
             const session = this.get(type, id);
@@ -54,8 +71,22 @@ class Database {
           .sort()
           .reverse()
           .slice(0, config.session.gc.indexSize);
-      })
-    );
+      });
+      instruments.hrtime(`session.${type}.gc.indexes.time`, gcIndexesStart);
+      return indexes;
+    });
+
+    instruments.hrtime('session.gc.time', gcStart);
+
+    const gcEnd = process.hrtime(gcStart);
+    const elapsed = gcEnd[0] + Math.round(gcEnd[1] / 1000000) / 1000;
+    console.log(`Session Garbage Collection in ${elapsed}s`);
+  }
+
+  instrument() {
+    this.sessions.entrySeq().forEach(([key, value]) => {
+      instruments.gauge(`sessions.${key}.size`, value.size);
+    });
   }
 
   serialize() {
@@ -139,7 +170,7 @@ class Database {
   get(type, id) {
     const session = this.sessions.getIn([type, id]);
     if (session) {
-      return withSpeed(session);
+      return this.withRule(withSpeed(session), type);
     }
   }
 
