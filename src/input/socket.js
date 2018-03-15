@@ -5,7 +5,7 @@ const { fromJS } = require('immutable');
 
 const defaultParse = s => fromJS(JSON.parse(s));
 
-function createTcpServer({ status, port, handler }) {
+function createTcpServer({ status, log, port, handler }) {
   return net
     .createServer(socket => {
       socket.on('data', data => {
@@ -19,7 +19,7 @@ function createTcpServer({ status, port, handler }) {
           });
       });
       socket.on('error', err => {
-        pipeline.log(err, 'error');
+        log(err, 'error');
       });
     })
     .listen(port, err => {
@@ -63,7 +63,7 @@ function create({
   let udpServer, tcpServer;
   return {
     name: name,
-    start: ({ success, reject, status }) => {
+    start: ({ success, reject, status, log }) => {
       const handler = message => {
         if (sample !== 1 && Math.random() > sample) {
           return;
@@ -78,7 +78,7 @@ function create({
         udpServer = createUdpServer({ status, name, port, handler });
       }
       if (!protocol || protocol === 'tcp') {
-        tcpServer = createTcpServer({ status, name, port, handler });
+        tcpServer = createTcpServer({ status, log, name, port, handler });
       }
     },
     stop: () => {

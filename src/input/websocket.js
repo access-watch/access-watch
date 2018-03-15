@@ -59,7 +59,12 @@ function create({
     start: ({ success, reject, status, log }) => {
       const listenSocket = socketToPipeline(success, reject, parse, sample);
       if (type === 'client') {
-        client = setupClientWebSocket({ status, address, options, listenSocket });
+        client = setupClientWebSocket({
+          status,
+          address,
+          options,
+          listenSocket,
+        });
       } else if (type === 'server') {
         setupServerWebSocket({ status, path, listenSocket });
       } else {

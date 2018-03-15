@@ -318,9 +318,7 @@ class Pipeline extends Builder {
           console.log(input.name + ': ' + msg);
           monitor.status = msg;
         },
-        log: (err, severity) => {
-          errorLog(err, severity);
-        },
+        log: errorLog,
       });
     });
   }
