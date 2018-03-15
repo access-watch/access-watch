@@ -8,7 +8,6 @@ const { now } = require('./util');
 const { Speed } = require('./speed');
 const database = require('./database');
 const config = require('../constants');
-const session = require('./session').connect();
 
 const ajv = new Ajv();
 
@@ -30,13 +29,18 @@ function isExpired(rule) {
 const matchCondition = (condition, log) =>
   dispatchCondition(condition, matchers, log);
 
+const rulesMatchers = {
+  address: ['address', 'value'],
+  robot: ['robot', 'id'],
+};
+
 const matchers = Map({
   address: (condition, log) =>
-    log.getIn(['address', 'value'], log.getIn(['request', 'address'])) ===
-    condition.getIn(['address', 'value']),
+    log.getIn(rulesMatchers.address, log.getIn(['request', 'address'])) ===
+    condition.getIn(rulesMatchers.address),
   robot: (condition, log) =>
-    log.getIn(['robot', 'id'], log.getIn(['request', 'robot'])) ===
-    condition.getIn(['robot', 'id']),
+    log.getIn(rulesMatchers.robot, log.getIn(['request', 'robot'])) ===
+    condition.getIn(rulesMatchers.robot),
 });
 
 function matchRule(rule, log) {
@@ -116,7 +120,7 @@ function validateRule(rule) {
 
 const validateRuleObject = ajv.compile({
   type: 'object',
-  required: ['condition'],
+  required: ['condition', 'type'],
   properties: {
     condition: {
       type: 'object',
@@ -127,24 +131,19 @@ const validateRuleObject = ajv.compile({
     note: {
       type: 'string',
     },
+    type: {
+      type: 'string',
+    },
   },
 });
-
-const getAddressesFromRobot = condition =>
-  session.list({
-    type: 'address',
-    filter: address =>
-      address.has('robots') &&
-      address.get('robots').has(condition.getIn(['robot', 'id'])),
-    sort: 'count',
-  });
 
 const getRobotComment = condition =>
   `# Blocked Robot: ${condition.getIn(['robot', 'name'])}\n`;
 
 const getRobotCondition = addressTranslator => condition =>
   getRobotComment(condition) +
-  getAddressesFromRobot(condition)
+  condition
+    .get('addresses')
     .map(addressTranslator)
     .join('\n');
 
@@ -186,7 +185,8 @@ const addressTxtTranslator = condition => condition.getIn(['address', 'value']);
 const TxtTranslators = Map({
   address: addressTxtTranslator,
   robot: condition =>
-    getAddressesFromRobot(condition)
+    condition
+      .get('addresses')
       .map(addressTxtTranslator)
       .join('\n'),
 });
@@ -220,6 +220,10 @@ class Database {
     });
   }
 
+  setTransformExports(transformExports) {
+    this.transformExports = transformExports;
+  }
+
   serialize() {
     return {
       rules: this.rules.toJS(),
@@ -230,19 +234,23 @@ class Database {
     const db = new Database();
     if (data) {
       db.rules = fromJS(data.rules).map(rule => {
-        return rule
-          .updateIn(['blocked', 'per_minute'], speed =>
-            Speed.deserialize(speed.toJS())
-          )
-          .updateIn(['blocked', 'per_hour'], speed =>
-            Speed.deserialize(speed.toJS())
-          )
-          .updateIn(['passed', 'per_minute'], speed =>
-            Speed.deserialize(speed.toJS())
-          )
-          .updateIn(['passed', 'per_hour'], speed =>
-            Speed.deserialize(speed.toJS())
-          );
+        return (
+          rule
+            .updateIn(['blocked', 'per_minute'], speed =>
+              Speed.deserialize(speed.toJS())
+            )
+            .updateIn(['blocked', 'per_hour'], speed =>
+              Speed.deserialize(speed.toJS())
+            )
+            .updateIn(['passed', 'per_minute'], speed =>
+              Speed.deserialize(speed.toJS())
+            )
+            .updateIn(['passed', 'per_hour'], speed =>
+              Speed.deserialize(speed.toJS())
+            )
+            // FIXME eventually remove this when we consider migration to rule type is conditionToApache
+            .update('type', type => type || 'blocked')
+        );
       });
     }
     return db;
@@ -269,6 +277,7 @@ class Database {
       .set('created', now());
     validateRule(rule);
     this.rules = this.rules.set(rule.get('id'), rule);
+    return rule;
   }
 
   // The rule with this identifier
@@ -282,7 +291,12 @@ class Database {
   }
 
   // All the rules in the database
-  list() {
+  list(type) {
+    if (type) {
+      return this.rules
+        .filter(rule => rule.get('type') === type)
+        .map(withSpeed);
+    }
     return this.rules.map(withSpeed);
   }
 
@@ -297,31 +311,71 @@ class Database {
     );
   }
 
+  getSessionWithRule({ type, session }) {
+    const getter = rulesMatchers[type];
+    const rule = this.list()
+      .filter(
+        rule =>
+          rule.getIn(['condition', 'type']) === type &&
+          rule.get('condition').getIn(getter) === session.getIn(getter)
+      )
+      .first();
+    if (rule) {
+      return session.set('rule', rule);
+    }
+    return session;
+  }
+
+  groupByConditionType(type) {
+    return this.list(type).reduce(
+      (grouped, rule) =>
+        grouped.update(rule.getIn(['condition', 'type']), (map = new Map()) =>
+          map.set(rule.get('id'), rule)
+        ),
+      new Map()
+    );
+  }
+
+  transformForExport(group, conditionType) {
+    const transformFn =
+      this.transformExports[conditionType] || (g => Promise.resolve(g));
+    return transformFn(group);
+  }
+
+  getExport(type) {
+    const transformPromises = this.groupByConditionType(type)
+      .map((...args) => this.transformForExport(...args))
+      .valueSeq();
+    return Promise.all(transformPromises).then(groups =>
+      groups.reduce((exported, group) => {
+        return exported.merge(group);
+      }, new Map())
+    );
+  }
+
   // Export database as Nginx configuration file
-  toNginx() {
-    const rules = this.list()
-      .map(ruleToNginx)
-      .join('\n');
-    return `# Blocked IPs
-${rules}`;
+  toNginx(type) {
+    return this.getExport(type).then(rules => {
+      const nginxRules = rules.map(ruleToNginx).join('\n');
+      return `# Blocked IPs
+${nginxRules}`;
+    });
   }
 
   // Export database as Apache configuration file
-  toApache() {
-    const rules = this.list()
-      .map(ruleToApache)
-      .join('\n');
-    return `<RequireAll>
-Require all granted
-# Blocked IPs
-${rules}
-</RequireAll>`;
+  toApache(type) {
+    return this.getExport(type).then(rules => {
+      const apacheRules = rules.map(ruleToApache).join('\n');
+      return `<RequireAll>
+  Require all granted
+  # Blocked IPs
+  ${apacheRules}
+  </RequireAll>`;
+    });
   }
 
-  toTxt() {
-    return this.list()
-      .map(ruleToTxt)
-      .join('\n');
+  toTxt(type) {
+    return this.getExport(type).then(rules => rules.map(ruleToTxt).join('\n'));
   }
 }
 
@@ -335,4 +389,4 @@ function connect({ name, protocol } = {}) {
   return conn.db;
 }
 
-module.exports = { connect };
+module.exports = { connect, rulesMatchers };

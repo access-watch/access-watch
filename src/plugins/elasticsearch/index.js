@@ -1,15 +1,19 @@
 require('date-format-lite');
+const omit = require('lodash.omit');
+const { Map } = require('immutable');
 const elasticsearch = require('elasticsearch');
-const { database, filters } = require('access-watch-sdk');
+const { filters } = require('access-watch-sdk');
+const { getSession } = require('../hub');
 const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
 const monitoring = require('../../lib/monitoring');
-const { iso } = require('../../lib/util');
+const { iso, now } = require('../../lib/util');
+const { rules } = require('../../databases');
+const { rulesMatchers } = require('../../lib/rules');
 
 const monitor = monitoring.registerOutput({ name: 'Elasticsearch' });
 
-const { logsIndexName, retention } = config.elasticsearch;
-const accessWatchSdkDatabase = database();
+const { logsIndexName, expiration } = config.elasticsearch;
 
 const generateIndexName = date =>
   `${logsIndexName}-${date.format('YYYY-MM-DD', 0)}`;
@@ -18,9 +22,14 @@ const getIndexDate = index =>
   index.slice(logsIndexName.length + 1).replace(/-/g, '/');
 
 const getGcDate = () =>
-  new Date(new Date().getTime() - retention * 24 * 3600 * 1000);
+  new Date(new Date().getTime() - (expiration + 1) * 24 * 3600 * 1000);
 
 const indexesDb = {};
+
+const sessionsIds = {
+  address: 'address.value',
+  robot: 'robot.id',
+};
 
 const reportOnError = promise =>
   promise.catch(e => {
@@ -68,7 +77,7 @@ const indexLog = client => log => {
     });
   } else {
     console.log(
-      `Not indexing old log (${logTime}), current retention: ${retention}`
+      `Not indexing old log (${logTime}), current expiration: ${expiration}`
     );
   }
 };
@@ -101,10 +110,8 @@ const caseInsentivizeRegexpValue = value => {
     .join('');
 };
 
-const prefixIfNeeded = (id, type) => (type === 'log' ? id : `${type}.${id}`);
-
 const getESValue = ({ id, value }, type) => {
-  const filter = filters[type].find(f => prefixIfNeeded(f.id, type) === id);
+  const filter = filters[type].find(f => f.id === id);
   if (filter && filter.fullText) {
     // Performance-wise this is not the greatest, but it's the only working
     // way I found for wildcard + case-insensitive matching for ES
@@ -117,8 +124,27 @@ const getESValue = ({ id, value }, type) => {
   return { match: { [id]: value } };
 };
 
+const getMustFromFilter = (filter, type) =>
+  Object.keys(filter).map(id => {
+    const { negative, values, exists } = filter[id];
+    let cond;
+    if (exists) {
+      cond = { exists: { field: id } };
+    } else {
+      cond =
+        values.length === 1
+          ? getESValue({ id, value: values[0] }, type)
+          : {
+              bool: {
+                should: values.map(value => getESValue({ id, value }, type)),
+              },
+            };
+    }
+    return negative ? { bool: { must_not: cond } } : cond;
+  });
+
 const search = client => (query = {}, type) => {
-  const { start, end, limit: size, aggs, filter } = query;
+  const { start, end, limit: size, aggs, filter, must } = query;
   let bool = {
     filter: [
       {
@@ -138,23 +164,10 @@ const search = client => (query = {}, type) => {
     ],
   };
   if (filter) {
-    bool.must = Object.keys(filter).map(id => {
-      const { negative, values, exists } = filter[id];
-      let cond;
-      if (exists) {
-        cond = { exists: { field: id } };
-      } else {
-        cond =
-          values.length === 1
-            ? getESValue({ id, value: values[0] }, type)
-            : {
-                bool: {
-                  should: values.map(value => getESValue({ id, value }, type)),
-                },
-              };
-      }
-      return negative ? { bool: { must_not: cond } } : cond;
-    });
+    bool.must = getMustFromFilter(filter, type);
+  }
+  if (must) {
+    bool.must = (bool.must || []).concat(must);
   }
   if (start || end) {
     bool.filter.push({
@@ -188,13 +201,120 @@ const searchLogs = client => (query = {}) =>
     return [];
   });
 
+const metricsMapping = {
+  status: 'robot.reputation.status',
+  type: 'identity.type',
+  country: 'address.country_code',
+};
+
+const searchMetrics = client => (query = {}) => {
+  const { step, by, filter: origFilter = {} } = query;
+  const filter = Object.assign({}, origFilter);
+  Object.keys(metricsMapping).forEach(key => {
+    if (query[key]) {
+      filter[metricsMapping[key]] = {
+        id: metricsMapping[key],
+        values: [query[key]],
+      };
+    }
+  });
+  return search(client)(
+    Object.assign({}, query, {
+      aggs: {
+        metrics: {
+          terms: {
+            field: metricsMapping[by],
+          },
+          aggs: {
+            activity: {
+              date_histogram: Object.assign(
+                {
+                  field: 'request.time',
+                  interval: `${step}s`,
+                  min_doc_count: 0,
+                },
+                query.start && query.end
+                  ? {
+                      extended_bounds: {
+                        min: query.start * 1000,
+                        max: query.end * 1000,
+                      },
+                    }
+                  : {}
+              ),
+            },
+          },
+        },
+      },
+      limit: 0,
+      filter,
+    }),
+    'log'
+  ).then(({ aggregations: { metrics: { buckets } } }) =>
+    buckets.reduce((metrics, { key: metricsKey, activity }) => {
+      return activity.buckets.map(({ key, doc_count }, i) => [
+        Math.ceil(key / 1000),
+        Object.assign(metrics[i] ? metrics[i][1] : {}, {
+          [metricsKey]: doc_count,
+        }),
+      ]);
+    }, [])
+  );
+};
+
 const searchSessions = ({
   fetchFn,
   sessionId,
   queryConstants = {},
   type,
-}) => client => (query = {}) =>
-  search(client)(
+}) => client => (query = {}) => {
+  const { start, end, filter } = query;
+  const activityRange =
+    start && end
+      ? {
+          gte: start * 1000,
+          lte: end * 1000,
+        }
+      : {
+          gte: (now() - 14 * 60) * 1000,
+        };
+  const activityBounds = {
+    min: activityRange.gte,
+    max: activityRange.lte || now() * 1000,
+  };
+  const activityInterval = Math.ceil(
+    Math.max(Math.floor((activityBounds.max - activityBounds.min) / 1000), 14) /
+      14
+  );
+  let must;
+  const ruleTypeFilter = filter['rule.type'];
+  if (ruleTypeFilter) {
+    let matchingRules;
+    if (ruleTypeFilter.exists) {
+      matchingRules = rules.list();
+    } else {
+      matchingRules = ruleTypeFilter.values.reduce(
+        (matches, value) => matches.merge(rules.list(value)),
+        new Map()
+      );
+    }
+    const ruleFilter = matchingRules
+      .filter(rule => rule.getIn(['condition', 'type']) === type)
+      .reduce((filter, rule) => {
+        const matcher = rulesMatchers[type];
+        const filterKey = matcher.join('.');
+        if (!filter[filterKey]) {
+          filter[filterKey] = { values: [], negative: ruleTypeFilter.negative };
+        }
+        filter[filterKey].values.push(rule.get('condition').getIn(matcher));
+        return filter;
+      }, {});
+    if (Object.keys(ruleFilter).length === 0 && !ruleTypeFilter.negative) {
+      return Promise.resolve([]);
+    }
+    must = getMustFromFilter(ruleFilter, type);
+  }
+  return search(client)(
     Object.assign(
       {
         aggs: {
@@ -203,48 +323,157 @@ const searchSessions = ({
               field: sessionId,
               size: query.limit || 50,
             },
+            aggs: Object.assign(
+              {
+                request_time_filter: {
+                  filter: {
+                    range: {
+                      'request.time': activityRange,
+                    },
+                  },
+                  aggs: {
+                    activity: {
+                      date_histogram: {
+                        field: 'request.time',
+                        interval: `${activityInterval}s`,
+                        min_doc_count: 0,
+                        extended_bounds: activityBounds,
+                      },
+                    },
+                  },
+                },
+                latest_request: {
+                  top_hits: {
+                    sort: {
+                      'request.time': {
+                        order: 'desc',
+                      },
+                    },
+                    _source: {
+                      includes: ['request.time', 'identity', 'user_agent'],
+                    },
+                    size: 1,
+                  },
+                },
+              },
+              query.sort === 'speed'
+                ? {
+                    activity_bucket_sort: {
+                      bucket_sort: {
+                        sort: {
+                          'request_time_filter>_count': {
+                            order: 'desc',
+                          },
+                        },
+                      },
+                    },
+                  }
+                : {}
+            ),
           },
         },
         limit: 0,
       },
       queryConstants,
-      query
+      query,
+      must
+        ? {
+            must,
+            filter: omit(query.filter, 'rule.type'),
+          }
+        : {}
     ),
     type
   )
     .then(({ aggregations: { sessions: { buckets } } }) =>
-      buckets.map(({ key, doc_count }) => ({
-        id: key,
-        count: doc_count,
-      }))
+      buckets.map(({ key, doc_count, request_time_filter, latest_request }) => {
+        const latestRequest = latest_request.hits.hits[0]._source;
+        return {
+          id: key,
+          count: doc_count,
+          speed: {
+            per_minute: request_time_filter.activity.buckets
+              .map(({ doc_count }) => doc_count)
+              .reverse(),
+          },
+          end: latestRequest.request.time,
+          identity: latestRequest.identity,
+          user_agents: [latestRequest.user_agent],
+        };
+      })
     )
     .then(sessions =>
       Promise.all(sessions.map(({ id }) => fetchFn(id))).then(sessionsData =>
-        sessionsData.map((sessionData, i) =>
-          Object.assign(
-            {
-              count: sessions[i].count,
-            },
-            sessionData
-          )
-        )
+        sessionsData.map((sessionData, i) => ({
+          es: sessions[i],
+          hub: sessionData,
+        }))
       )
     );
+};
 
 const searchRobots = searchSessions({
   queryConstants: {
     'identity.type': 'robot',
   },
-  fetchFn: id => accessWatchSdkDatabase.getRobot({ uuid: id }),
-  sessionId: 'robot.id',
+  fetchFn: id =>
+    getSession({ type: 'robot', id, immutable: false }).then(
+      ({ robot }) => robot
+    ),
+  sessionId: sessionsIds.robot,
   type: 'robot',
 });
 
 const searchAddresses = searchSessions({
-  fetchFn: address => accessWatchSdkDatabase.getAddress(address),
-  sessionId: 'address.value',
+  fetchFn: address =>
+    getSession({
+      type: 'address',
+      id: address,
+      immutable: false,
+      options: {
+        include_robots: 1,
+      },
+    }).then(({ address }) => address),
+  sessionId: sessionsIds.address,
   type: 'address',
 });
+
+const searchRobotsAddresses = client => robotIds =>
+  search(client)(
+    {
+      aggs: {
+        robots: {
+          terms: {
+            field: sessionsIds.robot,
+            size: robotIds.length,
+          },
+          aggs: {
+            addresses: {
+              terms: {
+                field: sessionsIds.address,
+                size: 10000,
+              },
+            },
+          },
+        },
+      },
+      filter: {
+        [sessionsIds.robot]: {
+          id: sessionsIds.robot,
+          values: robotIds,
+        },
+      },
+    },
+    'robot'
+  ).then(({ aggregations: { robots: { buckets } } }) =>
+    buckets.reduce(
+      (robotsAddresses, { key, addresses }) =>
+        Object.assign(robotsAddresses, {
+          [key]: addresses.buckets.map(({ key }) => key),
+        }),
+      {}
+    )
+  );
 
 const logsEndpoint = client => {
   const search = searchLogs(client);
@@ -263,9 +492,11 @@ const elasticSearchBuilder = config => {
   return {
     index: indexLog(esClient),
     searchLogs: searchLogs(esClient),
+    searchMetrics: searchMetrics(esClient),
     searchRobots: searchRobots(esClient),
     searchAddresses: searchAddresses(esClient),
     logsEndpoint: logsEndpoint(esClient),
+    searchRobotsAddresses: searchRobotsAddresses(esClient),
   };
 };
 

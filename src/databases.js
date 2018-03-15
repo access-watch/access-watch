@@ -1,8 +1,8 @@
-const databases = {
-  metrics: require('./lib/metrics').connect(),
-  session: require('./lib/session').connect(),
-  rules: require('./lib/rules').connect(),
-  searches: require('./lib/searches').connect(),
-};
+const rules = require('./lib/rules').connect();
+const session = require('./lib/session').connect();
+const metrics = require('./lib/metrics').connect();
+const searches = require('./lib/searches').connect();
 
-module.exports = databases;
+session.setRulesProvider(rules);
+
+module.exports = { rules, session, metrics, searches };

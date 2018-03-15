@@ -15,6 +15,10 @@ function withSpeed(session) {
     .updateIn(['speed', 'per_hour'], speed => speed.compute());
 }
 
+function withRule(rules) {
+  return (session, type) => rules.getSessionWithRule({ type, session });
+}
+
 function aggregateSpeed(session, type) {
   return session.getIn(['speed', type]).reduce((p, c) => p + c, 0);
 }
@@ -23,18 +27,30 @@ class Database {
   constructor() {
     this.sessions = Map();
     this.indexes = Map();
+    this.withRule = s => s;
+  }
+
+  setRulesProvider(rules) {
+    this.rules = rules;
+    this.withRule = withRule(rules);
   }
 
   gc() {
+    const gcStart = process.hrtime();
+
     // Filtering old Sessions
     const cutoff = now() - config.session.gc.expiration;
-    this.sessions = this.sessions.map(sessions =>
-      sessions.filter(s => s.get('end') >= cutoff)
-    );
+    this.sessions = this.sessions.map((sessions, type) => {
+      const gcExpiredStart = process.hrtime();
+      sessions = sessions.filter(s => s.get('end') >= cutoff);
+      instruments.hrtime(`session.${type}.gc.expired.time`, gcExpiredStart);
+      return sessions;
+    });
 
     // Update and Slice Indexes
-    this.indexes = this.indexes.map((indexes, type) =>
-      indexes.map((index, key) => {
+    this.indexes = this.indexes.map((indexes, type) => {
+      const gcIndexesStart = process.hrtime();
+      indexes = indexes.map((index, key) => {
         if (key === '24h') {
           index = index.map((count, id) => {
             const session = this.get(type, id);
@@ -55,8 +71,16 @@ class Database {
           .sort()
           .reverse()
           .slice(0, config.session.gc.indexSize);
-      })
-    );
+      });
+      instruments.hrtime(`session.${type}.gc.indexes.time`, gcIndexesStart);
+      return indexes;
+    });
+
+    instruments.hrtime('session.gc.time', gcStart);
+
+    const gcEnd = process.hrtime(gcStart);
+    const elapsed = gcEnd[0] + Math.round(gcEnd[1] / 1000000) / 1000;
+    console.log(`Session Garbage Collection in ${elapsed}s`);
   }
 
   instrument() {
@@ -146,7 +170,7 @@ class Database {
   get(type, id) {
     const session = this.sessions.getIn([type, id]);
     if (session) {
-      return withSpeed(session);
+      return this.withRule(withSpeed(session), type);
     }
   }
 

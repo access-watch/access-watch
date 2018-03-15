@@ -1,13 +1,33 @@
 const { Map } = require('immutable');
-const { database } = require('access-watch-sdk');
 
-const { session } = require('../databases');
+const { session, rules } = require('../databases');
+const { getSession: getSessionFromHub } = require('../plugins/hub');
 
 // Pipeline
 
 const { stream } = require('../pipeline/augmented');
 
 const config = require('../constants');
+
+rules.setTransformExports({
+  robot: robotsRules =>
+    Promise.resolve(
+      robotsRules.map(rule =>
+        rule.setIn(
+          ['condition', 'addresses'],
+          session.list({
+            type: 'address',
+            filter: address =>
+              address.has('robots') &&
+              address
+                .get('robots')
+                .has(rule.getIn(['condition', 'robot', 'id'])),
+            sort: 'count',
+          })
+        )
+      )
+    ),
+});
 
 /**
  * Assign a session to the log event, create it if necessary.
@@ -125,27 +145,18 @@ app.get('/sessions/:type', (req, res, next) => {
   }
 });
 
-const accessWatchSdkDatabase = database();
-
 const getSession = (type, id) => {
   const s = session.get(type, id);
   if (s) {
     return Promise.resolve(s);
   }
-  if (type === 'robot') {
-    return accessWatchSdkDatabase
-      .getRobot({ uuid: id })
-      .then(robot => ({ robot, id }));
-  } else {
-    return accessWatchSdkDatabase
-      .getAddress(id)
-      .then(address => ({ address, id }));
-  }
+  return getSessionFromHub({ type, id });
 };
 
 app.get('/sessions/:type/:id', (req, res) => {
   const { type, id } = req.params;
   getSession(type, id)
+    .then(session => rules.getSessionWithRule({ type, session }))
     .then(s => {
       res.send(s);
     })
