@@ -1,4 +1,4 @@
-const { fromJS } = require('immutable');
+const { fromJS, Map } = require('immutable');
 
 const { getSession: getSessionFromHub } = require('../plugins/hub');
 
@@ -20,6 +20,29 @@ config.modules.session.active = false;
 config.modules.metrics.active = false;
 
 stream.map(elasticsearch.index);
+
+rules.setTransformExports({
+  robot: robotsRules =>
+    elasticsearch
+      .searchRobotsAddresses(
+        robotsRules
+          .valueSeq()
+          .map(rule => rule.getIn(['condition'].concat(rulesMatchers.robot)))
+          .toJS()
+      )
+      .then(robotsAddresses =>
+        robotsRules.map(rule =>
+          rule.setIn(
+            ['condition', 'addresses'],
+            (
+              robotsAddresses[
+                rule.getIn(['condition'].concat(rulesMatchers.robot))
+              ] || []
+            ).map(value => new Map({ address: { value } }))
+          )
+        )
+      ),
+});
 
 app.get('/logs', (req, res) => {
   const { query } = req;
@@ -85,9 +108,9 @@ app.get('/sessions/:type/:id', (req, res) => {
     if (sessions[0]) {
       res.send(sessions[0]);
     } else {
-      getSessionFromHub({ type, id }).then(session =>
-        res.send(rules.getSessionWithRule({ type, session }))
-      );
+      getSessionFromHub({ type, id })
+        .then(session => res.send(rules.getSessionWithRule({ type, session })))
+        .catch(() => res.status(404).send({ error: 'Unknown session.' }));
     }
   });
 });

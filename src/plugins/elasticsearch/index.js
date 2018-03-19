@@ -1,4 +1,6 @@
 require('date-format-lite');
+const omit = require('lodash.omit');
+const { Map } = require('immutable');
 const elasticsearch = require('elasticsearch');
 const { filters } = require('access-watch-sdk');
 const { getSession } = require('../hub');
@@ -6,6 +8,8 @@ const logsIndexConfig = require('./logs-index-config.json');
 const config = require('../../constants');
 const monitoring = require('../../lib/monitoring');
 const { iso, now } = require('../../lib/util');
+const { rules } = require('../../databases');
+const { rulesMatchers } = require('../../lib/rules');
 
 const monitor = monitoring.registerOutput({ name: 'Elasticsearch' });
 
@@ -18,9 +22,14 @@ const getIndexDate = index =>
   index.slice(logsIndexName.length + 1).replace(/-/g, '/');
 
 const getGcDate = () =>
-  new Date(new Date().getTime() - expiration * 24 * 3600 * 1000);
+  new Date(new Date().getTime() - (expiration + 1) * 24 * 3600 * 1000);
 
 const indexesDb = {};
+
+const sessionsIds = {
+  address: 'address.value',
+  robot: 'robot.id',
+};
 
 const reportOnError = promise =>
   promise.catch(e => {
@@ -115,8 +124,27 @@ const getESValue = ({ id, value }, type) => {
   return { match: { [id]: value } };
 };
 
+const getMustFromFilter = (filter, type) =>
+  Object.keys(filter).map(id => {
+    const { negative, values, exists } = filter[id];
+    let cond;
+    if (exists) {
+      cond = { exists: { field: id } };
+    } else {
+      cond =
+        values.length === 1
+          ? getESValue({ id, value: values[0] }, type)
+          : {
+              bool: {
+                should: values.map(value => getESValue({ id, value }, type)),
+              },
+            };
+    }
+    return negative ? { bool: { must_not: cond } } : cond;
+  });
+
 const search = client => (query = {}, type) => {
-  const { start, end, limit: size, aggs, filter } = query;
+  const { start, end, limit: size, aggs, filter, must } = query;
   let bool = {
     filter: [
       {
@@ -136,23 +164,10 @@ const search = client => (query = {}, type) => {
     ],
   };
   if (filter) {
-    bool.must = Object.keys(filter).map(id => {
-      const { negative, values, exists } = filter[id];
-      let cond;
-      if (exists) {
-        cond = { exists: { field: id } };
-      } else {
-        cond =
-          values.length === 1
-            ? getESValue({ id, value: values[0] }, type)
-            : {
-                bool: {
-                  should: values.map(value => getESValue({ id, value }, type)),
-                },
-              };
-      }
-      return negative ? { bool: { must_not: cond } } : cond;
-    });
+    bool.must = getMustFromFilter(filter, type);
+  }
+  if (must) {
+    bool.must = (bool.must || []).concat(must);
   }
   if (start || end) {
     bool.filter.push({
@@ -212,11 +227,21 @@ const searchMetrics = client => (query = {}) => {
           },
           aggs: {
             activity: {
-              date_histogram: {
-                field: 'request.time',
-                interval: `${step}s`,
-                min_doc_count: 0,
-              },
+              date_histogram: Object.assign(
+                {
+                  field: 'request.time',
+                  interval: `${step}s`,
+                  min_doc_count: 0,
+                },
+                query.start && query.end
+                  ? {
+                      extended_bounds: {
+                        min: query.start * 1000,
+                        max: query.end * 1000,
+                      },
+                    }
+                  : {}
+              ),
             },
           },
         },
@@ -243,7 +268,7 @@ const searchSessions = ({
   queryConstants = {},
   type,
 }) => client => (query = {}) => {
-  const { start, end, step } = query;
+  const { start, end, step, filter } = query;
   const activityRange =
     start && end
       ? {
@@ -321,6 +346,34 @@ const searchSessions = ({
       },
     },
   };
+  let must;
+  const ruleTypeFilter = filter['rule.type'];
+  if (ruleTypeFilter) {
+    let matchingRules;
+    if (ruleTypeFilter.exists) {
+      matchingRules = rules.list();
+    } else {
+      matchingRules = ruleTypeFilter.values.reduce(
+        (matches, value) => matches.merge(rules.list(value)),
+        new Map()
+      );
+    }
+    const ruleFilter = matchingRules
+      .filter(rule => rule.getIn(['condition', 'type']) === type)
+      .reduce((filter, rule) => {
+        const matcher = rulesMatchers[type];
+        const filterKey = matcher.join('.');
+        if (!filter[filterKey]) {
+          filter[filterKey] = { values: [], negative: ruleTypeFilter.negative };
+        }
+        filter[filterKey].values.push(rule.get('condition').getIn(matcher));
+        return filter;
+      }, {});
+    if (Object.keys(ruleFilter).length === 0 && !ruleTypeFilter.negative) {
+      return Promise.resolve([]);
+    }
+    must = getMustFromFilter(ruleFilter, type);
+  }
   return search(client)(
     Object.assign(
       {
@@ -336,7 +389,13 @@ const searchSessions = ({
         limit: 0,
       },
       queryConstants,
-      query
+      query,
+      must
+        ? {
+            must,
+            filter: omit(filter, 'rule.type'),
+          }
+        : {}
     ),
     type
   )
@@ -386,7 +445,7 @@ const searchRobots = searchSessions({
     getSession({ type: 'robot', id, immutable: false }).then(
       ({ robot }) => robot
     ),
-  sessionId: 'robot.id',
+  sessionId: sessionsIds.robot,
   type: 'robot',
 });
 
@@ -400,9 +459,46 @@ const searchAddresses = searchSessions({
         include_robots: 1,
       },
     }).then(({ address }) => address),
-  sessionId: 'address.value',
+  sessionId: sessionsIds.address,
   type: 'address',
 });
+
+const searchRobotsAddresses = client => robotIds =>
+  search(client)(
+    {
+      aggs: {
+        robots: {
+          terms: {
+            field: sessionsIds.robot,
+            size: robotIds.length,
+          },
+          aggs: {
+            addresses: {
+              terms: {
+                field: sessionsIds.address,
+                size: 10000,
+              },
+            },
+          },
+        },
+      },
+      filter: {
+        [sessionsIds.robot]: {
+          id: sessionsIds.robot,
+          values: robotIds,
+        },
+      },
+    },
+    'robot'
+  ).then(({ aggregations: { robots: { buckets } } }) =>
+    buckets.reduce(
+      (robotsAddresses, { key, addresses }) =>
+        Object.assign(robotsAddresses, {
+          [key]: addresses.buckets.map(({ key }) => key),
+        }),
+      {}
+    )
+  );
 
 const logsEndpoint = client => {
   const search = searchLogs(client);
@@ -425,6 +521,7 @@ const elasticSearchBuilder = config => {
     searchRobots: searchRobots(esClient),
     searchAddresses: searchAddresses(esClient),
     logsEndpoint: logsEndpoint(esClient),
+    searchRobotsAddresses: searchRobotsAddresses(esClient),
   };
 };
 

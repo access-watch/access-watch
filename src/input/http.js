@@ -5,7 +5,7 @@ const app = require('../apps/api');
 function create({ name = 'HTTP server', path, parse = fromJS }) {
   return {
     name: name,
-    start: pipeline => {
+    start: ({ success, reject, status }) => {
       app.post(path, (req, res) => {
         // No validation before sending the response to the client
         res.send('Ok');
@@ -13,13 +13,13 @@ function create({ name = 'HTTP server', path, parse = fromJS }) {
         let messages = Array.isArray(req.body) ? req.body : [req.body];
         messages.forEach(message => {
           try {
-            pipeline.success(parse(message));
+            success(parse(message));
           } catch (err) {
-            pipeline.reject(err);
+            reject(err);
           }
         });
       });
-      pipeline.status(null, `Listening on http://__HOST__${path}`);
+      status(null, `Listening on http://__HOST__${path}`);
     },
   };
 }
