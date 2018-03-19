@@ -31,6 +31,12 @@ const sessionsIds = {
   robot: 'robot.id',
 };
 
+const reportIndexNotFound = location => {
+  console.warn(
+    `Elasticsearch plugin warning: Could not find data in ${location}, either no logs have been indexed yet or there is an index misconfiguration`
+  );
+};
+
 const reportOnError = promise =>
   promise.catch(e => {
     // Remove the eventual Error: that might come from the error from ES
@@ -197,8 +203,10 @@ const searchLogs = client => (query = {}) =>
   search(client)(query, 'log').then(({ hits }) => {
     if (hits) {
       return hits.hits.map(({ _source }) => _source);
+    } else {
+      reportIndexNotFound('logs');
+      return [];
     }
-    return [];
   });
 
 const metricsMapping = {
@@ -250,16 +258,22 @@ const searchMetrics = client => (query = {}) => {
       filter,
     }),
     'log'
-  ).then(({ aggregations: { metrics: { buckets } } }) =>
-    buckets.reduce((metrics, { key: metricsKey, activity }) => {
-      return activity.buckets.map(({ key, doc_count }, i) => [
-        Math.ceil(key / 1000),
-        Object.assign(metrics[i] ? metrics[i][1] : {}, {
-          [metricsKey]: doc_count,
-        }),
-      ]);
-    }, [])
-  );
+  ).then(({ aggregations }) => {
+    if (aggregations) {
+      const { metrics: { buckets } } = aggregations;
+      return buckets.reduce((metrics, { key: metricsKey, activity }) => {
+        return activity.buckets.map(({ key, doc_count }, i) => [
+          Math.ceil(key / 1000),
+          Object.assign(metrics[i] ? metrics[i][1] : {}, {
+            [metricsKey]: doc_count,
+          }),
+        ]);
+      }, []);
+    } else {
+      reportIndexNotFound('metrics');
+      return [];
+    }
+  });
 };
 
 const searchSessions = ({
@@ -385,23 +399,31 @@ const searchSessions = ({
     ),
     type
   )
-    .then(({ aggregations: { sessions: { buckets } } }) =>
-      buckets.map(({ key, doc_count, request_time_filter, latest_request }) => {
-        const latestRequest = latest_request.hits.hits[0]._source;
-        return {
-          id: key,
-          count: doc_count,
-          speed: {
-            per_minute: request_time_filter.activity.buckets
-              .map(({ doc_count }) => doc_count)
-              .reverse(),
-          },
-          end: latestRequest.request.time,
-          identity: latestRequest.identity,
-          user_agents: [latestRequest.user_agent],
-        };
-      })
-    )
+    .then(({ aggregations }) => {
+      if (aggregations) {
+        const { sessions: { buckets } } = aggregations;
+        return buckets.map(
+          ({ key, doc_count, request_time_filter, latest_request }) => {
+            const latestRequest = latest_request.hits.hits[0]._source;
+            return {
+              id: key,
+              count: doc_count,
+              speed: {
+                per_minute: request_time_filter.activity.buckets
+                  .map(({ doc_count }) => doc_count)
+                  .reverse(),
+              },
+              end: latestRequest.request.time,
+              identity: latestRequest.identity,
+              user_agents: [latestRequest.user_agent],
+            };
+          }
+        );
+      } else {
+        reportIndexNotFound('sessions');
+        return [];
+      }
+    })
     .then(sessions =>
       Promise.all(sessions.map(({ id }) => fetchFn(id))).then(sessionsData =>
         sessionsData.map((sessionData, i) => ({
@@ -465,15 +487,21 @@ const searchRobotsAddresses = client => robotIds =>
       },
     },
     'robot'
-  ).then(({ aggregations: { robots: { buckets } } }) =>
-    buckets.reduce(
-      (robotsAddresses, { key, addresses }) =>
-        Object.assign(robotsAddresses, {
-          [key]: addresses.buckets.map(({ key }) => key),
-        }),
-      {}
-    )
-  );
+  ).then(({ aggregations }) => {
+    if (aggregations) {
+      const { robots: { buckets } } = aggregations;
+      return buckets.reduce(
+        (robotsAddresses, { key, addresses }) =>
+          Object.assign(robotsAddresses, {
+            [key]: addresses.buckets.map(({ key }) => key),
+          }),
+        {}
+      );
+    } else {
+      reportIndexNotFound('robotsAddresses');
+      return [];
+    }
+  });
 
 const logsEndpoint = client => {
   const search = searchLogs(client);
