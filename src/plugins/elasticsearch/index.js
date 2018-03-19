@@ -268,7 +268,7 @@ const searchSessions = ({
   queryConstants = {},
   type,
 }) => client => (query = {}) => {
-  const { start, end, filter } = query;
+  const { start, end, step, filter } = query;
   const activityRange =
     start && end
       ? {
@@ -286,6 +286,66 @@ const searchSessions = ({
     Math.max(Math.floor((activityBounds.max - activityBounds.min) / 1000), 14) /
       14
   );
+  const recentActivityAgg = Object.assign(
+    {
+      request_time_filter: {
+        filter: {
+          range: {
+            'request.time': activityRange,
+          },
+        },
+        aggs: {
+          recent_activity: {
+            date_histogram: {
+              field: 'request.time',
+              interval: `${activityInterval}s`,
+              min_doc_count: 0,
+              extended_bounds: activityBounds,
+            },
+          },
+        },
+      },
+      latest_request: {
+        top_hits: {
+          sort: {
+            'request.time': {
+              order: 'desc',
+            },
+          },
+          _source: {
+            includes: ['request.time', 'identity', 'user_agent'],
+          },
+          size: 1,
+        },
+      },
+    },
+    query.sort === 'speed'
+      ? {
+          activity_bucket_sort: {
+            bucket_sort: {
+              sort: {
+                'request_time_filter>_count': {
+                  order: 'desc',
+                },
+              },
+            },
+          },
+        }
+      : {}
+  );
+  const globalActivityAgg = {
+    global_activity: {
+      date_histogram: {
+        field: 'request.time',
+        interval: `${step}s`,
+        min_doc_count: 0,
+        extended_bounds: {
+          min: start * 1000,
+          max: (end || now()) * 1000,
+        },
+      },
+    },
+  };
   let must;
   const ruleTypeFilter = filter['rule.type'];
   if (ruleTypeFilter) {
@@ -323,53 +383,7 @@ const searchSessions = ({
               field: sessionId,
               size: query.limit || 50,
             },
-            aggs: Object.assign(
-              {
-                request_time_filter: {
-                  filter: {
-                    range: {
-                      'request.time': activityRange,
-                    },
-                  },
-                  aggs: {
-                    activity: {
-                      date_histogram: {
-                        field: 'request.time',
-                        interval: `${activityInterval}s`,
-                        min_doc_count: 0,
-                        extended_bounds: activityBounds,
-                      },
-                    },
-                  },
-                },
-                latest_request: {
-                  top_hits: {
-                    sort: {
-                      'request.time': {
-                        order: 'desc',
-                      },
-                    },
-                    _source: {
-                      includes: ['request.time', 'identity', 'user_agent'],
-                    },
-                    size: 1,
-                  },
-                },
-              },
-              query.sort === 'speed'
-                ? {
-                    activity_bucket_sort: {
-                      bucket_sort: {
-                        sort: {
-                          'request_time_filter>_count': {
-                            order: 'desc',
-                          },
-                        },
-                      },
-                    },
-                  }
-                : {}
-            ),
+            aggs: Object.assign({}, globalActivityAgg, recentActivityAgg),
           },
         },
         limit: 0,
@@ -379,28 +393,39 @@ const searchSessions = ({
       must
         ? {
             must,
-            filter: omit(query.filter, 'rule.type'),
+            filter: omit(filter, 'rule.type'),
           }
         : {}
     ),
     type
   )
     .then(({ aggregations: { sessions: { buckets } } }) =>
-      buckets.map(({ key, doc_count, request_time_filter, latest_request }) => {
-        const latestRequest = latest_request.hits.hits[0]._source;
-        return {
-          id: key,
-          count: doc_count,
-          speed: {
-            per_minute: request_time_filter.activity.buckets
-              .map(({ doc_count }) => doc_count)
+      buckets.map(
+        ({
+          key,
+          doc_count,
+          request_time_filter,
+          latest_request,
+          global_activity,
+        }) => {
+          const latestRequest = latest_request.hits.hits[0]._source;
+          return {
+            id: key,
+            count: doc_count,
+            speed: {
+              per_minute: request_time_filter.recent_activity.buckets
+                .map(({ doc_count }) => doc_count)
+                .reverse(),
+            },
+            end: latestRequest.request.time,
+            identity: latestRequest.identity,
+            user_agents: [latestRequest.user_agent],
+            activity: global_activity.buckets
+              .map(({ key, doc_count }) => [key, doc_count])
               .reverse(),
-          },
-          end: latestRequest.request.time,
-          identity: latestRequest.identity,
-          user_agents: [latestRequest.user_agent],
-        };
-      })
+          };
+        }
+      )
     )
     .then(sessions =>
       Promise.all(sessions.map(({ id }) => fetchFn(id))).then(sessionsData =>
