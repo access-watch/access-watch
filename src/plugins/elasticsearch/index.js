@@ -415,7 +415,7 @@ const searchSessions = ({
             },
           },
           _source: {
-            includes: ['request.time', 'identity', 'user_agent'],
+            includes: ['request.time', 'identity', 'user_agent', type],
           },
           size: 1,
         },
@@ -530,16 +530,18 @@ const searchSessions = ({
             activity: global_activity.buckets
               .map(({ key, doc_count }) => [key, doc_count])
               .reverse(),
+            [type]: latestRequest[type],
           };
         }
       )
     )
     .then(sessions =>
-      Promise.all(sessions.map(({ id }) => fetchFn(id))).then(sessionsData =>
-        sessionsData.map((sessionData, i) => ({
-          es: sessions[i],
-          hub: sessionData,
-        }))
+      Promise.all(sessions.map(session => fetchFn(session.id, session))).then(
+        sessionsData =>
+          sessionsData.map((sessionData, i) => ({
+            es: sessions[i],
+            hub: sessionData,
+          }))
       )
     );
 };
@@ -548,10 +550,12 @@ const searchRobots = searchSessions({
   queryConstants: {
     'identity.type': 'robot',
   },
-  fetchFn: id =>
-    getSession({ type: 'robot', id, immutable: false }).then(
-      ({ robot }) => robot
-    ),
+  fetchFn: (id, session) =>
+    getSession({ type: 'robot', id, immutable: false })
+      .then(({ robot }) => robot)
+      // If the robot doesn't exist in the database, it's surely an unnamed robot
+      // And we can return it from the ES log
+      .catch(() => session.robot),
   sessionId: sessionsIds.robot,
   type: 'robot',
 });

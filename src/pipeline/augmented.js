@@ -1,4 +1,5 @@
 const uuid = require('uuid/v4');
+const { Map } = require('immutable');
 
 const { now } = require('../lib/util');
 const pipeline = require('../lib/pipeline');
@@ -39,6 +40,22 @@ const augmented = pipeline
       Math.floor(new Date(log.getIn(['request', 'time'])).getTime() / 1000) -
         now()
     );
+    return log;
+  })
+  // Handle anonymous robots
+  .map(log => {
+    if (log.getIn(['identity', 'type']) === 'robot' && !log.has('robot')) {
+      log = log.set(
+        'robot',
+        new Map({
+          id: log.getIn(['identity', 'id']),
+          name: log.getIn(['user_agent', 'agent', 'label'], 'Unknown'),
+          reputation: {
+            status: log.getIn(['reputation', 'status']),
+          },
+        })
+      );
+    }
     return log;
   });
 
