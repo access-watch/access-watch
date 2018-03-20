@@ -15,23 +15,23 @@ function create({
 }) {
   return {
     name: name,
-    start: pipeline => {
+    start: ({ success, reject, status }) => {
       const handler = message => {
         if (sample !== 1 && Math.random() > sample) {
           return;
         }
         try {
           const result = syslogParse(message);
-          pipeline.success(parse(result.message));
+          success(parse(result.message));
         } catch (err) {
-          pipeline.reject(err);
+          reject(err);
         }
       };
       if (!protocol || protocol === 'udp') {
-        socket.createUdpServer({ pipeline, name, port, handler });
+        socket.createUdpServer({ status, name, port, handler });
       }
       if (!protocol || protocol === 'tcp') {
-        socket.createTcpServer({ pipeline, name, port, handler });
+        socket.createTcpServer({ status, name, port, handler });
       }
     },
   };

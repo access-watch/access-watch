@@ -6,7 +6,8 @@ const app = require('../apps/websocket');
 const defaultParse = s => fromJS(JSON.parse(s));
 
 const socketToPipeline = (
-  pipeline,
+  success,
+  reject,
   parse = defaultParse,
   sample = 1
 ) => socket => {
@@ -15,32 +16,32 @@ const socketToPipeline = (
       return;
     }
     try {
-      pipeline.success(parse(message));
+      success(parse(message));
     } catch (err) {
-      pipeline.reject(err);
+      reject(err);
     }
   });
 };
 
-const setupClientWebSocket = ({ pipeline, address, options, listenSocket }) => {
+const setupClientWebSocket = ({ status, address, options, listenSocket }) => {
   let socket = new WebSocket(address, [], options);
-  pipeline.status(null, 'Waiting for connection to ' + address);
+  status(null, 'Waiting for connection to ' + address);
   socket.on('open', () => {
-    pipeline.status(null, 'Listening to ' + address);
+    status(null, 'Listening to ' + address);
   });
   socket.on('error', err => {
-    pipeline.status(err, 'Websocket error');
+    status(err, 'Websocket error');
   });
   socket.on('close', event => {
-    pipeline.status(event, event.reason || 'Websocket has been closed');
+    status(event, event.reason || 'Websocket has been closed');
   });
   listenSocket(socket);
   return socket;
 };
 
-const setupServerWebSocket = ({ pipeline, path, listenSocket }) => {
+const setupServerWebSocket = ({ status, path, listenSocket }) => {
   app.ws(path, listenSocket);
-  pipeline.status(null, `Listening on ws://__HOST__${path}`);
+  status(null, `Listening on ws://__HOST__${path}`);
 };
 
 function create({
@@ -55,20 +56,20 @@ function create({
   let client;
   return {
     name: `${name} ${type}`,
-    start: pipeline => {
-      const listenSocket = socketToPipeline(pipeline, parse, sample);
+    start: ({ success, reject, status, log }) => {
+      const listenSocket = socketToPipeline(success, reject, parse, sample);
       if (type === 'client') {
         client = setupClientWebSocket({
-          pipeline,
+          status,
           address,
           options,
           listenSocket,
         });
       } else if (type === 'server') {
-        setupServerWebSocket({ pipeline, path, listenSocket });
+        setupServerWebSocket({ status, path, listenSocket });
       } else {
         const errMsg = 'WebSocket type is either client or server';
-        pipeline.log(new Error(errMsg), 'error');
+        log(new Error(errMsg), 'error');
       }
     },
     stop: () => {

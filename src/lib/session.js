@@ -77,10 +77,6 @@ class Database {
     });
 
     instruments.hrtime('session.gc.time', gcStart);
-
-    const gcEnd = process.hrtime(gcStart);
-    const elapsed = gcEnd[0] + Math.round(gcEnd[1] / 1000000) / 1000;
-    console.log(`Session Garbage Collection in ${elapsed}s`);
   }
 
   instrument() {
