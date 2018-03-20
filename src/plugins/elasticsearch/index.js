@@ -524,19 +524,28 @@ const searchSessions = ({
       if (aggregations) {
         const { sessions: { buckets } } = aggregations;
         return buckets.map(
-          ({ key, doc_count, request_time_filter, latest_request }) => {
+          ({
+            key,
+            doc_count,
+            request_time_filter,
+            latest_request,
+            global_activity,
+          }) => {
             const latestRequest = latest_request.hits.hits[0]._source;
             return {
               id: key,
               count: doc_count,
               speed: {
-                per_minute: request_time_filter.activity.buckets
+                per_minute: request_time_filter.recent_activity.buckets
                   .map(({ doc_count }) => doc_count)
                   .reverse(),
               },
               end: latestRequest.request.time,
               identity: latestRequest.identity,
               user_agents: [latestRequest.user_agent],
+              activity: global_activity.buckets
+                .map(({ key, doc_count }) => [key, doc_count])
+                .reverse(),
             };
           }
         );
