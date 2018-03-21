@@ -530,7 +530,7 @@ const searchSessions = ({
               id: key,
               count: doc_count,
               speed: {
-                per_minute: request_time_filter.activity.buckets
+                per_minute: request_time_filter.recent_activity.buckets
                   .map(({ doc_count }) => doc_count)
                   .reverse(),
               },
