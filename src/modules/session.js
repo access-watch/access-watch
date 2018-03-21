@@ -127,20 +127,27 @@ function getSessionItemFilter(queryFilter, type) {
   return getFiltersFnFromString(queryFilter, filters[type], type);
 }
 
+function transformSession(session) {
+  return session.update('user_agents', Map(), ua => ua.toList());
+}
+
 app.get('/sessions/:type', (req, res, next) => {
   if (config.session.timerange && req.query.start && req.query.end) {
     next();
   } else {
     const { type } = req.params;
     res.send(
-      session.list({
-        type,
-        sort: req.query.sort || 'count',
-        filter:
-          (req.query.filter && getSessionItemFilter(req.query.filter, type)) ||
-          null,
-        limit: (req.query.limit && parseInt(req.query.limit)) || 100,
-      })
+      session
+        .list({
+          type,
+          sort: req.query.sort || 'count',
+          filter:
+            (req.query.filter &&
+              getSessionItemFilter(req.query.filter, type)) ||
+            null,
+          limit: (req.query.limit && parseInt(req.query.limit)) || 100,
+        })
+        .map(transformSession)
     );
   }
 });
@@ -157,6 +164,7 @@ app.get('/sessions/:type/:id', (req, res) => {
   const { type, id } = req.params;
   getSession(type, id)
     .then(session => rules.getSessionWithRule({ type, session }))
+    .then(transformSession)
     .then(s => {
       res.send(s);
     })
