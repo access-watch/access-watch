@@ -450,19 +450,21 @@ const searchSessions = ({
       : {}
   );
   // The activity aggregation to be displayed in activityList
-  const globalActivityAgg = {
-    global_activity: {
-      date_histogram: {
-        field: 'request.time',
-        interval: `${step}s`,
-        min_doc_count: 0,
-        extended_bounds: {
-          min: start * 1000,
-          max: (end || now()) * 1000,
+  const globalActivityAgg = step
+    ? {
+        global_activity: {
+          date_histogram: {
+            field: 'request.time',
+            interval: `${step}s`,
+            min_doc_count: 0,
+            extended_bounds: {
+              min: start * 1000,
+              max: (end || now()) * 1000,
+            },
+          },
         },
-      },
-    },
-  };
+      }
+    : {};
   let must;
   // We have to transform the rule filtering as elasticsearch logs do not contain rules
   const ruleTypeFilter = filter['rule.type'];
@@ -524,21 +526,36 @@ const searchSessions = ({
       if (aggregations) {
         const { sessions: { buckets } } = aggregations;
         return buckets.map(
-          ({ key, doc_count, request_time_filter, latest_request }) => {
+          ({
+            key,
+            doc_count,
+            request_time_filter,
+            latest_request,
+            global_activity,
+          }) => {
             const latestRequest = latest_request.hits.hits[0]._source;
-            return {
-              id: key,
-              count: doc_count,
-              speed: {
-                per_minute: request_time_filter.recent_activity.buckets
-                  .map(({ doc_count }) => doc_count)
-                  .reverse(),
+            return Object.assign(
+              {
+                id: key,
+                count: doc_count,
+                speed: {
+                  per_minute: request_time_filter.recent_activity.buckets
+                    .map(({ doc_count }) => doc_count)
+                    .reverse(),
+                },
+                end: latestRequest.request.time,
+                identity: latestRequest.identity,
+                user_agents: [latestRequest.user_agent],
+                [type]: latestRequest[type],
               },
-              end: latestRequest.request.time,
-              identity: latestRequest.identity,
-              user_agents: [latestRequest.user_agent],
-              [type]: latestRequest[type],
-            };
+              step
+                ? {
+                    activity: global_activity.buckets
+                      .map(({ key, doc_count }) => [key, doc_count])
+                      .reverse(),
+                  }
+                : {}
+            );
           }
         );
       } else {
