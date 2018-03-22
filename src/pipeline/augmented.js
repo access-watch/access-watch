@@ -1,6 +1,8 @@
 const uuid = require('uuid/v4');
 const { Map, List } = require('immutable');
 
+const constants = require('../constants');
+
 const { now } = require('../lib/util');
 const pipeline = require('../lib/pipeline');
 const instruments = require('../lib/instruments');
@@ -8,7 +10,7 @@ const instruments = require('../lib/instruments');
 const hub = require('../plugins/hub');
 const proxy = require('../plugins/proxy');
 
-const augmented = pipeline
+let augmented = pipeline
 
   // Set a UUID if no one is defined
   .map(log => {
@@ -31,7 +33,6 @@ const augmented = pipeline
 
   // Augment with data from the Access Watch Hub
   .map(log => hub.augment(log))
-
   // Instruments (out)
   .map(log => {
     instruments.increment('pipeline.augmented.out');
@@ -41,9 +42,11 @@ const augmented = pipeline
         now()
     );
     return log;
-  })
-  // Handle anonymous robots
-  .map(log => {
+  });
+
+
+if (constants.features.anonymousRobots) {
+  augmented = augmented.map(log => {
     if (log.getIn(['identity', 'type']) === 'robot' && !log.has('robot')) {
       log = log.set(
         'robot',
@@ -59,5 +62,6 @@ const augmented = pipeline
     }
     return log;
   });
+}
 
 module.exports = { stream: augmented };
