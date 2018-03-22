@@ -247,6 +247,7 @@ const search = client => (query = {}, type) => {
       type: 'log',
       body,
       size,
+      trackTotalHits: false,
     })
   );
 };

@@ -1,4 +1,10 @@
 {
+  "settings": {
+    "index": {
+      "sort.field": "request.time",
+      "sort.order": "desc"
+    }
+  },
   "mappings": {
     "log": {
       "dynamic": "true",
