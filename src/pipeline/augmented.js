@@ -47,13 +47,13 @@ const augmented = pipeline
     if (log.getIn(['identity', 'type']) === 'robot' && !log.has('robot')) {
       log = log.set(
         'robot',
-        new Map({
+        Map({
           id: log.getIn(['identity', 'id']),
           name: log.getIn(['user_agent', 'agent', 'label'], 'Unknown'),
           reputation: {
             status: log.getIn(['reputation', 'status']),
           },
-          flags: new List(),
+          flags: List(),
         })
       );
     }
