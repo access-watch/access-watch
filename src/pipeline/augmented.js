@@ -1,5 +1,5 @@
 const uuid = require('uuid/v4');
-const { Map } = require('immutable');
+const { Map, List } = require('immutable');
 
 const { now } = require('../lib/util');
 const pipeline = require('../lib/pipeline');
@@ -53,6 +53,7 @@ const augmented = pipeline
           reputation: {
             status: log.getIn(['reputation', 'status']),
           },
+          flags: new List(),
         })
       );
     }
