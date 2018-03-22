@@ -89,6 +89,9 @@ const constants = {
       retention: 1000,
     },
   },
+  features: {
+    anonymousRobots: false,
+  },
 };
 
 module.exports = rc('access-watch', constants);
