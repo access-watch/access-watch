@@ -38,7 +38,7 @@ rules.setTransformExports({
               robotsAddresses[
                 rule.getIn(['condition'].concat(rulesMatchers.robot))
               ] || []
-            ).map(value => new Map({ address: { value } }))
+            ).map(value => Map({ address: { value } }))
           )
         )
       ),

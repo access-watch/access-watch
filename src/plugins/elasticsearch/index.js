@@ -475,7 +475,7 @@ const searchSessions = ({
     } else {
       matchingRules = ruleTypeFilter.values.reduce(
         (matches, value) => matches.merge(rules.list(value)),
-        new Map()
+        Map()
       );
     }
     const ruleFilter = matchingRules
