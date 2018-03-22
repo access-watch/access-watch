@@ -90,8 +90,8 @@ const constants = {
     },
   },
   features: {
-    anonymousRobots: false
-  }
+    anonymousRobots: false,
+  },
 };
 
 module.exports = rc('access-watch', constants);

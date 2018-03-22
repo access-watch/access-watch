@@ -44,7 +44,6 @@ let augmented = pipeline
     return log;
   });
 
-
 if (constants.features.anonymousRobots) {
   augmented = augmented.map(log => {
     if (log.getIn(['identity', 'type']) === 'robot' && !log.has('robot')) {
