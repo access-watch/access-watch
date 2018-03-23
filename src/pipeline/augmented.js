@@ -33,6 +33,7 @@ let augmented = pipeline
 
   // Augment with data from the Access Watch Hub
   .map(log => hub.augment(log))
+
   // Instruments (out)
   .map(log => {
     instruments.increment('pipeline.augmented.out');
