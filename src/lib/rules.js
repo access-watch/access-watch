@@ -329,10 +329,10 @@ class Database {
   groupByConditionType(type) {
     return this.list(type).reduce(
       (grouped, rule) =>
-        grouped.update(rule.getIn(['condition', 'type']), (map = new Map()) =>
+        grouped.update(rule.getIn(['condition', 'type']), (map = Map()) =>
           map.set(rule.get('id'), rule)
         ),
-      new Map()
+      Map()
     );
   }
 
@@ -349,7 +349,7 @@ class Database {
     return Promise.all(transformPromises).then(groups =>
       groups.reduce((exported, group) => {
         return exported.merge(group);
-      }, new Map())
+      }, Map())
     );
   }
 

@@ -13,7 +13,7 @@ function create({ name = 'Elasticsearch', config, query, parse = fromJS }) {
   }
   return {
     name: name,
-    start: pipeline => {
+    start: ({ success, reject, status }) => {
       const client = new elasticsearch.Client(config);
       // Keep track of the latest processed ids
       let ids = [];
@@ -47,9 +47,9 @@ function create({ name = 'Elasticsearch', config, query, parse = fromJS }) {
               }
               // Parse log
               try {
-                pipeline.success(parse(hit._source));
+                success(parse(hit._source));
               } catch (err) {
-                pipeline.reject(err);
+                reject(err);
               }
             });
             // Keep list short
@@ -63,7 +63,7 @@ function create({ name = 'Elasticsearch', config, query, parse = fromJS }) {
       // Start
       setImmediate(run);
       // Status
-      pipeline.status(null, 'Polling ' + config.host);
+      status(null, 'Polling ' + config.host);
     },
   };
 }

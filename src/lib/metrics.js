@@ -166,10 +166,6 @@ function gc(data, deleteAfter) {
   }
 
   instruments.hrtime('metrics.gc.expired.time', gcStart);
-
-  const gcEnd = process.hrtime(gcStart);
-  const elapsed = gcEnd[0] + Math.round(gcEnd[1] / 1000000) / 1000;
-  console.log(`Metrics Garbage Collection in ${elapsed}s`);
 }
 
 class Database {
