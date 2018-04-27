@@ -337,7 +337,9 @@ const searchMetrics = client => (query = {}) => {
     'log'
   ).then(({ aggregations }) => {
     if (aggregations) {
-      const { metrics: { buckets } } = aggregations;
+      const {
+        metrics: { buckets },
+      } = aggregations;
       // Transform elasticsearch output to a front-end compatible output with tuples
       // [timeInSeconds, { metric1Value: number, metric2Value: number}]
       return buckets.reduce((metrics, { key: metricsKey, activity }) => {
@@ -525,7 +527,9 @@ const searchSessions = ({
   )
     .then(({ aggregations }) => {
       if (aggregations) {
-        const { sessions: { buckets } } = aggregations;
+        const {
+          sessions: { buckets },
+        } = aggregations;
         return buckets.map(
           ({
             key,
@@ -641,7 +645,9 @@ const searchRobotsAddresses = client => robotIds =>
     'robot'
   ).then(({ aggregations }) => {
     if (aggregations) {
-      const { robots: { buckets } } = aggregations;
+      const {
+        robots: { buckets },
+      } = aggregations;
       return buckets.reduce(
         (robotsAddresses, { key, addresses }) =>
           Object.assign(robotsAddresses, {
