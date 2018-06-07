@@ -13,7 +13,7 @@ class FixedWindow {
   }
   assign(event) {
     const t = event.get('time');
-    const start = t - (t - this.offset) % this.size;
+    const start = t - ((t - this.offset) % this.size);
     return fromJS([
       {
         start: start,
@@ -37,7 +37,7 @@ class SlidingWindow {
   }
   assign(event) {
     const t = event.get('time');
-    const start = t - (t - this.offset) % this.period;
+    const start = t - ((t - this.offset) % this.period);
     return Range(start, start - this.size, this.period)
       .map(t => Map({ start: t, end: t + this.size }))
       .reverse();

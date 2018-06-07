@@ -20,7 +20,7 @@ class Speed {
 
   hit(time) {
     this.started = !this.started ? time : Math.min(this.started, time);
-    const idx = time - time % this.windowSize;
+    const idx = time - (time % this.windowSize);
     this.counters = this.counters.update('' + idx, 0, n => n + 1);
     this.gc();
     return this;
@@ -35,8 +35,8 @@ class Speed {
     return Range(0, this.size)
       .map(n => {
         let t = time - n * this.windowSize;
-        t = t - t % this.windowSize;
-        if (t >= this.started - this.started % this.windowSize) {
+        t = t - (t % this.windowSize);
+        if (t >= this.started - (this.started % this.windowSize)) {
           return this.counters.get('' + t, 0);
         }
       })

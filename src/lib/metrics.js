@@ -106,8 +106,8 @@ function aggregate(data, start, end, step) {
     return data;
   }
   const size = data.length;
-  start = data[0][0] - data[0][0] % step;
-  end = data[size - 1][0] - data[size - 1][0] % step;
+  start = data[0][0] - (data[0][0] % step);
+  end = data[size - 1][0] - (data[size - 1][0] % step);
   const res = [];
   let c = 0;
   for (var i = start; i <= end; i += step) {
