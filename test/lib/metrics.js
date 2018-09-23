@@ -31,7 +31,7 @@ describe('Metrics', function() {
   });
 
   it('index by name', function() {
-    assert.deepEqual(db.query(fromJS({ name: 'request' })), [
+    assert.deepStrictEqual(db.query(fromJS({ name: 'request' })), [
       [11, 4],
       [12, 3],
       [13, 2],
@@ -42,21 +42,21 @@ describe('Metrics', function() {
   });
 
   it('index by name and tags', function() {
-    assert.deepEqual(
+    assert.deepStrictEqual(
       db.query(fromJS({ name: 'request', tags: { status: 'nice' } })),
       [[11, 2], [12, 3], [13, 0], [14, 0], [15, 0], [16, 2]]
     );
   });
 
   it('index by name and time', function() {
-    assert.deepEqual(
+    assert.deepStrictEqual(
       db.query(fromJS({ name: 'request', start: 11, end: 12 })),
       [[11, 4]]
     );
   });
 
   it('index by name, time and tags', function() {
-    assert.deepEqual(
+    assert.deepStrictEqual(
       db.query(
         fromJS({
           name: 'request',
@@ -70,14 +70,17 @@ describe('Metrics', function() {
   });
 
   it('group by tag', function() {
-    assert.deepEqual(db.query(fromJS({ name: 'request', by: 'status' })), [
-      [11, { nice: 2, bad: 2 }],
-      [12, { nice: 3 }],
-      [13, { bad: 2 }],
-      [14, {}],
-      [15, {}],
-      [16, { nice: 2 }],
-    ]);
+    assert.deepStrictEqual(
+      db.query(fromJS({ name: 'request', by: 'status' })),
+      [
+        [11, { nice: 2, bad: 2 }],
+        [12, { nice: 3 }],
+        [13, { bad: 2 }],
+        [14, {}],
+        [15, {}],
+        [16, { nice: 2 }],
+      ]
+    );
   });
 
   it('index by name, time, and tags and groups by tag', function() {
@@ -90,11 +93,11 @@ describe('Metrics', function() {
       end: 12,
       by: 'status',
     });
-    assert.deepEqual(db.query(query), [[11, { nice: 2 }]]);
+    assert.deepStrictEqual(db.query(query), [[11, { nice: 2 }]]);
   });
 
   it('groups by time periods and fills holes with zeroes', function() {
-    assert.deepEqual(db.query(fromJS({ name: 'request', step: 2 })), [
+    assert.deepStrictEqual(db.query(fromJS({ name: 'request', step: 2 })), [
       [10, 4],
       [12, 5],
       [14, 0],
@@ -103,7 +106,7 @@ describe('Metrics', function() {
   });
 
   it('Fix #45', function() {
-    assert.deepEqual(db.query(fromJS({ name: 'request' })), [
+    assert.deepStrictEqual(db.query(fromJS({ name: 'request' })), [
       [11, 4],
       [12, 3],
       [13, 2],
@@ -114,7 +117,7 @@ describe('Metrics', function() {
   });
 
   it('Fix #51', function() {
-    assert.deepEqual(
+    assert.deepStrictEqual(
       db.query(fromJS({ name: 'request', start: 12, end: 18, step: 5 })),
       [[10, 5], [15, 2]]
     );

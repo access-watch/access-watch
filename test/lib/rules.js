@@ -68,14 +68,14 @@ describe('Rules', function() {
     db.match(log); // request didn't get blocked
     db.match(log.setIn(['response', 'status'], 403)); // request did get blocked
 
-    assert.deepEqual(
+    assert.deepStrictEqual(
       db
         .get('1')
         .getIn(['passed', 'per_minute'])
         .toJS(),
       []
     );
-    assert.deepEqual(
+    assert.deepStrictEqual(
       db
         .get('1')
         .getIn(['blocked', 'per_minute'])
@@ -83,14 +83,14 @@ describe('Rules', function() {
       []
     );
 
-    assert.deepEqual(
+    assert.deepStrictEqual(
       db
         .get('2')
         .getIn(['passed', 'per_minute'])
         .toJS(),
       [1]
     );
-    assert.deepEqual(
+    assert.deepStrictEqual(
       db
         .get('2')
         .getIn(['blocked', 'per_minute'])

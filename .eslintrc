@@ -7,5 +7,8 @@
   "extends": ["plugin:node/recommended", "plugin:prettier/recommended", "eslint:recommended"],
   "rules": {
     "no-console": "off"
+  },
+  "parserOptions": {
+    "ecmaVersion": 6
   }
 }

@@ -18,7 +18,7 @@ describe('memoryIndex', () => {
     const memoryIndex = memoryIndexFactory(5);
     memoryIndex.push(1, 'test');
     memoryIndex.push(2, 'test');
-    assert.deepEqual(Object.keys(memoryIndex.collection), [1, 2]);
+    assert.deepStrictEqual(Object.keys(memoryIndex.collection), ['1', '2']);
   });
   it('is a FIFO collection with a limit', () => {
     const memoryIndex = memoryIndexFactory(2);
@@ -87,7 +87,7 @@ describe('memoryLogsProvider', () => {
     immutableFakeLogs.forEach(memoryLogsProvider.index);
     return memoryLogsProvider.searchLogs().then(search => {
       assert(search.length === 4);
-      assert.deepEqual(reverseFakeLogs, search);
+      assert.deepStrictEqual(reverseFakeLogs, search);
     });
   });
   it('can search for logs with start', () => {
@@ -99,7 +99,10 @@ describe('memoryLogsProvider', () => {
         start,
       })
       .then(search => {
-        assert.deepEqual(reverseFakeLogs.slice(0, fakeLogs.length - 1), search);
+        assert.deepStrictEqual(
+          reverseFakeLogs.slice(0, fakeLogs.length - 1),
+          search
+        );
       });
   });
   it('can search for logs in a specific time period', () => {
@@ -113,7 +116,7 @@ describe('memoryLogsProvider', () => {
           Math.floor(new Date(fakeLogs[2].request.time).getTime() / 1000) - 1,
       })
       .then(search => {
-        assert.deepEqual(search[0], fakeLogs[1]);
+        assert.deepStrictEqual(search[0], fakeLogs[1]);
         assert(search.length === 1);
       });
   });
