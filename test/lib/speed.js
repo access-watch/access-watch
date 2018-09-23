@@ -14,7 +14,7 @@ describe('Speed', function() {
     s.hit(t - 3 * windowSize);
     s.hit(t - 3 * windowSize);
     s.hit(t - 1 * windowSize);
-    assert.deepEqual(s.compute().toJS(), [0, 1, 0, 2]);
+    assert.deepStrictEqual(s.compute().toJS(), [0, 1, 0, 2]);
   });
 
   it('garbage collects old hits', function() {
@@ -28,7 +28,7 @@ describe('Speed', function() {
     s.hit(t - 3 * windowSize);
     s.hit(t - 3 * windowSize);
     s.hit(t - 1 * windowSize);
-    assert.deepEqual(s.compute().toJS(), [0, 1, 0, 2, 0]);
+    assert.deepStrictEqual(s.compute().toJS(), [0, 1, 0, 2, 0]);
   });
 
   it('serialize/deserialize', function() {
@@ -43,6 +43,6 @@ describe('Speed', function() {
     s.hit(t - 3 * windowSize);
     s.hit(t - 1 * windowSize);
     const ss = Speed.deserialize(s.serialize());
-    assert.deepEqual(ss.compute().toJS(), [0, 1, 0, 2, 0]);
+    assert.deepStrictEqual(ss.compute().toJS(), [0, 1, 0, 2, 0]);
   });
 });

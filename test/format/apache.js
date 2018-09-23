@@ -80,7 +80,7 @@ describe('Apache format', function() {
   cases.map(({ name, options, msg, expected }) => {
     it(name, function() {
       const parse = apache.parser(options);
-      assert.deepEqual(parse(msg).toJS(), expected);
+      assert.deepStrictEqual(parse(msg).toJS(), expected);
     });
   });
 });

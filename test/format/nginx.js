@@ -110,7 +110,7 @@ describe('Nginx format', function() {
   cases.map(({ name, options, msg, expected }) => {
     it(name, function() {
       const parse = nginx.parser(options);
-      assert.deepEqual(parse(msg).toJS(), expected);
+      assert.deepStrictEqual(parse(msg).toJS(), expected);
     });
   });
 });
