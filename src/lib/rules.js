@@ -49,9 +49,8 @@ function matchRule(rule, log) {
     const attr =
       log.getIn(['response', 'status']) === 403 ? 'blocked' : 'passed';
     return rule
-      .update(
-        'last_hit',
-        previousHit => (previousHit ? Math.max(previousHit, time) : time)
+      .update('last_hit', previousHit =>
+        previousHit ? Math.max(previousHit, time) : time
       )
       .update(attr, speeds => {
         return speeds
