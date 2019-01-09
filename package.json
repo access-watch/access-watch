@@ -35,7 +35,7 @@
     "axios": "^0.18.0",
     "date-format-lite": "^17.7.0",
     "ejs": "^2.6.1",
-    "elasticsearch": "^15.2.0",
+    "elasticsearch": "^15.3.0",
     "express": "^4.16.4",
     "express-ws": "^4.0.0",
     "fs-extra": "^7.0.1",
